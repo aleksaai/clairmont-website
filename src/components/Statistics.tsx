@@ -46,19 +46,19 @@ const StatCard = ({ icon, value, suffix = "", prefix = "", label, duration }: St
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       viewport={{ once: true }}
-      className="relative group"
+      className="relative"
     >
-      <div className="relative p-8 rounded-3xl border border-primary/10 bg-card shadow-lg shadow-primary/5 hover:shadow-primary/10 transition-all duration-300">
-        <div className="flex flex-col items-center text-center">
-          <div className="mb-4 p-4 rounded-2xl bg-primary/5 text-primary group-hover:scale-110 transition-transform duration-300">
+      <div className="relative p-10 rounded-3xl bg-gradient-to-br from-card to-card/50 backdrop-blur-sm border border-primary/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+        <div className="flex flex-col items-center text-center gap-4">
+          <div className="p-4 rounded-2xl bg-primary/5 text-primary">
             {icon}
           </div>
-          <div className="text-4xl md:text-5xl font-light text-primary mb-2">
+          <div className="text-5xl md:text-6xl font-light text-primary tracking-tight">
             {prefix}
             <AnimatedCounter value={value} duration={duration} />
             {suffix}
           </div>
-          <p className="text-muted-foreground text-sm md:text-base">{label}</p>
+          <p className="text-muted-foreground text-sm md:text-base leading-relaxed max-w-[200px]">{label}</p>
         </div>
       </div>
     </motion.div>
