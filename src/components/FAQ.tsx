@@ -44,8 +44,8 @@ const FAQ = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <div className="text-sm md:text-base font-light text-primary/50 mb-3 tracking-wider uppercase">
-            FAQ
+          <div className="inline-flex items-center justify-center px-4 py-1.5 border border-primary/20 rounded-full mb-6">
+            <span className="text-sm font-medium text-primary">FAQ</span>
           </div>
           <h2 className="text-4xl md:text-5xl font-light text-primary mb-4">
             Häufig gestellte Fragen
