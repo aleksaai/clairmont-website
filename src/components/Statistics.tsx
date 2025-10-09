@@ -71,7 +71,7 @@ const Statistics = () => {
       icon: <Euro className="w-8 h-8" />,
       value: 3800,
       prefix: "€",
-      label: "Durchschnittliche Rückerstattung",
+      label: "⌀ Rückerstattung",
       duration: 2.5,
     },
     {
