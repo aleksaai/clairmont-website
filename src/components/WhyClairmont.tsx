@@ -42,7 +42,7 @@ const WhyClairmont = () => {
               <img 
                 src={officeImage} 
                 alt="Clairmont Advisory Office" 
-                className="w-full h-auto"
+                className="w-11/12 h-auto mx-auto"
               />
             </div>
           </div>
