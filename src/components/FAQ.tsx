@@ -35,19 +35,19 @@ const FAQ = () => {
   ];
 
   return (
-    <section className="py-20 px-4 bg-muted/30">
-      <div className="container mx-auto max-w-4xl">
+    <section className="py-32 px-6">
+      <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12"
+          className="text-center mb-16"
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+          <h2 className="text-5xl md:text-6xl font-light text-primary mb-6">
             Häufig gestellte Fragen
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-xl md:text-2xl text-primary/70 max-w-3xl mx-auto font-light">
             Hier finden Sie Antworten auf die wichtigsten Fragen rund um die Mehrwertsteuer-Rückerstattung
           </p>
         </motion.div>
@@ -57,18 +57,19 @@ const FAQ = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.2 }}
+          className="max-w-4xl mx-auto"
         >
           <Accordion type="single" collapsible className="w-full space-y-4">
             {faqs.map((faq, index) => (
               <AccordionItem
                 key={index}
                 value={`item-${index}`}
-                className="bg-card border border-border rounded-lg px-6 shadow-sm hover:shadow-md transition-shadow"
+                className="bg-white/80 backdrop-blur-sm border-none rounded-3xl px-8 shadow-[inset_0_2px_6px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.05)]"
               >
-                <AccordionTrigger className="text-left text-lg font-semibold text-foreground hover:text-primary">
+                <AccordionTrigger className="text-left text-xl md:text-2xl font-light text-primary hover:text-primary/80 py-6">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground leading-relaxed pt-2">
+                <AccordionContent className="text-primary/60 leading-relaxed text-base md:text-lg font-light pb-6">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>
