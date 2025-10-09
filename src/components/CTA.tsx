@@ -60,7 +60,8 @@ const CTA = () => {
               </Button>
               <Button 
                 variant="glass" 
-                className="rounded-full px-6 py-2.5 text-sm md:text-base"
+                size="lg" 
+                className="rounded-full px-8 text-base md:text-lg h-14"
               >
                 Kontakt aufnehmen
               </Button>
