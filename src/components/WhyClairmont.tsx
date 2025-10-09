@@ -38,11 +38,11 @@ const WhyClairmont = () => {
           </div>
           
           <div className="relative">
-            <div className="relative rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.15)]">
+            <div className="relative rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.15)] h-[600px]">
               <img 
                 src={officeImage} 
                 alt="Clairmont Advisory Office" 
-                className="w-full h-auto object-cover"
+                className="w-full h-full object-cover"
               />
             </div>
           </div>
