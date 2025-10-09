@@ -2,6 +2,7 @@ import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import HowItWorks from "@/components/HowItWorks";
 import WhyClairmont from "@/components/WhyClairmont";
+import Testimonials from "@/components/Testimonials";
 
 const Index = () => {
   return (
@@ -10,6 +11,7 @@ const Index = () => {
       <Hero />
       <HowItWorks />
       <WhyClairmont />
+      <Testimonials />
     </div>
   );
 };
