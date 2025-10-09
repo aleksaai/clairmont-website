@@ -3,6 +3,7 @@ import Hero from "@/components/Hero";
 import HowItWorks from "@/components/HowItWorks";
 import WhyClairmont from "@/components/WhyClairmont";
 import Testimonials from "@/components/Testimonials";
+import Statistics from "@/components/Statistics";
 
 const Index = () => {
   return (
@@ -12,6 +13,7 @@ const Index = () => {
       <HowItWorks />
       <WhyClairmont />
       <Testimonials />
+      <Statistics />
     </div>
   );
 };
