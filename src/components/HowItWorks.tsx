@@ -35,7 +35,7 @@ const HowItWorks = () => {
               key={index}
               className="relative"
             >
-              <div className="relative h-full p-10 rounded-3xl bg-white/80 backdrop-blur-sm border border-primary/10 shadow-lg">
+              <div className="relative h-full p-10 rounded-3xl bg-white/80 backdrop-blur-sm shadow-[inset_0_4px_12px_rgba(0,0,0,0.1),0_8px_24px_rgba(0,0,0,0.08)]">
                 {/* Large number */}
                 <div className="mb-8">
                   <span className="text-7xl font-extralight text-primary/30">{step.number}</span>
