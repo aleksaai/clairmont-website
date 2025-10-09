@@ -6,7 +6,7 @@ const Navigation = () => {
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-primary"></div>
-          <span className="text-[hsl(var(--glass-text))] font-medium text-lg">consulting</span>
+          <span className="text-[hsl(var(--glass-text))] font-medium text-lg">Clairmont Advisory</span>
         </div>
         
         <div className="hidden md:flex items-center gap-8">
@@ -14,10 +14,10 @@ const Navigation = () => {
             Home
           </a>
           <a href="#" className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors">
-            About
+            Über uns
           </a>
           <a href="#" className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors">
-            Services
+            Leistungen
           </a>
           <a href="#" className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors">
             Blog
@@ -25,7 +25,7 @@ const Navigation = () => {
         </div>
         
         <Button variant="glass" className="rounded-full px-6">
-          Get an audit
+          Kostenlose Prognose
         </Button>
       </div>
     </nav>
