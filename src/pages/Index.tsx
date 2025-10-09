@@ -6,6 +6,7 @@ import Testimonials from "@/components/Testimonials";
 import Statistics from "@/components/Statistics";
 import FAQ from "@/components/FAQ";
 import CTA from "@/components/CTA";
+import Footer from "@/components/Footer";
 
 const Index = () => {
   return (
@@ -18,6 +19,7 @@ const Index = () => {
       <Statistics />
       <FAQ />
       <CTA />
+      <Footer />
     </div>
   );
 };
