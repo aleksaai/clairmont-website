@@ -91,7 +91,8 @@ const Statistics = () => {
     {
       icon: <Clock className="w-8 h-8" />,
       value: 14,
-      label: "Tage durchschnittliche Bearbeitungszeit",
+      suffix: " Tage",
+      label: "⌀ Bearbeitungszeit",
       duration: 1,
     },
   ];
