@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "motion/react";
 import { ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const CTA = () => {
+  const navigate = useNavigate();
+  
   return (
     <section className="py-32 px-6">
       <div className="max-w-5xl mx-auto">
@@ -54,6 +57,7 @@ const CTA = () => {
               <Button 
                 size="lg" 
                 className="rounded-full px-8 text-base md:text-lg h-14 shadow-lg hover:shadow-xl transition-shadow group"
+                onClick={() => navigate("/prognose")}
               >
                 Kostenlose Prognose starten
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />

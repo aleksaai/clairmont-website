@@ -1,7 +1,10 @@
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import heroBackground from "@/assets/hero-background.png";
 
 const Hero = () => {
+  const navigate = useNavigate();
+  
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
@@ -25,7 +28,7 @@ const Hero = () => {
           </p>
           
           <div className="flex flex-wrap gap-4">
-            <Button size="lg" className="rounded-full px-8">
+            <Button size="lg" className="rounded-full px-8" onClick={() => navigate("/prognose")}>
               Jetzt Prognose erhalten
             </Button>
             <Button variant="glass" size="lg" className="rounded-full px-8">

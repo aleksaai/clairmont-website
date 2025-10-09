@@ -1,6 +1,9 @@
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const Navigation = () => {
+  const navigate = useNavigate();
+  
   return (
     <nav className="fixed top-4 left-0 right-0 z-50 px-6">
       <div className="max-w-6xl mx-auto bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-white/10 rounded-2xl shadow-lg px-6 py-3 flex items-center justify-between">
@@ -24,7 +27,7 @@ const Navigation = () => {
           </a>
         </div>
         
-        <Button variant="glass" className="rounded-full px-5 py-2 text-sm">
+        <Button variant="glass" className="rounded-full px-5 py-2 text-sm" onClick={() => navigate("/prognose")}>
           Kostenlose Prognose
         </Button>
       </div>
