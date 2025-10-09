@@ -4,6 +4,7 @@ import HowItWorks from "@/components/HowItWorks";
 import WhyClairmont from "@/components/WhyClairmont";
 import Testimonials from "@/components/Testimonials";
 import Statistics from "@/components/Statistics";
+import FAQ from "@/components/FAQ";
 
 const Index = () => {
   return (
@@ -14,6 +15,7 @@ const Index = () => {
       <WhyClairmont />
       <Testimonials />
       <Statistics />
+      <FAQ />
     </div>
   );
 };
