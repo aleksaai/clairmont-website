@@ -1,14 +1,221 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { motion } from "motion/react";
-import { ArrowRight, ArrowLeft } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { motion, AnimatePresence } from "motion/react";
+import { ArrowRight, ArrowLeft, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import officeBackground from "@/assets/office-background.png";
 
+// Import step components
+import WelcomeStep from "@/components/prognose/WelcomeStep";
+import PersonalInfoStep from "@/components/prognose/PersonalInfoStep";
+import FamilyStep from "@/components/prognose/FamilyStep";
+import ChildrenStep from "@/components/prognose/ChildrenStep";
+import WorkStep from "@/components/prognose/WorkStep";
+import IncomeStep from "@/components/prognose/IncomeStep";
+import InsuranceStep from "@/components/prognose/InsuranceStep";
+import PropertyStep from "@/components/prognose/PropertyStep";
+import SpecialCircumstancesStep from "@/components/prognose/SpecialCircumstancesStep";
+import BankDetailsStep from "@/components/prognose/BankDetailsStep";
+import SuccessStep from "@/components/prognose/SuccessStep";
+
+export interface FormData {
+  // Personal Info
+  firstName: string;
+  lastName: string;
+  birthDate: string;
+  gender: string;
+  nationality: string;
+  address: string;
+  differentAddress: boolean;
+  alternativeAddress?: string;
+  
+  // Family
+  maritalStatus: string;
+  marriedSince?: string;
+  spouseName?: string;
+  spouseBirthDate?: string;
+  spouseOccupation?: string;
+  spouseEmployed?: boolean;
+  spouseTaxDocument?: File;
+  
+  // Children
+  hasChildren: boolean;
+  children: Array<{
+    name: string;
+    birthDate: string;
+    childBenefitPeriod: string;
+  }>;
+  
+  // Work
+  occupation: string;
+  homeOfficeDays: string;
+  workplaceAddress: string;
+  trainingCosts: string;
+  businessEquipment: string;
+  
+  // Income
+  hasBusiness: boolean;
+  businessType?: string;
+  hasCryptoIncome: boolean;
+  hasSocialBenefits: boolean;
+  socialBenefitDetails?: string;
+  taxYears: string[];
+  
+  // Insurance
+  isUnionMember: boolean;
+  unionFee?: string;
+  hasOtherMemberships: boolean;
+  otherMembershipsDetails?: string;
+  insurances: Array<{
+    type: string;
+    provider: string;
+  }>;
+  
+  // Property
+  hasProperty: boolean;
+  properties: Array<{
+    address: string;
+    purchasePrice: string;
+    purchaseDate: string;
+    completionDate: string;
+    numberOfUnits: string;
+    rentedArea: string;
+    rent: string;
+    additionalCosts?: string;
+    interestExpense: string;
+    notaryCosts: string;
+    propertyTax: string;
+  }>;
+  
+  // Special Circumstances
+  hasDisability: boolean;
+  disabilityProof?: File;
+  paysAlimony: boolean;
+  alimonyProof?: File;
+  
+  // Bank Details
+  iban: string;
+  confirmCorrectness: boolean;
+  acceptTerms: boolean;
+  acceptPrivacy: boolean;
+  partnerCode?: string;
+}
+
+const TOTAL_STEPS = 11;
+
 const Prognose = () => {
   const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(0);
+  const [formData, setFormData] = useState<FormData>({
+    firstName: "",
+    lastName: "",
+    birthDate: "",
+    gender: "",
+    nationality: "",
+    address: "",
+    differentAddress: false,
+    maritalStatus: "",
+    hasChildren: false,
+    children: [],
+    occupation: "",
+    homeOfficeDays: "",
+    workplaceAddress: "",
+    trainingCosts: "",
+    businessEquipment: "",
+    hasBusiness: false,
+    hasCryptoIncome: false,
+    hasSocialBenefits: false,
+    taxYears: [],
+    isUnionMember: false,
+    hasOtherMemberships: false,
+    insurances: [],
+    hasProperty: false,
+    properties: [],
+    hasDisability: false,
+    paysAlimony: false,
+    iban: "",
+    confirmCorrectness: false,
+    acceptTerms: false,
+    acceptPrivacy: false,
+  });
+
+  // Load saved form data from localStorage
+  useEffect(() => {
+    const savedData = localStorage.getItem("prognoseFormData");
+    const savedStep = localStorage.getItem("prognoseCurrentStep");
+    if (savedData) {
+      setFormData(JSON.parse(savedData));
+    }
+    if (savedStep) {
+      setCurrentStep(parseInt(savedStep));
+    }
+  }, []);
+
+  // Save form data to localStorage
+  const saveProgress = () => {
+    localStorage.setItem("prognoseFormData", JSON.stringify(formData));
+    localStorage.setItem("prognoseCurrentStep", currentStep.toString());
+  };
+
+  const updateFormData = (data: Partial<FormData>) => {
+    setFormData((prev) => ({ ...prev, ...data }));
+  };
+
+  const nextStep = () => {
+    if (currentStep < TOTAL_STEPS) {
+      setCurrentStep((prev) => prev + 1);
+      saveProgress();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep((prev) => prev - 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const handleSubmit = () => {
+    // Handle final form submission
+    console.log("Form submitted:", formData);
+    // Clear localStorage after submission
+    localStorage.removeItem("prognoseFormData");
+    localStorage.removeItem("prognoseCurrentStep");
+    nextStep();
+  };
+
+  const progress = ((currentStep + 1) / (TOTAL_STEPS + 1)) * 100;
+
+  const renderStep = () => {
+    switch (currentStep) {
+      case 0:
+        return <WelcomeStep onNext={nextStep} />;
+      case 1:
+        return <PersonalInfoStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+      case 2:
+        return <FamilyStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+      case 3:
+        return <ChildrenStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+      case 4:
+        return <WorkStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+      case 5:
+        return <IncomeStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+      case 6:
+        return <InsuranceStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+      case 7:
+        return <PropertyStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+      case 8:
+        return <SpecialCircumstancesStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+      case 9:
+        return <BankDetailsStep data={formData} updateData={updateFormData} onNext={handleSubmit} onBack={prevStep} />;
+      case 10:
+        return <SuccessStep />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -27,161 +234,59 @@ const Prognose = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="w-full max-w-2xl"
+          className="w-full max-w-3xl"
         >
-          {/* Back Button */}
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-2 text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors mb-8"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Zurück</span>
-          </button>
+          {/* Header with Progress */}
+          {currentStep > 0 && currentStep < TOTAL_STEPS && (
+            <div className="mb-8 space-y-4">
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => navigate("/")}
+                  className="flex items-center gap-2 text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors"
+                >
+                  <Home className="w-5 h-5" />
+                  <span className="hidden sm:inline">Zurück zur Startseite</span>
+                </button>
+                <button
+                  onClick={saveProgress}
+                  className="text-sm text-[hsl(var(--glass-text))]/70 hover:text-[hsl(var(--glass-text))] transition-colors"
+                >
+                  Fortschritt speichern
+                </button>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm text-[hsl(var(--glass-text))]/80">
+                  <span>Schritt {currentStep} von {TOTAL_STEPS}</span>
+                  <span>{Math.round(progress)}%</span>
+                </div>
+                <Progress value={progress} className="h-2" />
+              </div>
+            </div>
+          )}
+
+          {currentStep === 0 && (
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center gap-2 text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors mb-8"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span>Zurück</span>
+            </button>
+          )}
 
           {/* Glass Form Container */}
           <div className="bg-white/10 backdrop-blur-2xl rounded-[2.5rem] border border-white/20 p-8 md:p-12 shadow-[0_20px_70px_rgba(0,0,0,0.3)]">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-            >
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-light text-[hsl(var(--glass-text))] mb-3">
-                Kostenlose Steuerprognose
-              </h1>
-              <p className="text-[hsl(var(--glass-text))]/80 mb-8">
-                Erfahren Sie in 2 Minuten, wie viel Geld Sie zurückbekommen können
-              </p>
-            </motion.div>
-
-            <form className="space-y-6">
-              {/* Name */}
+            <AnimatePresence mode="wait">
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="space-y-2"
+                key={currentStep}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
               >
-                <Label htmlFor="name" className="text-[hsl(var(--glass-text))]">
-                  Vollständiger Name
-                </Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Max Mustermann"
-                  className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50 focus:border-white/40 focus:ring-white/20"
-                />
+                {renderStep()}
               </motion.div>
-
-              {/* Email */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="space-y-2"
-              >
-                <Label htmlFor="email" className="text-[hsl(var(--glass-text))]">
-                  E-Mail-Adresse
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="max@beispiel.de"
-                  className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50 focus:border-white/40 focus:ring-white/20"
-                />
-              </motion.div>
-
-              {/* Phone */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                className="space-y-2"
-              >
-                <Label htmlFor="phone" className="text-[hsl(var(--glass-text))]">
-                  Telefonnummer
-                </Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="+49 123 456789"
-                  className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50 focus:border-white/40 focus:ring-white/20"
-                />
-              </motion.div>
-
-              {/* Employment Status */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.5 }}
-                className="space-y-2"
-              >
-                <Label htmlFor="status" className="text-[hsl(var(--glass-text))]">
-                  Beschäftigungsstatus
-                </Label>
-                <Select>
-                  <SelectTrigger className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] focus:border-white/40 focus:ring-white/20">
-                    <SelectValue placeholder="Bitte wählen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="angestellt">Angestellt</SelectItem>
-                    <SelectItem value="selbststaendig">Selbstständig</SelectItem>
-                    <SelectItem value="beides">Beides</SelectItem>
-                    <SelectItem value="rentner">Rentner</SelectItem>
-                  </SelectContent>
-                </Select>
-              </motion.div>
-
-              {/* Annual Income */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
-                className="space-y-2"
-              >
-                <Label htmlFor="income" className="text-[hsl(var(--glass-text))]">
-                  Jährliches Bruttoeinkommen
-                </Label>
-                <Select>
-                  <SelectTrigger className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] focus:border-white/40 focus:ring-white/20">
-                    <SelectValue placeholder="Bitte wählen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="unter-20k">Unter 20.000€</SelectItem>
-                    <SelectItem value="20-40k">20.000€ - 40.000€</SelectItem>
-                    <SelectItem value="40-60k">40.000€ - 60.000€</SelectItem>
-                    <SelectItem value="60-80k">60.000€ - 80.000€</SelectItem>
-                    <SelectItem value="ueber-80k">Über 80.000€</SelectItem>
-                  </SelectContent>
-                </Select>
-              </motion.div>
-
-              {/* Submit Button */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.7 }}
-                className="pt-4"
-              >
-                <Button 
-                  type="submit"
-                  size="lg" 
-                  className="w-full rounded-full text-base md:text-lg h-14 shadow-lg hover:shadow-xl transition-shadow group"
-                >
-                  Prognose jetzt berechnen
-                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </motion.div>
-
-              {/* Privacy Note */}
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.8 }}
-                className="text-sm text-[hsl(var(--glass-text))]/60 text-center"
-              >
-                100% kostenlos • Keine Verpflichtung • Datenschutzkonform
-              </motion.p>
-            </form>
+            </AnimatePresence>
           </div>
         </motion.div>
       </div>
