@@ -13,6 +13,7 @@ import FamilyStep from "@/components/prognose/FamilyStep";
 import ChildrenStep from "@/components/prognose/ChildrenStep";
 import WorkStep from "@/components/prognose/WorkStep";
 import IncomeStep from "@/components/prognose/IncomeStep";
+import CryptoUploadStep from "@/components/prognose/CryptoUploadStep";
 import InsuranceStep from "@/components/prognose/InsuranceStep";
 import PropertyStep from "@/components/prognose/PropertyStep";
 import SpecialCircumstancesStep from "@/components/prognose/SpecialCircumstancesStep";
@@ -55,7 +56,11 @@ export interface FormData {
   // Work
   occupation: string;
   homeOfficeDays: string;
-  workplaceAddress: string;
+  workplace?: {
+    street?: string;
+    zipCode?: string;
+    city?: string;
+  };
   trainingCosts: string;
   businessEquipment: string;
   
@@ -63,6 +68,7 @@ export interface FormData {
   hasBusiness: boolean;
   businessType?: string;
   hasCryptoIncome: boolean;
+  cryptoDocuments?: File[];
   hasSocialBenefits: boolean;
   socialBenefitDetails?: string;
   taxYears: string[];
@@ -72,13 +78,10 @@ export interface FormData {
   unionFee?: string;
   hasOtherMemberships: boolean;
   otherMembershipsDetails?: string;
-  insurance?: {
-    pillar3a?: string;
-    healthInsurance?: string;
-  };
   insurances: Array<{
     type: string;
     provider: string;
+    yearlyContribution?: string;
   }>;
   
   // Property
@@ -111,7 +114,7 @@ export interface FormData {
   partnerCode?: string;
 }
 
-const TOTAL_STEPS = 11;
+const BASE_STEPS = 11;
 
 const Prognose = () => {
   const navigate = useNavigate();
@@ -129,7 +132,6 @@ const Prognose = () => {
     children: [],
     occupation: "",
     homeOfficeDays: "",
-    workplaceAddress: "",
     trainingCosts: "",
     businessEquipment: "",
     hasBusiness: false,
@@ -172,11 +174,9 @@ const Prognose = () => {
   };
 
   const nextStep = () => {
-    if (currentStep < TOTAL_STEPS) {
-      setCurrentStep((prev) => prev + 1);
-      saveProgress();
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+    setCurrentStep((prev) => prev + 1);
+    saveProgress();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const prevStep = () => {
@@ -195,9 +195,16 @@ const Prognose = () => {
     nextStep();
   };
 
-  const progress = ((currentStep + 1) / (TOTAL_STEPS + 1)) * 100;
+  // Calculate total steps dynamically based on form data
+  const totalSteps = BASE_STEPS + (formData.hasCryptoIncome ? 1 : 0);
+  const progress = (currentStep / totalSteps) * 100;
 
   const renderStep = () => {
+    let stepOffset = 0;
+    
+    // Calculate step offset based on conditional steps
+    const cryptoStepPosition = 6;
+    
     switch (currentStep) {
       case 0:
         return <WelcomeStep onNext={nextStep} />;
@@ -212,14 +219,38 @@ const Prognose = () => {
       case 5:
         return <IncomeStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
       case 6:
-        return <InsuranceStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+        // If crypto income is selected, show crypto upload step
+        if (formData.hasCryptoIncome) {
+          return <CryptoUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+        } else {
+          return <InsuranceStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+        }
       case 7:
-        return <PropertyStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+        // Adjust based on whether crypto step was shown
+        if (formData.hasCryptoIncome) {
+          return <InsuranceStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+        } else {
+          return <PropertyStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+        }
       case 8:
-        return <SpecialCircumstancesStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+        if (formData.hasCryptoIncome) {
+          return <PropertyStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+        } else {
+          return <SpecialCircumstancesStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+        }
       case 9:
-        return <BankDetailsStep data={formData} updateData={updateFormData} onNext={handleSubmit} onBack={prevStep} />;
+        if (formData.hasCryptoIncome) {
+          return <SpecialCircumstancesStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+        } else {
+          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={handleSubmit} onBack={prevStep} />;
+        }
       case 10:
+        if (formData.hasCryptoIncome) {
+          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={handleSubmit} onBack={prevStep} />;
+        } else {
+          return <SuccessStep formData={formData} />;
+        }
+      case 11:
         return <SuccessStep formData={formData} />;
       default:
         return null;
@@ -246,7 +277,7 @@ const Prognose = () => {
           className="w-full max-w-3xl"
         >
           {/* Header with Progress */}
-          {currentStep > 0 && currentStep < TOTAL_STEPS && (
+          {currentStep > 0 && currentStep < totalSteps && (
             <div className="mb-8 space-y-4">
               <div className="flex items-center justify-between">
                 <button
@@ -265,7 +296,7 @@ const Prognose = () => {
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm text-[hsl(var(--glass-text))]/80">
-                  <span>Schritt {currentStep} von {TOTAL_STEPS}</span>
+                  <span>Schritt {currentStep} von {totalSteps}</span>
                   <span>{Math.round(progress)}%</span>
                 </div>
                 <Progress value={progress} className="h-2" />

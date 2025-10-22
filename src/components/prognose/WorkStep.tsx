@@ -54,16 +54,44 @@ const WorkStep = ({ data, updateData, onNext, onBack }: WorkStepProps) => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="workplaceAddress" className="text-[hsl(var(--glass-text))]">
+          <Label className="text-[hsl(var(--glass-text))]">
             Adresse der Arbeitsstelle
           </Label>
-          <Input
-            id="workplaceAddress"
-            value={data.workplaceAddress}
-            onChange={(e) => updateData({ workplaceAddress: e.target.value })}
-            className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
-            placeholder="Straße, Hausnummer, PLZ, Ort"
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <Input
+                id="workplaceStreet"
+                value={data.workplace?.street || ""}
+                onChange={(e) => updateData({ 
+                  workplace: { ...data.workplace, street: e.target.value }
+                })}
+                className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
+                placeholder="Straße und Hausnummer"
+              />
+            </div>
+            <div>
+              <Input
+                id="workplaceZipCode"
+                value={data.workplace?.zipCode || ""}
+                onChange={(e) => updateData({ 
+                  workplace: { ...data.workplace, zipCode: e.target.value }
+                })}
+                className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
+                placeholder="PLZ"
+              />
+            </div>
+            <div>
+              <Input
+                id="workplaceCity"
+                value={data.workplace?.city || ""}
+                onChange={(e) => updateData({ 
+                  workplace: { ...data.workplace, city: e.target.value }
+                })}
+                className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
+                placeholder="Stadt"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="space-y-2">

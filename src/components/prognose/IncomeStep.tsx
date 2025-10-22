@@ -128,7 +128,7 @@ const IncomeStep = ({ data, updateData, onNext, onBack }: IncomeStepProps) => {
             <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
               <AlertCircle className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
               <p className="text-sm text-[hsl(var(--glass-text))]/80">
-                Bitte halten Sie Ihre Transaktionsübersichten bereit. Wir fragen diese im nächsten Schritt automatisiert ab.
+                Im nächsten Schritt können Sie Ihre Transaktionsübersichten hochladen.
               </p>
             </div>
           )}

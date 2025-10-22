@@ -18,13 +18,15 @@ const InsuranceStep = ({ data, updateData, onNext, onBack }: InsuranceStepProps)
   const [showOtherMemberships, setShowOtherMemberships] = useState(data.hasOtherMemberships);
 
   const addInsurance = () => {
-    const newInsurances = [...data.insurances, { type: "", provider: "" }];
-    updateData({ insurances: newInsurances });
+    updateData({
+      insurances: [...data.insurances, { type: "", provider: "", yearlyContribution: "" }],
+    });
   };
 
   const removeInsurance = (index: number) => {
-    const newInsurances = data.insurances.filter((_, i) => i !== index);
-    updateData({ insurances: newInsurances });
+    updateData({
+      insurances: data.insurances.filter((_, i) => i !== index),
+    });
   };
 
   const updateInsurance = (index: number, field: string, value: string) => {
@@ -134,40 +136,6 @@ const InsuranceStep = ({ data, updateData, onNext, onBack }: InsuranceStepProps)
         )}
 
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="healthInsurance" className="text-[hsl(var(--glass-text))]">
-              Säule 3a Beiträge (CHF/Jahr)
-            </Label>
-            <Input
-              id="pillar3a"
-              type="number"
-              value={data.insurance?.pillar3a || ""}
-              onChange={(e) => updateData({ 
-                insurance: { ...data.insurance, pillar3a: e.target.value }
-              })}
-              className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
-              placeholder="0"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="healthInsurance" className="text-[hsl(var(--glass-text))]">
-              Krankenversicherung (CHF/Jahr)
-            </Label>
-            <Input
-              id="healthInsurance"
-              type="number"
-              value={data.insurance?.healthInsurance || ""}
-              onChange={(e) => updateData({ 
-                insurance: { ...data.insurance, healthInsurance: e.target.value }
-              })}
-              className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
-              placeholder="0"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-4">
           <Label className="text-[hsl(var(--glass-text))]">
             Welche Versicherungen haben Sie?
           </Label>
@@ -209,19 +177,32 @@ const InsuranceStep = ({ data, updateData, onNext, onBack }: InsuranceStepProps)
                   value={insurance.type}
                   onChange={(e) => updateInsurance(index, "type", e.target.value)}
                   className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
-                  placeholder="z.B. Haftpflicht, Krankenversicherung"
+                  placeholder="z.B. Haftpflicht, Hausrat, Rechtsschutz"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label className="text-[hsl(var(--glass-text))] text-sm">
-                  Anbieter
+                  Versicherungsanbieter
                 </Label>
                 <Input
                   value={insurance.provider}
                   onChange={(e) => updateInsurance(index, "provider", e.target.value)}
                   className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
-                  placeholder="Name des Versicherungsanbieters"
+                  placeholder="z.B. Allianz, AXA, ERGO"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[hsl(var(--glass-text))] text-sm">
+                  Jahresbeitrag (in €)
+                </Label>
+                <Input
+                  type="number"
+                  value={insurance.yearlyContribution || ""}
+                  onChange={(e) => updateInsurance(index, "yearlyContribution", e.target.value)}
+                  className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
+                  placeholder="0"
                 />
               </div>
             </div>
