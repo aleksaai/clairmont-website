@@ -27,13 +27,13 @@ const Footer = () => {
                 <Mail className="h-4 w-4" />
                 info@clairmont-advisory.de
               </a>
-              <a href="tel:+49123456789" className="flex items-center gap-3 text-primary/70 hover:text-primary transition-colors text-sm font-light">
+              <a href="tel:+4917684569934" className="flex items-center gap-3 text-primary/70 hover:text-primary transition-colors text-sm font-light">
                 <Phone className="h-4 w-4" />
-                +49 (0) 123 456 789
+                +49 176 84569934
               </a>
               <div className="flex items-center gap-3 text-primary/70 text-sm font-light">
                 <MapPin className="h-4 w-4" />
-                Musterstraße 123, 10115 Berlin
+                Meydan Grandstand, 6th floor, Meydan Road, Nad Al Sheba, Dubai, U.A.E.
               </div>
             </div>
           </div>
