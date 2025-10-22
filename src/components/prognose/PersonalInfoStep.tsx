@@ -19,7 +19,8 @@ const PersonalInfoStep = ({ data, updateData, onNext, onBack }: PersonalInfoStep
 
   const handleNext = () => {
     // Validate required fields
-    if (!data.firstName || !data.lastName || !data.birthDate || !data.gender || !data.nationality || !data.address) {
+    if (!data.firstName || !data.lastName || !data.birthDate || !data.gender || !data.nationality || 
+        !data.personalInfo?.street || !data.personalInfo?.zipCode || !data.personalInfo?.city) {
       alert("Bitte füllen Sie alle Pflichtfelder aus.");
       return;
     }
@@ -109,16 +110,50 @@ const PersonalInfoStep = ({ data, updateData, onNext, onBack }: PersonalInfoStep
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="address" className="text-[hsl(var(--glass-text))]">
-            Aktuelle Adresse *
+          <Label htmlFor="street" className="text-[hsl(var(--glass-text))]">
+            Strasse und Hausnummer *
           </Label>
           <Input
-            id="address"
-            value={data.address}
-            onChange={(e) => updateData({ address: e.target.value })}
+            id="street"
+            value={data.personalInfo?.street || ""}
+            onChange={(e) => updateData({ 
+              personalInfo: { ...data.personalInfo, street: e.target.value }
+            })}
             className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
-            placeholder="Straße, Hausnummer, PLZ, Ort"
+            placeholder="Musterstrasse 123"
           />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="zipCode" className="text-[hsl(var(--glass-text))]">
+              PLZ *
+            </Label>
+            <Input
+              id="zipCode"
+              value={data.personalInfo?.zipCode || ""}
+              onChange={(e) => updateData({ 
+                personalInfo: { ...data.personalInfo, zipCode: e.target.value }
+              })}
+              className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
+              placeholder="8000"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="city" className="text-[hsl(var(--glass-text))]">
+              Ort *
+            </Label>
+            <Input
+              id="city"
+              value={data.personalInfo?.city || ""}
+              onChange={(e) => updateData({ 
+                personalInfo: { ...data.personalInfo, city: e.target.value }
+              })}
+              className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
+              placeholder="Zürich"
+            />
+          </div>
         </div>
 
         <div className="space-y-3">

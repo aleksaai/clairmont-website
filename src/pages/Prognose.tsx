@@ -29,6 +29,11 @@ export interface FormData {
   address: string;
   differentAddress: boolean;
   alternativeAddress?: string;
+  personalInfo?: {
+    street?: string;
+    zipCode?: string;
+    city?: string;
+  };
   
   // Family
   maritalStatus: string;
@@ -67,6 +72,10 @@ export interface FormData {
   unionFee?: string;
   hasOtherMemberships: boolean;
   otherMembershipsDetails?: string;
+  insurance?: {
+    pillar3a?: string;
+    healthInsurance?: string;
+  };
   insurances: Array<{
     type: string;
     provider: string;
@@ -211,7 +220,7 @@ const Prognose = () => {
       case 9:
         return <BankDetailsStep data={formData} updateData={updateFormData} onNext={handleSubmit} onBack={prevStep} />;
       case 10:
-        return <SuccessStep />;
+        return <SuccessStep formData={formData} />;
       default:
         return null;
     }

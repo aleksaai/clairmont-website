@@ -1,9 +1,37 @@
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { FormData } from "@/pages/Prognose";
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-const SuccessStep = () => {
+interface SuccessStepProps {
+  formData: FormData;
+}
+
+const SuccessStep = ({ formData }: SuccessStepProps) => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const sendEmail = async () => {
+      try {
+        const { error } = await supabase.functions.invoke('send-prognose-email', {
+          body: { 
+            formData,
+            userEmail: formData.firstName + '@example.com' // Replace with actual email field
+          }
+        });
+        
+        if (error) throw error;
+      } catch (error) {
+        console.error('Email error:', error);
+        toast.error('E-Mail konnte nicht gesendet werden');
+      }
+    };
+    
+    sendEmail();
+  }, [formData]);
 
   return (
     <div className="space-y-8 text-center">
