@@ -26,7 +26,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await resend.emails.send({
       from: "Clairmont <onboarding@resend.dev>",
-      to: ["info@clairmont.ch"], // Change this to your desired recipient email
+      to: ["aleksa@destinymedia.de"],
       replyTo: userEmail,
       subject: `Neue Steuerprognose von ${formData.personalInfo?.firstName} ${formData.personalInfo?.lastName}`,
       html: `
