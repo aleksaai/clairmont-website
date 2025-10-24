@@ -11,14 +11,14 @@ const Footer = () => {
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-    }, 100);
+    }, 300);
   };
 
   const scrollToTop = () => {
     navigate('/');
     setTimeout(() => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 100);
+    }, 300);
   };
   
   return (
