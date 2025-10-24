@@ -9,28 +9,28 @@ import {
 const FAQ = () => {
   const faqs = [
     {
-      question: "Wer kann eine Mehrwertsteuer-Rückerstattung beantragen?",
-      answer: "Unternehmen und Selbstständige aus dem Ausland, die in Deutschland Vorsteuer gezahlt haben, können eine Rückerstattung beantragen. Dies gilt insbesondere für Geschäftsreisen, Messen, Schulungen oder den Kauf von Waren und Dienstleistungen.",
+      question: "Wer kann Ihre Unterstützung bei der Steuererklärung nutzen?",
+      answer: "Privatpersonen mit Wohnsitz in Deutschland, die ihre Steuererklärung optimieren möchten. Besonders hilfreich ist unser Service für alle, die Steuererstattungen maximieren oder komplexe Sachverhalte wie Kapitalerträge, Versicherungen oder Immobilien korrekt deklarieren möchten.",
     },
     {
-      question: "Wie lange dauert der Rückerstattungsprozess?",
-      answer: "Die durchschnittliche Bearbeitungszeit beträgt etwa 14 Tage ab Einreichung der vollständigen Unterlagen. Die tatsächliche Dauer kann je nach Komplexität des Falls und Arbeitsbelastung der Finanzbehörden variieren.",
+      question: "Wie lange dauert die Bearbeitung meiner Steuererklärung?",
+      answer: "Die durchschnittliche Bearbeitungszeit durch das Finanzamt beträgt 6-8 Wochen nach Einreichung. Wir erstellen Ihre Steuererklärung in der Regel innerhalb von 14 Tagen nach Erhalt aller benötigten Unterlagen.",
     },
     {
-      question: "Welche Dokumente werden für die Rückerstattung benötigt?",
-      answer: "Sie benötigen Originalrechnungen, Zahlungsnachweise, Reisebelege und weitere relevante Dokumente. Wir erstellen für Sie eine detaillierte Checkliste und unterstützen Sie bei der vollständigen Zusammenstellung aller erforderlichen Unterlagen.",
+      question: "Welche Dokumente werden für die Steuererklärung benötigt?",
+      answer: "Typischerweise benötigen wir Ihre Lohnsteuerbescheinigung, Belege für Versicherungen, Nachweise über Werbungskosten, Spendenquittungen und weitere relevante Dokumente. Nach der Prognose erhalten Sie eine individuell auf Sie zugeschnittene Checkliste.",
     },
     {
       question: "Wie hoch sind die Kosten für Ihre Dienstleistung?",
-      answer: "Unsere Vergütung erfolgt erfolgsbasiert. Sie zahlen nur, wenn die Rückerstattung erfolgreich ist. Die genauen Konditionen besprechen wir transparent in einem persönlichen Beratungsgespräch.",
+      answer: "Unsere Vergütung erfolgt transparent und fair. Die genauen Kosten hängen von der Komplexität Ihrer Steuersituation ab. Alle Konditionen besprechen wir vorab ausführlich in einem persönlichen Beratungsgespräch.",
     },
     {
-      question: "Gibt es eine Frist für die Antragstellung?",
-      answer: "Ja, der Antrag muss in der Regel bis zum 30. September des Folgejahres eingereicht werden. Für Ausgaben aus 2024 haben Sie also bis zum 30. September 2025 Zeit. Wir empfehlen jedoch, frühzeitig zu starten.",
+      question: "Gibt es eine Frist für die Steuererklärung?",
+      answer: "Die reguläre Abgabefrist für die Steuererklärung 2024 endet am 31. Juli 2025. Mit steuerlicher Beratung verlängert sich die Frist bis zum 28. Februar 2026. Wir empfehlen jedoch, frühzeitig zu beginnen, um Ihre Erstattung schneller zu erhalten.",
     },
     {
-      question: "Kann ich auch Rückerstattungen für mehrere Jahre beantragen?",
-      answer: "Ja, unter bestimmten Voraussetzungen können auch Anträge für vergangene Jahre nachgereicht werden. Wir prüfen gerne Ihre individuelle Situation und beraten Sie zu den Möglichkeiten.",
+      question: "Kann ich auch Steuererklärungen für vergangene Jahre nachreichen?",
+      answer: "Ja, Sie können Steuererklärungen für bis zu vier Jahre rückwirkend einreichen (ohne Verpflichtung zur Abgabe). Wir prüfen gerne Ihre individuelle Situation und beraten Sie zu möglichen Erstattungen aus Vorjahren.",
     },
   ];
 
@@ -51,7 +51,7 @@ const FAQ = () => {
             Häufig gestellte Fragen
           </h2>
           <p className="text-lg md:text-xl text-primary/70 max-w-2xl mx-auto font-light">
-            Hier finden Sie Antworten auf die wichtigsten Fragen rund um die Mehrwertsteuer-Rückerstattung
+            Hier finden Sie Antworten auf die wichtigsten Fragen rund um Ihre Steuererklärung
           </p>
         </motion.div>
 
