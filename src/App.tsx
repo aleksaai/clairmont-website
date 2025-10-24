@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Prognose from "./pages/Prognose";
 import CryptoUpload from "./pages/CryptoUpload";
 import Impressum from "./pages/Impressum";
+import Datenschutz from "./pages/Datenschutz";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/prognose" element={<Prognose />} />
           <Route path="/crypto-upload" element={<CryptoUpload />} />
           <Route path="/impressum" element={<Impressum />} />
+          <Route path="/datenschutz" element={<Datenschutz />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
