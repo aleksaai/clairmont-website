@@ -1,4 +1,5 @@
 import { Mail, Phone, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -70,9 +71,9 @@ const Footer = () => {
             <h3 className="text-primary font-medium mb-4">Rechtliches</h3>
             <ul className="space-y-3">
               <li>
-                <a href="#" className="text-primary/70 hover:text-primary transition-colors text-sm font-light">
+                <Link to="/impressum" className="text-primary/70 hover:text-primary transition-colors text-sm font-light">
                   Impressum
-                </a>
+                </Link>
               </li>
               <li>
                 <a href="#" className="text-primary/70 hover:text-primary transition-colors text-sm font-light">
