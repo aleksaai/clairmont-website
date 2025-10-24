@@ -52,7 +52,7 @@ const CTA = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+              className="flex justify-center items-center"
             >
               <Button 
                 size="lg" 
@@ -61,13 +61,6 @@ const CTA = () => {
               >
                 Kostenlose Prognose starten
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button 
-                variant="glass" 
-                size="lg" 
-                className="rounded-full px-8 text-base md:text-lg h-14 !text-primary"
-              >
-                Kontakt aufnehmen
               </Button>
             </motion.div>
             
