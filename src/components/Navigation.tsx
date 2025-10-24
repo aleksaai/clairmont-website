@@ -1,13 +1,26 @@
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Navigation = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (location.pathname !== '/') {
+      navigate('/', { state: { scrollTo: id } });
+    } else {
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  };
+
+  const scrollToTop = () => {
+    if (location.pathname !== '/') {
+      navigate('/');
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
   
@@ -20,18 +33,18 @@ const Navigation = () => {
         </div>
         
         <div className="hidden md:flex items-center gap-6">
-          <a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors text-sm">
+          <button onClick={scrollToTop} className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors text-sm">
             Home
-          </a>
-          <a href="#why-clairmont" onClick={(e) => { e.preventDefault(); scrollToSection('why-clairmont'); }} className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors text-sm">
+          </button>
+          <button onClick={() => scrollToSection('why-clairmont')} className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors text-sm">
             Über uns
-          </a>
-          <a href="#statistics" onClick={(e) => { e.preventDefault(); scrollToSection('statistics'); }} className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors text-sm">
+          </button>
+          <button onClick={() => scrollToSection('statistics')} className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors text-sm">
             Leistungen
-          </a>
-          <a href="#faq" onClick={(e) => { e.preventDefault(); scrollToSection('faq'); }} className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors text-sm">
+          </button>
+          <button onClick={() => scrollToSection('faq')} className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors text-sm">
             FAQ
-          </a>
+          </button>
         </div>
         
         <Button variant="glass" className="rounded-full px-5 py-2 text-sm" onClick={() => navigate("/prognose")}>
