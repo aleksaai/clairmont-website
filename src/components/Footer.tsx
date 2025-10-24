@@ -1,7 +1,26 @@
 import { Mail, Phone, MapPin } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Footer = () => {
+  const navigate = useNavigate();
+
+  const scrollToSection = (id: string) => {
+    navigate('/');
+    setTimeout(() => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
+
+  const scrollToTop = () => {
+    navigate('/');
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
+  };
+  
   return (
     <footer className="relative py-16 px-6 mt-32 overflow-hidden">
       {/* Glass background */}
@@ -44,24 +63,24 @@ const Footer = () => {
             <h3 className="text-primary font-medium mb-4">Links</h3>
             <ul className="space-y-3">
               <li>
-                <a href="#" className="text-primary/70 hover:text-primary transition-colors text-sm font-light">
+                <button onClick={scrollToTop} className="text-primary/70 hover:text-primary transition-colors text-sm font-light">
                   Home
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#" className="text-primary/70 hover:text-primary transition-colors text-sm font-light">
+                <button onClick={() => scrollToSection('why-clairmont')} className="text-primary/70 hover:text-primary transition-colors text-sm font-light">
                   Über uns
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#" className="text-primary/70 hover:text-primary transition-colors text-sm font-light">
+                <button onClick={() => scrollToSection('statistics')} className="text-primary/70 hover:text-primary transition-colors text-sm font-light">
                   Leistungen
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#" className="text-primary/70 hover:text-primary transition-colors text-sm font-light">
-                  Blog
-                </a>
+                <button onClick={() => scrollToSection('faq')} className="text-primary/70 hover:text-primary transition-colors text-sm font-light">
+                  FAQ
+                </button>
               </li>
             </ul>
           </div>
