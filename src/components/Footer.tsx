@@ -90,16 +90,6 @@ const Footer = () => {
                   Datenschutz
                 </Link>
               </li>
-              <li>
-                <a href="#" className="text-primary/70 hover:text-primary transition-colors text-sm font-light">
-                  AGB
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-primary/70 hover:text-primary transition-colors text-sm font-light">
-                  Cookie-Richtlinie
-                </a>
-              </li>
             </ul>
           </div>
         </div>
