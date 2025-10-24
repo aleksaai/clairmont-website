@@ -5,20 +5,34 @@ const Footer = () => {
   const navigate = useNavigate();
 
   const scrollToSection = (id: string) => {
-    navigate('/');
-    setTimeout(() => {
+    if (window.location.pathname !== '/') {
+      navigate('/');
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        setTimeout(() => {
+          const element = document.getElementById(id);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 100);
+      }, 100);
+    } else {
       const element = document.getElementById(id);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-    }, 300);
+    }
   };
 
   const scrollToTop = () => {
-    navigate('/');
-    setTimeout(() => {
+    if (window.location.pathname !== '/') {
+      navigate('/');
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 100);
+    } else {
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 300);
+    }
   };
   
   return (
