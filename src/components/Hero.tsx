@@ -5,6 +5,13 @@ import heroBackground from "@/assets/hero-background.png";
 const Hero = () => {
   const navigate = useNavigate();
   
+  const scrollToHowItWorks = () => {
+    const element = document.getElementById('how-it-works');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+  
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
@@ -31,7 +38,7 @@ const Hero = () => {
             <Button size="lg" className="rounded-full px-8" onClick={() => navigate("/prognose")}>
               Jetzt Prognose erhalten
             </Button>
-            <Button variant="glass" size="lg" className="rounded-full px-8">
+            <Button variant="glass" size="lg" className="rounded-full px-8" onClick={scrollToHowItWorks}>
               Mehr erfahren
             </Button>
           </div>

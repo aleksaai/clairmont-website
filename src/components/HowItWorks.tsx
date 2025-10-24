@@ -18,7 +18,7 @@ const HowItWorks = () => {
   ];
 
   return (
-    <section className="relative py-32 px-6 overflow-hidden bg-gradient-to-br from-primary/5 via-background to-primary/10">
+    <section id="how-it-works" className="relative py-32 px-6 overflow-hidden bg-gradient-to-br from-primary/5 via-background to-primary/10">
       <div className="relative z-10 max-w-7xl mx-auto">
         <div className="text-center mb-20">
           <h2 className="text-5xl md:text-6xl lg:text-7xl font-light text-primary mb-6">
