@@ -22,7 +22,7 @@ const FAQ = () => {
     },
     {
       question: "Wie hoch sind die Kosten für Ihre Dienstleistung?",
-      answer: "Unsere Vergütung beträgt 30% Ihrer prognostizierten Steuererstattung und ist im Voraus zu zahlen. Sie erfahren zunächst kostenlos durch unsere Prognose, wie viel Sie zurückbekommen können. Erst wenn Sie sich entscheiden, die Steuererklärung über uns einzureichen, zahlen Sie 30% der prognostizierten Erstattung. Sie tragen kein Risiko, da Sie vorher genau wissen, was Sie zurückerhalten.",
+      answer: "Unsere Vergütung beträgt 30% Ihrer tatsächlichen Steuererstattung. Sie erfahren zunächst kostenlos durch unsere Prognose, wie viel Sie voraussichtlich zurückbekommen. Wenn Sie sich entscheiden fortzufahren, zahlen Sie 30% der prognostizierten Summe im Voraus. Sollte die tatsächliche Erstattung niedriger ausfallen, erstatten wir Ihnen die Differenz zurück – Sie zahlen garantiert nur 30% dessen, was Sie wirklich erhalten.",
     },
     {
       question: "Gibt es eine Frist für die Steuererklärung?",
