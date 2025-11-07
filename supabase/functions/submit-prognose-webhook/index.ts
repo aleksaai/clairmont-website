@@ -85,6 +85,7 @@ const handler = async (req: Request): Promise<Response> => {
       firstName: jsonData.firstName || '',
       lastName: jsonData.lastName || '',
       birthDate: jsonData.birthDate || '',
+      email: jsonData.email || '',
       street: jsonData.street || '',
       houseNumber: jsonData.houseNumber || '',
       postalCode: jsonData.postalCode || '',

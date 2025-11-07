@@ -36,10 +36,16 @@ const InsuranceStep = ({ data, updateData, onNext, onBack }: InsuranceStepProps)
   };
 
   const handleNext = () => {
-    // Validate union name if member
-    if (data.isUnionMember && (!data.unionName || data.unionName.trim() === "")) {
-      alert("Bitte geben Sie den Namen der Gewerkschaft an.");
-      return;
+    // Validate union name and fee if member
+    if (data.isUnionMember) {
+      if (!data.unionName || data.unionName.trim() === "") {
+        alert("Bitte geben Sie den Namen der Gewerkschaft an.");
+        return;
+      }
+      if (!data.unionFee || data.unionFee.trim() === "") {
+        alert("Bitte geben Sie die Höhe des Gewerkschaftsbeitrags an.");
+        return;
+      }
     }
     onNext();
   };
@@ -99,7 +105,7 @@ const InsuranceStep = ({ data, updateData, onNext, onBack }: InsuranceStepProps)
             </div>
             <div className="space-y-2">
               <Label htmlFor="unionFee" className="text-[hsl(var(--glass-text))]">
-                Höhe des Beitrags (€)
+                Höhe des Beitrags (€) *
               </Label>
               <Input
                 id="unionFee"

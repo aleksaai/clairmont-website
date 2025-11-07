@@ -121,7 +121,7 @@ const ChildrenStep = ({ data, updateData, onNext, onBack }: ChildrenStepProps) =
 
                 <div className="space-y-2">
                   <Label className="text-[hsl(var(--glass-text))]">
-                    Name des Kindes
+                    Name des Kindes *
                   </Label>
                   <Input
                     value={child.name}
@@ -133,7 +133,7 @@ const ChildrenStep = ({ data, updateData, onNext, onBack }: ChildrenStepProps) =
 
                 <div className="space-y-2">
                   <Label className="text-[hsl(var(--glass-text))]">
-                    Geburtsdatum
+                    Geburtsdatum *
                   </Label>
                   <Input
                     type="date"

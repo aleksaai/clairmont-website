@@ -12,6 +12,15 @@ interface WorkStepProps {
 }
 
 const WorkStep = ({ data, updateData, onNext, onBack }: WorkStepProps) => {
+  const handleNext = () => {
+    // Validate required fields
+    if (!data.occupation || !data.workplace?.street || !data.workplace?.zipCode || !data.workplace?.city) {
+      alert("Bitte füllen Sie alle Pflichtfelder aus.");
+      return;
+    }
+    onNext();
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -26,7 +35,7 @@ const WorkStep = ({ data, updateData, onNext, onBack }: WorkStepProps) => {
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="occupation" className="text-[hsl(var(--glass-text))]">
-            Berufsbezeichnung laut Arbeitsvertrag
+            Berufsbezeichnung laut Arbeitsvertrag *
           </Label>
           <Input
             id="occupation"
@@ -55,10 +64,13 @@ const WorkStep = ({ data, updateData, onNext, onBack }: WorkStepProps) => {
 
         <div className="space-y-2">
           <Label className="text-[hsl(var(--glass-text))]">
-            Adresse der Arbeitsstelle
+            Adresse der Arbeitsstelle *
           </Label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
+              <Label htmlFor="workplaceStreet" className="text-[hsl(var(--glass-text))] text-sm mb-1 block">
+                Straße und Hausnummer *
+              </Label>
               <Input
                 id="workplaceStreet"
                 value={data.workplace?.street || ""}
@@ -70,6 +82,9 @@ const WorkStep = ({ data, updateData, onNext, onBack }: WorkStepProps) => {
               />
             </div>
             <div>
+              <Label htmlFor="workplaceZipCode" className="text-[hsl(var(--glass-text))] text-sm mb-1 block">
+                PLZ *
+              </Label>
               <Input
                 id="workplaceZipCode"
                 value={data.workplace?.zipCode || ""}
@@ -81,6 +96,9 @@ const WorkStep = ({ data, updateData, onNext, onBack }: WorkStepProps) => {
               />
             </div>
             <div>
+              <Label htmlFor="workplaceCity" className="text-[hsl(var(--glass-text))] text-sm mb-1 block">
+                Stadt *
+              </Label>
               <Input
                 id="workplaceCity"
                 value={data.workplace?.city || ""}
@@ -137,7 +155,7 @@ const WorkStep = ({ data, updateData, onNext, onBack }: WorkStepProps) => {
           Zurück
         </Button>
         <Button 
-          onClick={onNext}
+          onClick={handleNext}
           size="lg" 
           className="flex-1 rounded-full group"
         >

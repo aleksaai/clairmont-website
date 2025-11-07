@@ -28,6 +28,7 @@ export interface FormData {
   birthDate: string;
   gender: string;
   nationality: string;
+  email: string;
   address: string;
   differentAddress: boolean;
   alternativeAddress?: string;
@@ -137,6 +138,7 @@ const Prognose = () => {
     birthDate: "",
     gender: "",
     nationality: "",
+    email: "",
     address: "",
     differentAddress: false,
     maritalStatus: "",

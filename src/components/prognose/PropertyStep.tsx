@@ -16,6 +16,22 @@ interface PropertyStepProps {
 const PropertyStep = ({ data, updateData, onNext, onBack }: PropertyStepProps) => {
   const [showProperties, setShowProperties] = useState(data.hasProperty);
 
+  const handleNext = () => {
+    if (showProperties && data.properties.length > 0) {
+      // Validate all properties have required fields filled
+      for (let i = 0; i < data.properties.length; i++) {
+        const property = data.properties[i];
+        if (!property.address || !property.purchasePrice || !property.purchaseDate || 
+            !property.completionDate || !property.numberOfUnits || !property.rentedArea || 
+            !property.rent || !property.interestExpense || !property.notaryCosts || !property.propertyTax) {
+          alert(`Bitte füllen Sie alle Pflichtfelder für Immobilie ${i + 1} aus.`);
+          return;
+        }
+      }
+    }
+    onNext();
+  };
+
   const addProperty = () => {
     const newProperties = [
       ...data.properties,
@@ -112,7 +128,7 @@ const PropertyStep = ({ data, updateData, onNext, onBack }: PropertyStepProps) =
 
                 <div className="grid grid-cols-1 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[hsl(var(--glass-text))] text-sm">Adresse</Label>
+                    <Label className="text-[hsl(var(--glass-text))] text-sm">Adresse *</Label>
                     <Input
                       value={property.address}
                       onChange={(e) => updateProperty(index, "address", e.target.value)}
@@ -123,7 +139,7 @@ const PropertyStep = ({ data, updateData, onNext, onBack }: PropertyStepProps) =
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-[hsl(var(--glass-text))] text-sm">Kaufpreis (€)</Label>
+                      <Label className="text-[hsl(var(--glass-text))] text-sm">Kaufpreis (€) *</Label>
                       <Input
                         type="number"
                         value={property.purchasePrice}
@@ -132,7 +148,7 @@ const PropertyStep = ({ data, updateData, onNext, onBack }: PropertyStepProps) =
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[hsl(var(--glass-text))] text-sm">Anschaffungsdatum</Label>
+                      <Label className="text-[hsl(var(--glass-text))] text-sm">Anschaffungsdatum *</Label>
                       <Input
                         type="date"
                         value={property.purchaseDate}
@@ -144,7 +160,7 @@ const PropertyStep = ({ data, updateData, onNext, onBack }: PropertyStepProps) =
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-[hsl(var(--glass-text))] text-sm">Fertigstellungsdatum</Label>
+                      <Label className="text-[hsl(var(--glass-text))] text-sm">Fertigstellungsdatum *</Label>
                       <Input
                         type="date"
                         value={property.completionDate}
@@ -153,7 +169,7 @@ const PropertyStep = ({ data, updateData, onNext, onBack }: PropertyStepProps) =
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[hsl(var(--glass-text))] text-sm">Anzahl Wohnungen</Label>
+                      <Label className="text-[hsl(var(--glass-text))] text-sm">Anzahl Wohnungen *</Label>
                       <Input
                         type="number"
                         value={property.numberOfUnits}
@@ -165,7 +181,7 @@ const PropertyStep = ({ data, updateData, onNext, onBack }: PropertyStepProps) =
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-[hsl(var(--glass-text))] text-sm">Vermietete Fläche (m²)</Label>
+                      <Label className="text-[hsl(var(--glass-text))] text-sm">Vermietete Fläche (m²) *</Label>
                       <Input
                         type="number"
                         value={property.rentedArea}
@@ -174,7 +190,7 @@ const PropertyStep = ({ data, updateData, onNext, onBack }: PropertyStepProps) =
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[hsl(var(--glass-text))] text-sm">Kaltmiete (€)</Label>
+                      <Label className="text-[hsl(var(--glass-text))] text-sm">Kaltmiete (€) *</Label>
                       <Input
                         type="number"
                         value={property.rent}
@@ -198,7 +214,7 @@ const PropertyStep = ({ data, updateData, onNext, onBack }: PropertyStepProps) =
 
                   <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-[hsl(var(--glass-text))] text-sm">Schuldzinsen (€)</Label>
+                      <Label className="text-[hsl(var(--glass-text))] text-sm">Schuldzinsen (€) *</Label>
                       <Input
                         type="number"
                         value={property.interestExpense}
@@ -207,7 +223,7 @@ const PropertyStep = ({ data, updateData, onNext, onBack }: PropertyStepProps) =
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[hsl(var(--glass-text))] text-sm">Notarkosten (€)</Label>
+                      <Label className="text-[hsl(var(--glass-text))] text-sm">Notarkosten (€) *</Label>
                       <Input
                         type="number"
                         value={property.notaryCosts}
@@ -216,7 +232,7 @@ const PropertyStep = ({ data, updateData, onNext, onBack }: PropertyStepProps) =
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[hsl(var(--glass-text))] text-sm">Grundsteuer (€)</Label>
+                      <Label className="text-[hsl(var(--glass-text))] text-sm">Grundsteuer (€) *</Label>
                       <Input
                         type="number"
                         value={property.propertyTax}
@@ -253,7 +269,7 @@ const PropertyStep = ({ data, updateData, onNext, onBack }: PropertyStepProps) =
           Zurück
         </Button>
         <Button 
-          onClick={onNext}
+          onClick={handleNext}
           size="lg" 
           className="flex-1 rounded-full group"
         >

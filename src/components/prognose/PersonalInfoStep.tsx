@@ -20,10 +20,18 @@ const PersonalInfoStep = ({ data, updateData, onNext, onBack }: PersonalInfoStep
   const handleNext = () => {
     // Validate required fields
     if (!data.firstName || !data.lastName || !data.birthDate || !data.gender || !data.nationality || 
-        !data.personalInfo?.street || !data.personalInfo?.zipCode || !data.personalInfo?.city) {
+        !data.email || !data.personalInfo?.street || !data.personalInfo?.zipCode || !data.personalInfo?.city) {
       alert("Bitte füllen Sie alle Pflichtfelder aus.");
       return;
     }
+    
+    // Simple email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(data.email)) {
+      alert("Bitte geben Sie eine gültige E-Mail-Adresse ein.");
+      return;
+    }
+    
     onNext();
   };
 
@@ -106,6 +114,20 @@ const PersonalInfoStep = ({ data, updateData, onNext, onBack }: PersonalInfoStep
             onChange={(e) => updateData({ nationality: e.target.value })}
             className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
             placeholder="Deutsch"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-[hsl(var(--glass-text))]">
+            E-Mail-Adresse *
+          </Label>
+          <Input
+            id="email"
+            type="email"
+            value={data.email}
+            onChange={(e) => updateData({ email: e.target.value })}
+            className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
+            placeholder="ihre.email@beispiel.de"
           />
         </div>
 
