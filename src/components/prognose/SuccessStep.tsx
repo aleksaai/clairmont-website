@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Mail, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { FormData } from "@/pages/Prognose";
+import type { FormData } from "@/pages/Prognose";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -25,13 +25,47 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
       toast.error('PDF konnte nicht erstellt werden');
     }
 
+    // Submit to webhook
+    const submitToWebhook = async () => {
+      try {
+        const formDataToSend = new FormData();
+        formDataToSend.append('data', JSON.stringify(formData));
+
+        // Add all document files
+        if (formData.documents) {
+          formData.documents.taxCertificate?.forEach((file: File) => {
+            formDataToSend.append('taxCertificate', file);
+          });
+          formData.documents.idCard?.forEach((file: File) => {
+            formDataToSend.append('idCard', file);
+          });
+          formData.documents.disabilityCertificate?.forEach((file: File) => {
+            formDataToSend.append('disabilityCertificate', file);
+          });
+          formData.documents.otherDocuments?.forEach((file: File) => {
+            formDataToSend.append('otherDocuments', file);
+          });
+        }
+
+        const { error } = await supabase.functions.invoke('submit-prognose-webhook', {
+          body: formDataToSend,
+        });
+        
+        if (error) throw error;
+        toast.success('Daten erfolgreich übermittelt');
+      } catch (error) {
+        console.error('Webhook error:', error);
+        toast.error('Daten konnten nicht übermittelt werden');
+      }
+    };
+
     // Send email
     const sendEmail = async () => {
       try {
         const { error } = await supabase.functions.invoke('send-prognose-email', {
           body: { 
             formData,
-            userEmail: formData.firstName + '@example.com' // Replace with actual email field
+            userEmail: formData.firstName + '@example.com'
           }
         });
         
@@ -43,6 +77,7 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
       }
     };
     
+    submitToWebhook();
     sendEmail();
   }, [formData]);
 
