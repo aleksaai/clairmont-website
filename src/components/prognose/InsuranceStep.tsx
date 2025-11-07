@@ -35,6 +35,15 @@ const InsuranceStep = ({ data, updateData, onNext, onBack }: InsuranceStepProps)
     updateData({ insurances: newInsurances });
   };
 
+  const handleNext = () => {
+    // Validate union name if member
+    if (data.isUnionMember && (!data.unionName || data.unionName.trim() === "")) {
+      alert("Bitte geben Sie den Namen der Gewerkschaft an.");
+      return;
+    }
+    onNext();
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -75,19 +84,33 @@ const InsuranceStep = ({ data, updateData, onNext, onBack }: InsuranceStepProps)
         </div>
 
         {showUnionFee && (
-          <div className="space-y-2">
-            <Label htmlFor="unionFee" className="text-[hsl(var(--glass-text))]">
-              Höhe des Beitrags (€)
-            </Label>
-            <Input
-              id="unionFee"
-              type="number"
-              value={data.unionFee || ""}
-              onChange={(e) => updateData({ unionFee: e.target.value })}
-              className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
-              placeholder="0"
-            />
-          </div>
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="unionName" className="text-[hsl(var(--glass-text))]">
+                Name der Gewerkschaft *
+              </Label>
+              <Input
+                id="unionName"
+                value={data.unionName || ""}
+                onChange={(e) => updateData({ unionName: e.target.value })}
+                className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
+                placeholder="z.B. IG Metall, ver.di"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="unionFee" className="text-[hsl(var(--glass-text))]">
+                Höhe des Beitrags (€)
+              </Label>
+              <Input
+                id="unionFee"
+                type="number"
+                value={data.unionFee || ""}
+                onChange={(e) => updateData({ unionFee: e.target.value })}
+                className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
+                placeholder="0"
+              />
+            </div>
+          </>
         )}
 
         <div className="space-y-3">
@@ -233,7 +256,7 @@ const InsuranceStep = ({ data, updateData, onNext, onBack }: InsuranceStepProps)
           Zurück
         </Button>
         <Button 
-          onClick={onNext}
+          onClick={handleNext}
           size="lg" 
           className="flex-1 rounded-full group"
         >

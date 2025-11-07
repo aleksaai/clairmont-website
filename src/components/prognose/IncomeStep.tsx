@@ -162,18 +162,33 @@ const IncomeStep = ({ data, updateData, onNext, onBack }: IncomeStepProps) => {
         </div>
 
         {showSocialBenefitsDetails && (
-          <div className="space-y-2">
-            <Label htmlFor="socialBenefitDetails" className="text-[hsl(var(--glass-text))]">
-              Zeitraum und Art der Leistung
-            </Label>
-            <Input
-              id="socialBenefitDetails"
-              value={data.socialBenefitDetails || ""}
-              onChange={(e) => updateData({ socialBenefitDetails: e.target.value })}
-              className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
-              placeholder="z.B. ALG I von 01/2024 bis 06/2024"
-            />
-          </div>
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="socialBenefitDetails" className="text-[hsl(var(--glass-text))]">
+                Zeitraum und Art der Leistung
+              </Label>
+              <Input
+                id="socialBenefitDetails"
+                value={data.socialBenefitDetails || ""}
+                onChange={(e) => updateData({ socialBenefitDetails: e.target.value })}
+                className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
+                placeholder="z.B. ALG I von 01/2024 bis 06/2024"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="socialBenefitAmount" className="text-[hsl(var(--glass-text))]">
+                Summe der erhaltenen Leistung (in €) *
+              </Label>
+              <Input
+                id="socialBenefitAmount"
+                type="number"
+                value={data.socialBenefitAmount || ""}
+                onChange={(e) => updateData({ socialBenefitAmount: e.target.value })}
+                className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
+                placeholder="0"
+              />
+            </div>
+          </>
         )}
 
         <div className="space-y-3">

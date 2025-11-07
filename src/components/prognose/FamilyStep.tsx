@@ -29,6 +29,25 @@ const FamilyStep = ({ data, updateData, onNext, onBack }: FamilyStepProps) => {
       alert("Bitte geben Sie Ihren Familienstand an.");
       return;
     }
+    
+    // Validation for married
+    if (data.maritalStatus === "verheiratet") {
+      if (!data.marriedSince) {
+        alert("Bitte geben Sie an, seit wann Sie verheiratet sind.");
+        return;
+      }
+      if (!data.spouseName || data.spouseName.trim() === "") {
+        alert("Bitte geben Sie den Namen Ihres Ehepartners an.");
+        return;
+      }
+    }
+    
+    // Validation for divorced
+    if (data.maritalStatus === "geschieden" && !data.divorceDate) {
+      alert("Bitte geben Sie das Datum der Scheidung an.");
+      return;
+    }
+    
     onNext();
   };
 
@@ -61,11 +80,26 @@ const FamilyStep = ({ data, updateData, onNext, onBack }: FamilyStepProps) => {
           </Select>
         </div>
 
+        {data.maritalStatus === "geschieden" && (
+          <div className="space-y-2">
+            <Label htmlFor="divorceDate" className="text-[hsl(var(--glass-text))]">
+              Datum der Scheidung *
+            </Label>
+            <Input
+              id="divorceDate"
+              type="date"
+              value={data.divorceDate || ""}
+              onChange={(e) => updateData({ divorceDate: e.target.value })}
+              className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))]"
+            />
+          </div>
+        )}
+
         {showSpouseQuestions && (
           <>
             <div className="space-y-2">
               <Label htmlFor="marriedSince" className="text-[hsl(var(--glass-text))]">
-                Seit wann verheiratet?
+                Seit wann verheiratet? *
               </Label>
               <Input
                 id="marriedSince"
@@ -78,7 +112,7 @@ const FamilyStep = ({ data, updateData, onNext, onBack }: FamilyStepProps) => {
 
             <div className="space-y-2">
               <Label htmlFor="spouseName" className="text-[hsl(var(--glass-text))]">
-                Name des Ehepartners
+                Name des Ehepartners *
               </Label>
               <Input
                 id="spouseName"

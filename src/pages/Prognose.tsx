@@ -18,6 +18,7 @@ import InsuranceStep from "@/components/prognose/InsuranceStep";
 import PropertyStep from "@/components/prognose/PropertyStep";
 import SpecialCircumstancesStep from "@/components/prognose/SpecialCircumstancesStep";
 import BankDetailsStep from "@/components/prognose/BankDetailsStep";
+import DocumentUploadStep from "@/components/prognose/DocumentUploadStep";
 import SuccessStep from "@/components/prognose/SuccessStep";
 
 export interface FormData {
@@ -44,6 +45,7 @@ export interface FormData {
   spouseOccupation?: string;
   spouseEmployed?: boolean;
   spouseTaxDocument?: File;
+  divorceDate?: string; // NEW
   
   // Children
   hasChildren: boolean;
@@ -71,11 +73,13 @@ export interface FormData {
   cryptoDocuments?: File[];
   hasSocialBenefits: boolean;
   socialBenefitDetails?: string;
+  socialBenefitAmount?: string; // NEW
   taxYears: string[];
   
   // Insurance
   isUnionMember: boolean;
   unionFee?: string;
+  unionName?: string; // NEW
   hasOtherMemberships: boolean;
   otherMembershipsDetails?: string;
   insurances: Array<{
@@ -106,6 +110,14 @@ export interface FormData {
   paysAlimony: boolean;
   alimonyProof?: File;
   
+  // Documents Upload (NEW)
+  documents?: {
+    taxCertificate?: File[];
+    idCard?: File[];
+    disabilityCertificate?: File[];
+    otherDocuments?: File[];
+  };
+  
   // Bank Details
   iban: string;
   confirmCorrectness: boolean;
@@ -114,7 +126,7 @@ export interface FormData {
   partnerCode?: string;
 }
 
-const BASE_STEPS = 11;
+const BASE_STEPS = 12; // Updated to include DocumentUploadStep
 
 const Prognose = () => {
   const navigate = useNavigate();
@@ -242,15 +254,21 @@ const Prognose = () => {
         if (formData.hasCryptoIncome) {
           return <SpecialCircumstancesStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
         } else {
-          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={handleSubmit} onBack={prevStep} />;
+          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
         }
       case 10:
         if (formData.hasCryptoIncome) {
-          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={handleSubmit} onBack={prevStep} />;
+          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+        } else {
+          return <DocumentUploadStep data={formData} updateData={updateFormData} onNext={handleSubmit} onBack={prevStep} />;
+        }
+      case 11:
+        if (formData.hasCryptoIncome) {
+          return <DocumentUploadStep data={formData} updateData={updateFormData} onNext={handleSubmit} onBack={prevStep} />;
         } else {
           return <SuccessStep formData={formData} />;
         }
-      case 11:
+      case 12:
         return <SuccessStep formData={formData} />;
       default:
         return null;

@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Mail } from "lucide-react";
+import { CheckCircle2, Mail, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { FormData } from "@/pages/Prognose";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { generatePrognosePDF } from "@/utils/pdfGenerator";
 
 interface SuccessStepProps {
   formData: FormData;
@@ -12,8 +13,19 @@ interface SuccessStepProps {
 
 const SuccessStep = ({ formData }: SuccessStepProps) => {
   const navigate = useNavigate();
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
 
   useEffect(() => {
+    // Generate PDF
+    try {
+      const pdf = generatePrognosePDF(formData);
+      setPdfBlob(pdf);
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast.error('PDF konnte nicht erstellt werden');
+    }
+
+    // Send email
     const sendEmail = async () => {
       try {
         const { error } = await supabase.functions.invoke('send-prognose-email', {
@@ -24,6 +36,7 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
         });
         
         if (error) throw error;
+        toast.success('E-Mail erfolgreich gesendet');
       } catch (error) {
         console.error('Email error:', error);
         toast.error('E-Mail konnte nicht gesendet werden');
@@ -32,6 +45,24 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
     
     sendEmail();
   }, [formData]);
+
+  const downloadPDF = () => {
+    if (!pdfBlob) {
+      toast.error('PDF ist noch nicht bereit');
+      return;
+    }
+
+    const url = URL.createObjectURL(pdfBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Steuer-Selbstauskunft_${formData.firstName}_${formData.lastName}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast.success('PDF heruntergeladen');
+  };
 
   return (
     <div className="space-y-8 text-center">
@@ -78,10 +109,21 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
         </ul>
       </div>
 
-      <div className="pt-4">
+      <div className="space-y-3 pt-4">
+        <Button 
+          onClick={downloadPDF}
+          disabled={!pdfBlob}
+          size="lg" 
+          className="w-full rounded-full"
+          variant="default"
+        >
+          <Download className="mr-2 h-5 w-5" />
+          PDF herunterladen
+        </Button>
         <Button 
           onClick={() => navigate("/")}
           size="lg" 
+          variant="outline"
           className="w-full rounded-full"
         >
           Zurück zur Startseite

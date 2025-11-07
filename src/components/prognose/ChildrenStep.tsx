@@ -32,6 +32,30 @@ const ChildrenStep = ({ data, updateData, onNext, onBack }: ChildrenStepProps) =
     updateData({ children: newChildren });
   };
 
+  const handleNext = () => {
+    if (showChildren) {
+      // Validate that at least one child exists
+      if (data.children.length === 0) {
+        alert("Bitte fügen Sie mindestens ein Kind hinzu.");
+        return;
+      }
+      
+      // Validate that all children have required fields
+      for (let i = 0; i < data.children.length; i++) {
+        const child = data.children[i];
+        if (!child.name || child.name.trim() === "") {
+          alert(`Bitte geben Sie den Namen für Kind ${i + 1} an.`);
+          return;
+        }
+        if (!child.birthDate) {
+          alert(`Bitte geben Sie das Geburtsdatum für Kind ${i + 1} an.`);
+          return;
+        }
+      }
+    }
+    onNext();
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -157,7 +181,7 @@ const ChildrenStep = ({ data, updateData, onNext, onBack }: ChildrenStepProps) =
           Zurück
         </Button>
         <Button 
-          onClick={onNext}
+          onClick={handleNext}
           size="lg" 
           className="flex-1 rounded-full group"
         >
