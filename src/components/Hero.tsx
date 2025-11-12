@@ -27,7 +27,8 @@ const Hero = () => {
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-20">
         <div className="max-w-2xl">
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-normal text-[hsl(var(--glass-text))] mb-6 leading-tight">
-            Kostenlose Steuer-Prognose – schnell, transparent, unverbindlich.
+            Kostenlose Steuer-Prognose<br />
+            schnell, transparent, unverbindlich
           </h1>
           
           <p className="text-lg md:text-xl text-[hsl(var(--glass-text))]/90 mb-10 leading-relaxed max-w-xl">
