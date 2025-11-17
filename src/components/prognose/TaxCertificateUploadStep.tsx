@@ -12,35 +12,35 @@ interface TaxCertificateUploadStepProps {
 }
 
 const TaxCertificateUploadStep = ({ data, updateData, onNext, onBack }: TaxCertificateUploadStepProps) => {
-  const [dragActive, setDragActive] = useState(false);
+  const [dragActiveYear, setDragActiveYear] = useState<string | null>(null);
 
-  const handleDrag = (e: React.DragEvent) => {
+  const handleDrag = (e: React.DragEvent, year: string) => {
     e.preventDefault();
     e.stopPropagation();
     if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
+      setDragActiveYear(year);
     } else if (e.type === "dragleave") {
-      setDragActive(false);
+      setDragActiveYear(null);
     }
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent, year: string) => {
     e.preventDefault();
     e.stopPropagation();
-    setDragActive(false);
+    setDragActiveYear(null);
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFiles(e.dataTransfer.files);
+      handleFiles(e.dataTransfer.files, year);
     }
   };
 
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>, year: string) => {
     if (e.target.files) {
-      handleFiles(e.target.files);
+      handleFiles(e.target.files, year);
     }
   };
 
-  const handleFiles = (files: FileList) => {
+  const handleFiles = (files: FileList, year: string) => {
     const fileArray = Array.from(files);
     const validFiles = fileArray.filter(file => {
       if (file.size > 10 * 1024 * 1024) {
@@ -50,19 +50,41 @@ const TaxCertificateUploadStep = ({ data, updateData, onNext, onBack }: TaxCerti
       return true;
     });
 
-    const currentFiles = data.taxCertificateFiles || [];
-    updateData({ taxCertificateFiles: [...currentFiles, ...validFiles] });
+    const currentCertificates = data.taxCertificatesByYear || {};
+    const yearFiles = currentCertificates[year] || [];
+    updateData({ 
+      taxCertificatesByYear: {
+        ...currentCertificates,
+        [year]: [...yearFiles, ...validFiles]
+      }
+    });
   };
 
-  const removeFile = (index: number) => {
-    const currentFiles = data.taxCertificateFiles || [];
-    const newFiles = currentFiles.filter((_, i) => i !== index);
-    updateData({ taxCertificateFiles: newFiles });
+  const removeFile = (year: string, fileIndex: number) => {
+    const currentCertificates = data.taxCertificatesByYear || {};
+    const yearFiles = currentCertificates[year] || [];
+    const newYearFiles = yearFiles.filter((_, i) => i !== fileIndex);
+    
+    updateData({ 
+      taxCertificatesByYear: {
+        ...currentCertificates,
+        [year]: newYearFiles
+      }
+    });
   };
 
   const handleNext = () => {
-    if (!data.taxCertificateFiles || data.taxCertificateFiles.length === 0) {
-      alert("Bitte laden Sie mindestens einen Lohnsteuerbescheid hoch.");
+    // Check if all selected years have at least one file
+    const missingYears: string[] = [];
+    data.taxYears.forEach(year => {
+      const yearFiles = data.taxCertificatesByYear?.[year] || [];
+      if (yearFiles.length === 0) {
+        missingYears.push(year);
+      }
+    });
+
+    if (missingYears.length > 0) {
+      alert(`Bitte laden Sie mindestens einen Lohnsteuerbescheid für folgende Jahre hoch: ${missingYears.join(', ')}`);
       return;
     }
     onNext();
@@ -72,90 +94,98 @@ const TaxCertificateUploadStep = ({ data, updateData, onNext, onBack }: TaxCerti
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl md:text-3xl font-light text-[hsl(var(--glass-text))] mb-2">
-          Lohnsteuerbescheid hochladen
+          Lohnsteuerbescheide hochladen
         </h2>
         <p className="text-[hsl(var(--glass-text))]/70">
-          Bitte laden Sie Ihren Lohnsteuerbescheid hoch (Sie können mehrere Dateien für verschiedene Jahre hochladen).
+          Bitte laden Sie für jedes ausgewählte Jahr den entsprechenden Lohnsteuerbescheid hoch.
         </p>
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <Label className="text-[hsl(var(--glass-text))] mb-2 block">
-            Lohnsteuerbescheid *
-          </Label>
-          <div
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-              dragActive
-                ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/10"
-                : "border-white/20 hover:border-white/40"
-            }`}
-          >
-            <Upload className="mx-auto h-12 w-12 text-[hsl(var(--glass-text))]/50 mb-4" />
-            <p className="text-[hsl(var(--glass-text))] mb-2">
-              Dateien hierher ziehen oder klicken zum Auswählen
-            </p>
-            <p className="text-sm text-[hsl(var(--glass-text))]/60 mb-4">
-              PDF, JPG oder PNG (max. 10MB pro Datei)
-            </p>
-            <input
-              type="file"
-              multiple
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={handleFileInput}
-              className="hidden"
-              id="tax-certificate-upload"
-            />
-            <label htmlFor="tax-certificate-upload">
-              <Button
-                type="button"
-                variant="outline"
-                className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] hover:bg-white/20"
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById("tax-certificate-upload")?.click();
-                }}
-              >
-                Dateien auswählen
-              </Button>
-            </label>
-          </div>
-        </div>
+      <div className="space-y-6">
+        {data.taxYears.map((year) => {
+          const yearFiles = data.taxCertificatesByYear?.[year] || [];
+          const isDragActive = dragActiveYear === year;
 
-        {data.taxCertificateFiles && data.taxCertificateFiles.length > 0 && (
-          <div className="space-y-2">
-            <Label className="text-[hsl(var(--glass-text))]">Hochgeladene Dateien:</Label>
-            <div className="space-y-2">
-              {data.taxCertificateFiles.map((file, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10"
-                >
-                  <span className="text-sm text-[hsl(var(--glass-text))] truncate flex-1">
-                    {file.name}
-                  </span>
+          return (
+            <div key={year} className="space-y-3">
+              <Label className="text-[hsl(var(--glass-text))] text-lg font-medium">
+                Lohnsteuerbescheid {year} *
+              </Label>
+              
+              <div
+                onDragEnter={(e) => handleDrag(e, year)}
+                onDragLeave={(e) => handleDrag(e, year)}
+                onDragOver={(e) => handleDrag(e, year)}
+                onDrop={(e) => handleDrop(e, year)}
+                className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                  isDragActive
+                    ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/10"
+                    : "border-white/20 hover:border-white/40"
+                }`}
+              >
+                <Upload className="mx-auto h-10 w-10 text-[hsl(var(--glass-text))]/50 mb-3" />
+                <p className="text-[hsl(var(--glass-text))] mb-2">
+                  Dateien hierher ziehen oder klicken zum Auswählen
+                </p>
+                <p className="text-sm text-[hsl(var(--glass-text))]/60 mb-3">
+                  PDF, JPG oder PNG (max. 10MB pro Datei)
+                </p>
+                <input
+                  type="file"
+                  multiple
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={(e) => handleFileInput(e, year)}
+                  className="hidden"
+                  id={`tax-certificate-${year}`}
+                />
+                <label htmlFor={`tax-certificate-${year}`}>
                   <Button
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeFile(index)}
-                    className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                    variant="outline"
+                    className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] hover:bg-white/20"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById(`tax-certificate-${year}`)?.click();
+                    }}
                   >
-                    <X className="h-4 w-4" />
+                    Dateien auswählen
                   </Button>
+                </label>
+              </div>
+
+              {yearFiles.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-[hsl(var(--glass-text))] text-sm">Hochgeladene Dateien:</Label>
+                  <div className="space-y-2">
+                    {yearFiles.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10"
+                      >
+                        <span className="text-sm text-[hsl(var(--glass-text))] truncate flex-1">
+                          {file.name}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFile(year, index)}
+                          className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
+              )}
             </div>
-          </div>
-        )}
+          );
+        })}
 
         <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
           <p className="text-sm text-[hsl(var(--glass-text))]/80">
-            💡 Sie können mehrere Lohnsteuerbescheide für verschiedene Jahre hochladen. Dies hilft uns, eine genauere Prognose zu erstellen.
+            💡 Bitte laden Sie für jedes ausgewählte Jahr den entsprechenden Lohnsteuerbescheid hoch. Dies hilft uns, eine genauere Prognose zu erstellen.
           </p>
         </div>
       </div>
