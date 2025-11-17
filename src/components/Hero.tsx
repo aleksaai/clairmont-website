@@ -1,23 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import heroBg1 from "@/assets/hero-mountain-1.png";
-import heroBg2 from "@/assets/hero-mountain-2.png";
-import heroBg3 from "@/assets/hero-mountain-3.png";
-import heroBg4 from "@/assets/hero-mountain-4.png";
+import heroMountain from "@/assets/hero-mountain.png";
 
 const Hero = () => {
   const navigate = useNavigate();
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const backgroundImages = [heroBg1, heroBg2, heroBg3, heroBg4];
-  
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % backgroundImages.length);
-    }, 10000); // Change every 10 seconds
-    
-    return () => clearInterval(interval);
-  }, [backgroundImages.length]);
   
   const scrollToHowItWorks = () => {
     const element = document.getElementById('how-it-works');
@@ -28,17 +14,13 @@ const Hero = () => {
   
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Rotating Background Images */}
-      {backgroundImages.map((image, index) => (
-        <div
-          key={index}
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000"
-          style={{
-            backgroundImage: `url(${image})`,
-            opacity: currentImageIndex === index ? 1 : 0,
-          }}
-        />
-      ))}
+      {/* Background Image */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `url(${heroMountain})`,
+        }}
+      />
       
       {/* Dark Overlay */}
       <div className="absolute inset-0 bg-[hsl(var(--glass-bg))] backdrop-blur-sm" />
