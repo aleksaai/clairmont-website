@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
+import logo from "@/assets/logo.png";
 
 const Navigation = () => {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ const Navigation = () => {
     <nav className="fixed top-4 left-0 right-0 z-50 px-6">
       <div className="max-w-6xl mx-auto bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-white/10 rounded-2xl shadow-lg px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-primary"></div>
+          <img src={logo} alt="Clairmont Advisory Logo" className="h-8 w-8" />
           <span className="text-[hsl(var(--glass-text))] font-medium text-lg">Clairmont Advisory</span>
         </div>
         
