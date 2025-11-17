@@ -62,7 +62,7 @@ const Navigation = () => {
               <DropdownMenuItem onClick={() => navigate("/prognose")} className="cursor-pointer text-[hsl(var(--glass-text))]">
                 Privatkredit Selbstauskunft
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/prognose")} className="cursor-pointer text-[hsl(var(--glass-text))]">
+              <DropdownMenuItem onClick={() => navigate("/baufinanzierung-selbstauskunft")} className="cursor-pointer text-[hsl(var(--glass-text))]">
                 Baufinanzierung Selbstauskunft
               </DropdownMenuItem>
             </DropdownMenuContent>

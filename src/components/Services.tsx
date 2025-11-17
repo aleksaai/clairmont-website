@@ -23,7 +23,7 @@ const services = [
     icon: Home,
     title: "Baufinanzierung",
     description: "Immobilienfinanzierung, Refinanzierung und Ablösung bestehender Kredite.",
-    link: "/prognose",
+    link: "/baufinanzierung-selbstauskunft",
     cta: "Jetzt anfragen",
   },
   {
