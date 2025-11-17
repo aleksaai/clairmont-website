@@ -63,11 +63,11 @@ const StatCard = ({ icon, value, suffix = "", prefix = "", label, tooltip, durat
             <p className="text-muted-foreground text-sm md:text-base leading-relaxed max-w-[200px]">{label}</p>
             <Tooltip delayDuration={200}>
               <TooltipTrigger asChild>
-                <button className="text-muted-foreground hover:text-primary transition-colors z-[10000]">
+                <button className="text-muted-foreground hover:text-primary transition-colors">
                   <Info className="w-4 h-4" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent className="max-w-[280px] md:max-w-[320px] p-4 z-[10000]" side="top">
+              <TooltipContent className="max-w-[280px] md:max-w-[320px] p-4" side="top">
                 <p className="text-sm leading-relaxed">{tooltip}</p>
               </TooltipContent>
             </Tooltip>
