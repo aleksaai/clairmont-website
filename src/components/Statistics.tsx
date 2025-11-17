@@ -48,9 +48,8 @@ const StatCard = ({ icon, value, suffix = "", prefix = "", label, tooltip, durat
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       viewport={{ once: true }}
-      className="relative"
     >
-      <div className="relative p-10 rounded-3xl bg-gradient-to-br from-card to-card/50 backdrop-blur-sm border border-primary/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+      <div className="p-10 rounded-3xl bg-gradient-to-br from-card to-card/50 backdrop-blur-sm border border-primary/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
         <div className="flex flex-col items-center text-center gap-4">
           <div className="p-4 rounded-2xl bg-primary/5 text-primary">
             {icon}
@@ -62,13 +61,13 @@ const StatCard = ({ icon, value, suffix = "", prefix = "", label, tooltip, durat
           </div>
           <div className="flex items-center gap-2 justify-center">
             <p className="text-muted-foreground text-sm md:text-base leading-relaxed max-w-[200px]">{label}</p>
-            <Tooltip>
+            <Tooltip delayDuration={200}>
               <TooltipTrigger asChild>
-                <button className="text-muted-foreground hover:text-primary transition-colors">
+                <button className="text-muted-foreground hover:text-primary transition-colors z-[10000]">
                   <Info className="w-4 h-4" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent className="max-w-[280px] md:max-w-[320px] p-4" side="top">
+              <TooltipContent className="max-w-[280px] md:max-w-[320px] p-4 z-[10000]" side="top">
                 <p className="text-sm leading-relaxed">{tooltip}</p>
               </TooltipContent>
             </Tooltip>
