@@ -4,9 +4,7 @@ import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import HowItWorks from "@/components/HowItWorks";
 import WhyClairmont from "@/components/WhyClairmont";
-import CreditServices from "@/components/CreditServices";
-import RealEstateFinancing from "@/components/RealEstateFinancing";
-import InvestmentConsulting from "@/components/InvestmentConsulting";
+import Services from "@/components/Services";
 import Testimonials from "@/components/Testimonials";
 import Statistics from "@/components/Statistics";
 import FAQ from "@/components/FAQ";
@@ -33,9 +31,7 @@ const Index = () => {
       <Hero />
       <HowItWorks />
       <WhyClairmont />
-      <CreditServices />
-      <RealEstateFinancing />
-      <InvestmentConsulting />
+      <Services />
       <Testimonials />
       <Statistics />
       <FAQ />
