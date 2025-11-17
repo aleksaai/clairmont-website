@@ -35,9 +35,9 @@ const Footer = () => {
               Von Steuerprognosen bis Baufinanzierung - kompetent, sicher und unkompliziert.
             </p>
             <div className="space-y-3">
-              <a href="mailto:kolukisaerolemre@gmail.com" className="flex items-center gap-3 text-primary/70 hover:text-primary transition-colors text-sm font-light">
+              <a href="mailto:info@clairmont-advisory.com" className="flex items-center gap-3 text-primary/70 hover:text-primary transition-colors text-sm font-light">
                 <Mail className="h-4 w-4" />
-                kolukisaerolemre@gmail.com
+                info@clairmont-advisory.com
               </a>
               <a href="tel:+4917684569934" className="flex items-center gap-3 text-primary/70 hover:text-primary transition-colors text-sm font-light">
                 <Phone className="h-4 w-4" />

@@ -68,8 +68,8 @@ const Impressum = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4" />
-                  <a href="mailto:kolukisaerolemre@gmail.com" className="hover:text-primary transition-colors">
-                    kolukisaerolemre@gmail.com
+                  <a href="mailto:info@clairmont-advisory.com" className="hover:text-primary transition-colors">
+                    info@clairmont-advisory.com
                   </a>
                 </div>
               </div>
