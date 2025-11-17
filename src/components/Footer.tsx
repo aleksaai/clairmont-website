@@ -1,5 +1,6 @@
 import { Mail, Phone, MapPin } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import footerIcon from "@/assets/footer-icon.png";
 
 const Footer = () => {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ const Footer = () => {
           {/* Company Info */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-2 h-2 rounded-full bg-primary"></div>
+              <img src={footerIcon} alt="Clairmont Advisory Icon" className="w-8 h-8 object-contain" />
               <span className="text-primary font-medium text-xl">Clairmont Advisory</span>
             </div>
             <p className="text-primary/70 text-sm leading-relaxed font-light mb-6">
