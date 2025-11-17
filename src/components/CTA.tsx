@@ -57,7 +57,7 @@ const CTA = () => {
               <Button 
                 size="lg" 
                 className="rounded-full px-8 text-base md:text-lg h-14 shadow-lg hover:shadow-xl transition-shadow group"
-                onClick={() => navigate("/prognose")}
+                onClick={() => navigate("/kontakt")}
               >
                 Jetzt Kontakt aufnehmen
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
