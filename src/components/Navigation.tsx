@@ -72,7 +72,7 @@ const Navigation = () => {
           </button>
         </div>
         
-        <Button variant="glass" className="rounded-full px-5 py-2 text-sm" onClick={() => scrollToSection('cta')}>
+        <Button variant="glass" className="rounded-full px-5 py-2 text-sm" onClick={() => navigate("/kontakt")}>
           Kontakt
         </Button>
       </div>
