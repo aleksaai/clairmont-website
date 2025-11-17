@@ -114,7 +114,7 @@ const Testimonials = () => {
                 </div>
               </div>
               <p className="text-sm text-muted-foreground">
-                {totalReviews} Google Bewertungen
+                Google Bewertungen
               </p>
             </div>
           </TimelineContent>
