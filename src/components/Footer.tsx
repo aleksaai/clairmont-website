@@ -23,7 +23,7 @@ const Footer = () => {
       <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
       
       <div className="relative z-10 max-w-6xl mx-auto">
-        <div className="grid md:grid-cols-4 gap-12 mb-12">
+        <div className="grid md:grid-cols-5 gap-12 mb-12">
           {/* Company Info */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
@@ -73,6 +73,28 @@ const Footer = () => {
                 <button onClick={() => scrollToSection('faq')} className="text-primary/70 hover:text-primary transition-colors text-sm font-light">
                   FAQ
                 </button>
+              </li>
+            </ul>
+          </div>
+          
+          {/* Formulare */}
+          <div>
+            <h3 className="text-primary font-medium mb-4">Formulare</h3>
+            <ul className="space-y-3">
+              <li>
+                <Link to="/prognose" className="text-primary/70 hover:text-primary transition-colors text-sm font-light">
+                  Prognose
+                </Link>
+              </li>
+              <li>
+                <Link to="/selbstauskunft" className="text-primary/70 hover:text-primary transition-colors text-sm font-light">
+                  Privatkredit Selbstauskunft
+                </Link>
+              </li>
+              <li>
+                <Link to="/baufinanzierung-selbstauskunft" className="text-primary/70 hover:text-primary transition-colors text-sm font-light">
+                  Baufinanzierung Selbstauskunft
+                </Link>
               </li>
             </ul>
           </div>
