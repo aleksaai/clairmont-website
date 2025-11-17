@@ -31,8 +31,8 @@ const Footer = () => {
               <span className="text-primary font-medium text-xl">Clairmont Advisory</span>
             </div>
             <p className="text-primary/70 text-sm leading-relaxed font-light mb-6">
-              Ihre Experten für Steuererstattungen. 
-              Wir maximieren Ihre Rückzahlung schnell, sicher und unkompliziert.
+              Ihr Partner für Finanzdienstleistungen. 
+              Von Steuerprognosen bis Baufinanzierung - kompetent, sicher und unkompliziert.
             </p>
             <div className="space-y-3">
               <a href="mailto:kolukisaerolemre@gmail.com" className="flex items-center gap-3 text-primary/70 hover:text-primary transition-colors text-sm font-light">
