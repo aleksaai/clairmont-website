@@ -1,4 +1,6 @@
 import { Home, Calculator, FileText, Headphones } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const RealEstateFinancing = () => {
   const features = [
@@ -87,7 +89,7 @@ const RealEstateFinancing = () => {
             <h3 className="text-2xl md:text-3xl font-light text-primary mb-6">
               Warum Baufinanzierung mit uns?
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-4 mb-8">
               <div className="flex items-start gap-3">
                 <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
                 <p className="text-lg text-primary/70 font-light">
@@ -113,6 +115,11 @@ const RealEstateFinancing = () => {
                 </p>
               </div>
             </div>
+            <Link to="/prognose">
+              <Button size="lg" className="w-full text-lg py-6 rounded-full shadow-lg hover:shadow-xl transition-shadow">
+                Zur Selbstauskunft
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

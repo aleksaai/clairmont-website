@@ -1,4 +1,6 @@
 import { Building2, TrendingUp, Shield, CheckCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const CreditServices = () => {
   const benefits = [
@@ -68,13 +70,20 @@ const CreditServices = () => {
           <h3 className="text-3xl md:text-4xl font-light text-primary mb-8 text-center">
             Ihre Vorteile
           </h3>
-          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-10">
             {benefits.map((benefit, index) => (
               <div key={index} className="flex items-start gap-4">
                 <CheckCircle className="w-6 h-6 text-primary flex-shrink-0 mt-1" />
                 <p className="text-lg text-primary/70 font-light">{benefit}</p>
               </div>
             ))}
+          </div>
+          <div className="text-center">
+            <Link to="/prognose">
+              <Button size="lg" className="text-lg px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-shadow">
+                Zur Selbstauskunft
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
