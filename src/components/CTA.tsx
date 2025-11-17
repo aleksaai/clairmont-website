@@ -7,7 +7,7 @@ const CTA = () => {
   const navigate = useNavigate();
   
   return (
-    <section className="py-32 px-6">
+    <section id="cta" className="py-32 px-6">
       <div className="max-w-5xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
