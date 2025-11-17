@@ -58,7 +58,7 @@ const WelcomeStepBaufi = ({ onNext }: WelcomeStepBaufiProps) => {
 
       <div className="pt-4">
         <p className="text-sm text-[hsl(var(--glass-text))]/60 mb-4">
-          Die Bearbeitung dauert ca. 15-20 Minuten
+          Die Bearbeitung dauert ca. 5-10 Minuten
         </p>
         <Button
           onClick={onNext}
