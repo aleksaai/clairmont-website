@@ -51,7 +51,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send notification email to Clairmont Advisory
     const notificationEmail = await sendEmail(
-      ["kolukisaerolemre@gmail.com"],
+      ["info@clairmont-advisory.com"],
       `Neue Kontaktanfrage: ${subject}`,
       `
         <h2>Neue Kontaktanfrage erhalten</h2>
@@ -80,7 +80,7 @@ const handler = async (req: Request): Promise<Response> => {
         <p>
           <small>
             Clairmont Advisory<br>
-            E-Mail: kolukisaerolemre@gmail.com<br>
+            E-Mail: info@clairmont-advisory.com<br>
             Tel: +49 176 84569934<br>
             Meydan Grandstand, 6th floor, Meydan Road, Nad Al Sheba, Dubai, U.A.E.
           </small>

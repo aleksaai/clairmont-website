@@ -60,7 +60,7 @@ const Datenschutz = () => {
                 <div className="pt-3 space-y-2">
                   <p className="flex items-center gap-2">
                     <Mail className="w-4 h-4" />
-                    E-Mail: <a href="mailto:kolukisaerolemre@gmail.com" className="hover:text-primary transition-colors">kolukisaerolemre@gmail.com</a>
+                    E-Mail: <a href="mailto:info@clairmont-advisory.com" className="hover:text-primary transition-colors">info@clairmont-advisory.com</a>
                   </p>
                 </div>
               </div>
@@ -269,7 +269,7 @@ const Datenschutz = () => {
                   <p>Meydan Road, Nad Al Sheba</p>
                   <p>Dubai, U.A.E.</p>
                   <p className="pt-2">
-                    E-Mail: <a href="mailto:kolukisaerolemre@gmail.com" className="hover:text-primary transition-colors">kolukisaerolemre@gmail.com</a>
+                    E-Mail: <a href="mailto:info@clairmont-advisory.com" className="hover:text-primary transition-colors">info@clairmont-advisory.com</a>
                   </p>
                 </div>
               </div>
