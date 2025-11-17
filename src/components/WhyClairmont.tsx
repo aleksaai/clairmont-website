@@ -62,7 +62,7 @@ const WhyClairmont = () => {
             <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background/80 to-transparent z-20" />
           </motion.div>
 
-          <div className="space-y-8 lg:pt-8">
+          <div className="space-y-6 lg:pt-8">
             {benefits.map((benefit, index) => (
               <motion.div
                 key={index}
@@ -72,12 +72,11 @@ const WhyClairmont = () => {
                 viewport={{ once: true }}
                 className="group"
               >
-                <div className="relative pl-6 border-l-2 border-primary/20 hover:border-primary transition-colors duration-300">
-                  <div className="absolute -left-[9px] top-2 w-4 h-4 rounded-full bg-primary/20 group-hover:bg-primary transition-colors duration-300" />
-                  <h3 className="text-xl font-medium text-primary mb-2 leading-tight">
+                <div className="relative">
+                  <h3 className="text-xl font-medium text-primary mb-2 leading-tight group-hover:text-primary/80 transition-colors duration-300">
                     {benefit.title}
                   </h3>
-                  <p className="text-muted-foreground leading-relaxed">
+                  <p className="text-muted-foreground leading-relaxed text-base">
                     {benefit.description}
                   </p>
                 </div>
@@ -89,7 +88,7 @@ const WhyClairmont = () => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.9 }}
               viewport={{ once: true }}
-              className="pt-6 pl-6 border-l-2 border-primary/10"
+              className="pt-4 mt-4 border-t border-primary/10"
             >
               <p className="text-primary/70 leading-relaxed italic">
                 Egal ob Privathaushalt, Familie oder Unternehmen – wir beraten alle Kundengruppen individuell und auf Augenhöhe. Vertrauen Sie unserer Expertise und erreichen Sie Ihr Ziel mit maximaler Planungssicherheit.
