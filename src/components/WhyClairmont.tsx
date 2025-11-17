@@ -1,38 +1,35 @@
 import { motion } from "motion/react";
-import { Clock, Target, Award, Shield, Globe } from "lucide-react";
+import officeImage from "@/assets/clairmont-office.png";
 
 const WhyClairmont = () => {
-  const features = [
+  const benefits = [
     {
-      icon: <Clock className="w-6 h-6" />,
       title: "Schnelle, unkomplizierte Beratung",
-      description: "Wir wissen: Zeit ist entscheidend. Darum erhalten Sie bei uns direkte Antworten und verständliche Lösungen – ohne Umwege, ohne Fachjargon."
+      description: "Zeit ist entscheidend. Sie erhalten direkte Antworten und verständliche Lösungen – ohne Umwege, ohne Fachjargon."
     },
     {
-      icon: <Award className="w-6 h-6" />,
       title: "Expertise trifft auf Präzision",
-      description: "Unsere Beraterinnen und Berater vereinen jahrzehntelange Erfahrung mit datenbasierten Entscheidungsprozessen. So entstehen Finanzierungslösungen, die wirklich zu Ihnen passen."
+      description: "Jahrzehntelange Erfahrung vereint mit datenbasierten Entscheidungsprozessen für Finanzierungslösungen, die wirklich passen."
     },
     {
-      icon: <Target className="w-6 h-6" />,
       title: "Maßgeschneiderte Konzepte",
-      description: "Jedes Vorhaben ist einzigartig. Mithilfe intelligenter Analysen und unseres internationalen Partnernetzwerks entwickeln wir Strategien, die Ihre Ziele optimal unterstützen."
+      description: "Intelligente Analysen und internationales Partnernetzwerk für Strategien, die Ihre Ziele optimal unterstützen."
     },
     {
-      icon: <Shield className="w-6 h-6" />,
       title: "Transparenz auf jedem Schritt",
-      description: "Wir schaffen Klarheit – mit nachvollziehbaren Berechnungen, klaren Konditionen und vollständiger Kostentransparenz. So behalten Sie jederzeit die Kontrolle."
+      description: "Nachvollziehbare Berechnungen, klare Konditionen und vollständige Kostentransparenz. Sie behalten die Kontrolle."
     },
     {
-      icon: <Globe className="w-6 h-6" />,
       title: "Internationales Netzwerk",
-      description: "Unsere internationalen Kontakte und digitalen Systeme ermöglichen einen reibungslosen Ablauf, auch bei komplexen oder grenzüberschreitenden Projekten."
+      description: "Digitale Systeme und weltweite Kontakte für reibungslose Abläufe bei komplexen oder grenzüberschreitenden Projekten."
     }
   ];
 
   return (
     <section id="why-clairmont" className="py-24 px-6 relative overflow-hidden">
-      <div className="max-w-7xl mx-auto">
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-primary/[0.02] to-background pointer-events-none" />
+      
+      <div className="max-w-7xl mx-auto relative">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -43,52 +40,63 @@ const WhyClairmont = () => {
           <div className="inline-flex items-center justify-center px-4 py-1.5 border border-primary/20 rounded-full mb-6">
             <span className="text-sm font-medium text-primary">Ihre Vorteile</span>
           </div>
-          <h2 className="text-4xl md:text-5xl font-light text-primary mb-4">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-light text-primary mb-4">
             Warum Clairmont Advisory?
           </h2>
-          <p className="text-lg text-primary/70 max-w-2xl mx-auto">
-            Egal ob Privathaushalt, Familie oder Unternehmen – wir beraten alle Kundengruppen individuell und auf Augenhöhe.
-          </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature, index) => (
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="relative h-[500px] lg:h-[600px] rounded-3xl overflow-hidden group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent z-10 group-hover:opacity-0 transition-opacity duration-500" />
+            <img 
+              src={officeImage} 
+              alt="Clairmont Advisory Office" 
+              className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+            />
+            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background/80 to-transparent z-20" />
+          </motion.div>
+
+          <div className="space-y-8 lg:pt-8">
+            {benefits.map((benefit, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
+                viewport={{ once: true }}
+                className="group"
+              >
+                <div className="relative pl-6 border-l-2 border-primary/20 hover:border-primary transition-colors duration-300">
+                  <div className="absolute -left-[9px] top-2 w-4 h-4 rounded-full bg-primary/20 group-hover:bg-primary transition-colors duration-300" />
+                  <h3 className="text-xl font-medium text-primary mb-2 leading-tight">
+                    {benefit.title}
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {benefit.description}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+
             <motion.div
-              key={index}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
+              transition={{ duration: 0.8, delay: 0.9 }}
               viewport={{ once: true }}
-              className="group"
+              className="pt-6 pl-6 border-l-2 border-primary/10"
             >
-              <div className="h-full p-8 rounded-2xl bg-gradient-to-br from-card to-card/50 backdrop-blur-sm border border-primary/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgb(0,0,0,0.08)] transition-all duration-300">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 p-3 rounded-xl bg-primary/5 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
-                    {feature.icon}
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-medium text-primary mb-2 leading-tight">
-                      {feature.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {feature.description}
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <p className="text-primary/70 leading-relaxed italic">
+                Egal ob Privathaushalt, Familie oder Unternehmen – wir beraten alle Kundengruppen individuell und auf Augenhöhe. Vertrauen Sie unserer Expertise und erreichen Sie Ihr Ziel mit maximaler Planungssicherheit.
+              </p>
             </motion.div>
-          ))}
+          </div>
         </div>
-
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
-          viewport={{ once: true }}
-          className="text-center text-primary/70 max-w-3xl mx-auto mt-12 leading-relaxed"
-        >
-          Vertrauen Sie unserer Expertise und erreichen Sie Ihr Ziel mit maximaler Planungssicherheit. Nehmen Sie Kontakt auf – jetzt unverbindlich beraten lassen.
-        </motion.p>
       </div>
     </section>
   );
