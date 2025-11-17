@@ -91,7 +91,7 @@ const Testimonials = () => {
             customVariants={revealVariants} 
             timelineRef={testimonialRef}
           >
-            Vertrauen Sie auf die Erfahrung von über 100 zufriedenen Kunden
+            Vertrauen Sie auf die Erfahrung von zufriedenen Kunden!
           </TimelineContent>
           
           {/* Google Rating Display */}
