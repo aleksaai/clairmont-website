@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import heroBg1 from "@/assets/hero-bg-1.png";
-import heroBg2 from "@/assets/hero-bg-2.png";
-import heroBg3 from "@/assets/hero-bg-3.png";
-import heroBg4 from "@/assets/hero-bg-4.png";
+import heroBg1 from "@/assets/hero-mountain-1.png";
+import heroBg2 from "@/assets/hero-mountain-2.png";
+import heroBg3 from "@/assets/hero-mountain-3.png";
+import heroBg4 from "@/assets/hero-mountain-4.png";
 
 const Hero = () => {
   const navigate = useNavigate();
