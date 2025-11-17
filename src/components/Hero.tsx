@@ -29,12 +29,16 @@ const Hero = () => {
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-20">
         <div className="max-w-2xl">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-normal text-[hsl(var(--glass-text))] mb-6 leading-tight">
-            Kostenlose Steuer-Prognose<br />
-            schnell, transparent, unverbindlich
+            Willkommen bei Clairmont Advisory & Partners<br />
+            – die Zukunft der Finanzberatung.
           </h1>
           
-          <p className="text-lg md:text-xl text-[hsl(var(--glass-text))]/90 mb-10 leading-relaxed max-w-xl">
-            Erfahren Sie kostenlos, wie viel Steuern Sie zurückbekommen können. Bis zu 5.000€ pro Jahr – einfach, schnell und ohne Risiko.
+          <p className="text-lg md:text-xl text-[hsl(var(--glass-text))]/90 mb-6 leading-relaxed max-w-xl">
+            Erfahrung trifft auf moderne Technologie – für klare, effiziente und zukunftssichere Finanzen. Persönlich. Präzise. Intelligent.
+          </p>
+          
+          <p className="text-xl md:text-2xl font-medium text-[hsl(var(--glass-text))] mb-10">
+            Steuern. Kredite. Vermögen
           </p>
           
           <div className="flex flex-wrap gap-4">
