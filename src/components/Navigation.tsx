@@ -1,5 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 import logo from "@/assets/logo.png";
 
 const Navigation = () => {
@@ -40,16 +47,33 @@ const Navigation = () => {
           <button onClick={() => scrollToSection('why-clairmont')} className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors text-sm">
             Über uns
           </button>
-          <button onClick={() => scrollToSection('statistics')} className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors text-sm">
+          <button onClick={() => scrollToSection('services')} className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors text-sm">
             Leistungen
           </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors text-sm flex items-center gap-1">
+              Formulare
+              <ChevronDown className="w-4 h-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-white/10">
+              <DropdownMenuItem onClick={() => navigate("/prognose")} className="cursor-pointer text-[hsl(var(--glass-text))]">
+                Kostenlose Prognose
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/prognose")} className="cursor-pointer text-[hsl(var(--glass-text))]">
+                Privatkredit Selbstauskunft
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/prognose")} className="cursor-pointer text-[hsl(var(--glass-text))]">
+                Baufinanzierung Selbstauskunft
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <button onClick={() => scrollToSection('faq')} className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors text-sm">
             FAQ
           </button>
         </div>
         
-        <Button variant="glass" className="rounded-full px-5 py-2 text-sm" onClick={() => navigate("/prognose")}>
-          Kostenlose Prognose
+        <Button variant="glass" className="rounded-full px-5 py-2 text-sm" onClick={() => scrollToSection('cta')}>
+          Kontakt
         </Button>
       </div>
     </nav>

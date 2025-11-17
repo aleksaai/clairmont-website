@@ -10,18 +10,21 @@ const services = [
     title: "Steuerberatung",
     description: "Lohnsteuerjahresausgleich, Steuerprognose und Optimierung Ihrer Steuererklärung.",
     link: "/prognose",
+    cta: "Kostenlose Steuerprognose",
   },
   {
     icon: CreditCard,
     title: "Privatkredite",
     description: "Kreditberatung, Selbstauskunft und Vermittlung über starke Partner.",
     link: "/prognose",
+    cta: "Jetzt anfragen",
   },
   {
     icon: Home,
     title: "Baufinanzierung",
     description: "Immobilienfinanzierung, Refinanzierung und Ablösung bestehender Kredite.",
     link: "/prognose",
+    cta: "Jetzt anfragen",
   },
   {
     icon: TrendingUp,
@@ -83,7 +86,7 @@ const Services = () => {
                 </CardHeader>
                 <CardContent>
                   <Button asChild variant="outline" className="w-full">
-                    <Link to={service.link}>Mehr erfahren</Link>
+                    <Link to={service.link}>{service.cta || "Mehr erfahren"}</Link>
                   </Button>
                 </CardContent>
               </Card>
