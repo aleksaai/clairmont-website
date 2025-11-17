@@ -16,7 +16,7 @@ const services = [
     icon: CreditCard,
     title: "Privatkredite",
     description: "Kreditberatung, Selbstauskunft und Vermittlung über starke Partner.",
-    link: "/prognose",
+    link: "/selbstauskunft",
     cta: "Jetzt anfragen",
   },
   {

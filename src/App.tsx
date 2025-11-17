@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import Index from "./pages/Index";
 import Prognose from "./pages/Prognose";
 import CryptoUpload from "./pages/CryptoUpload";
+import Selbstauskunft from "./pages/Selbstauskunft";
 import Kontakt from "./pages/Kontakt";
 import Impressum from "./pages/Impressum";
 import Datenschutz from "./pages/Datenschutz";
@@ -33,9 +34,10 @@ const App = () => (
         <ScrollToTop />
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/prognose" element={<Prognose />} />
-          <Route path="/crypto-upload" element={<CryptoUpload />} />
-          <Route path="/kontakt" element={<Kontakt />} />
+        <Route path="/prognose" element={<Prognose />} />
+        <Route path="/crypto-upload" element={<CryptoUpload />} />
+        <Route path="/kontakt" element={<Kontakt />} />
+        <Route path="/selbstauskunft" element={<Selbstauskunft />} />
           <Route path="/impressum" element={<Impressum />} />
           <Route path="/datenschutz" element={<Datenschutz />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
