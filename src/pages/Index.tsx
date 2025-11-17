@@ -6,6 +6,7 @@ import HowItWorks from "@/components/HowItWorks";
 import WhyClairmont from "@/components/WhyClairmont";
 import CreditServices from "@/components/CreditServices";
 import RealEstateFinancing from "@/components/RealEstateFinancing";
+import InvestmentConsulting from "@/components/InvestmentConsulting";
 import Testimonials from "@/components/Testimonials";
 import Statistics from "@/components/Statistics";
 import FAQ from "@/components/FAQ";
@@ -34,6 +35,7 @@ const Index = () => {
       <WhyClairmont />
       <CreditServices />
       <RealEstateFinancing />
+      <InvestmentConsulting />
       <Testimonials />
       <Statistics />
       <FAQ />
