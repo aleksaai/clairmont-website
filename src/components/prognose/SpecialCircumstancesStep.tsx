@@ -17,6 +17,19 @@ const SpecialCircumstancesStep = ({ data, updateData, onNext, onBack }: SpecialC
   const [showDisabilityUpload, setShowDisabilityUpload] = useState(data.hasDisability);
   const [showAlimonyUpload, setShowAlimonyUpload] = useState(data.paysAlimony);
 
+  const handleNext = () => {
+    // Validate that proof is uploaded if disability or alimony is selected
+    if (data.hasDisability && !data.disabilityProof) {
+      alert("Bitte laden Sie einen Nachweis für Ihre Behinderung hoch.");
+      return;
+    }
+    if (data.paysAlimony && !data.alimonyProof) {
+      alert("Bitte laden Sie einen Nachweis für Ihre Unterhaltszahlungen hoch.");
+      return;
+    }
+    onNext();
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -135,7 +148,7 @@ const SpecialCircumstancesStep = ({ data, updateData, onNext, onBack }: SpecialC
           Zurück
         </Button>
         <Button 
-          onClick={onNext}
+          onClick={handleNext}
           size="lg" 
           className="flex-1 rounded-full group"
         >
