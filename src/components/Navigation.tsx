@@ -57,9 +57,9 @@ const Navigation = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-white/10">
               <DropdownMenuItem onClick={() => navigate("/prognose")} className="cursor-pointer text-[hsl(var(--glass-text))]">
-                Kostenlose Prognose
+                Kostenlose Steuerprognose
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/prognose")} className="cursor-pointer text-[hsl(var(--glass-text))]">
+              <DropdownMenuItem onClick={() => navigate("/selbstauskunft")} className="cursor-pointer text-[hsl(var(--glass-text))]">
                 Privatkredit Selbstauskunft
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/baufinanzierung-selbstauskunft")} className="cursor-pointer text-[hsl(var(--glass-text))]">

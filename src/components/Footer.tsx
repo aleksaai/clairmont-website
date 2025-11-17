@@ -83,7 +83,7 @@ const Footer = () => {
             <ul className="space-y-3">
               <li>
                 <Link to="/prognose" className="text-primary/70 hover:text-primary transition-colors text-sm font-light">
-                  Prognose
+                  Steuerprognose
                 </Link>
               </li>
               <li>
