@@ -18,6 +18,14 @@ const BankDetailsStep = ({ data, updateData, onNext, onBack }: BankDetailsStepPr
       alert("Bitte geben Sie Ihre IBAN ein.");
       return;
     }
+    if (!data.confirmEmail) {
+      alert("Bitte bestätigen Sie Ihre E-Mail-Adresse.");
+      return;
+    }
+    if (data.confirmEmail !== data.email) {
+      alert("Die eingegebene E-Mail-Adresse stimmt nicht mit Ihrer ursprünglichen E-Mail überein.");
+      return;
+    }
     if (!data.confirmCorrectness || !data.acceptTerms || !data.acceptPrivacy) {
       alert("Bitte bestätigen Sie alle erforderlichen Felder.");
       return;
@@ -48,6 +56,23 @@ const BankDetailsStep = ({ data, updateData, onNext, onBack }: BankDetailsStepPr
             className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
             placeholder="DE89 3704 0044 0532 0130 00"
           />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="confirmEmail" className="text-[hsl(var(--glass-text))]">
+            E-Mail-Adresse bestätigen *
+          </Label>
+          <Input
+            id="confirmEmail"
+            type="email"
+            value={data.confirmEmail || ""}
+            onChange={(e) => updateData({ confirmEmail: e.target.value })}
+            className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
+            placeholder="Ihre E-Mail-Adresse zur Bestätigung"
+          />
+          <p className="text-xs text-[hsl(var(--glass-text))]/60">
+            Bitte geben Sie die gleiche E-Mail-Adresse ein wie im ersten Schritt.
+          </p>
         </div>
 
         <div className="space-y-4 pt-4">

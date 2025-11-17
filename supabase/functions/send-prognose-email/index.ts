@@ -109,6 +109,7 @@ const handler = async (req: Request): Promise<Response> => {
               <li>Kaufpreis: ${prop.purchasePrice || '0'} €</li>
               <li>Kaufdatum: ${prop.purchaseDate || 'Nicht angegeben'}</li>
               <li>Mieteinnahmen: ${prop.rent || '0'} €</li>
+              ${prop.otherCostsDescription ? `<li>Weitere Kosten: ${prop.otherCostsDescription} (${prop.otherCostsAmount || '0'} €)</li>` : ''}
             </ul>
           `).join('')
         : ''}
@@ -118,13 +119,17 @@ const handler = async (req: Request): Promise<Response> => {
         <p><strong>Unterhaltszahlungen:</strong> ${formData.paysAlimony ? 'Ja' : 'Nein'}</p>
         
         <h2>Hochgeladene Dokumente</h2>
+        <p><strong>Lohnsteuerbescheid(e):</strong> ${formData.taxCertificateFiles?.length || 0} Datei(en)</p>
         <p><strong>Lohnsteuerbescheinigung:</strong> ${formData.documents?.taxCertificate?.length || 0} Datei(en)</p>
         <p><strong>Personalausweis:</strong> ${formData.documents?.idCard?.length || 0} Datei(en)</p>
         ${formData.hasDisability ? `<p><strong>Behindertenausweis:</strong> ${formData.documents?.disabilityCertificate?.length || 0} Datei(en)</p>` : ''}
+        ${formData.propertyDocuments?.length ? `<p><strong>Immobilien-Unterlagen:</strong> ${formData.propertyDocuments.length} Datei(en)</p>` : ''}
+        ${formData.additionalDocuments?.length ? `<p><strong>Weitere Unterlagen:</strong> ${formData.additionalDocuments.length} Datei(en)</p>` : ''}
         ${formData.documents?.otherDocuments?.length ? `<p><strong>Sonstige Belege:</strong> ${formData.documents.otherDocuments.length} Datei(en)</p>` : ''}
         
         <h2>Bankverbindung</h2>
         <p><strong>IBAN:</strong> ${formData.iban || 'Nicht angegeben'}</p>
+        <p><strong>E-Mail (bestätigt):</strong> ${formData.confirmEmail || formData.email || 'Nicht angegeben'}</p>
         ${formData.partnerCode ? `<p><strong>Partnercode:</strong> ${formData.partnerCode}</p>` : ''}
         
         <p style="margin-top: 30px; color: #666;">

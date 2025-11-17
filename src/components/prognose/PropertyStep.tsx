@@ -47,6 +47,8 @@ const PropertyStep = ({ data, updateData, onNext, onBack }: PropertyStepProps) =
         interestExpense: "",
         notaryCosts: "",
         propertyTax: "",
+        otherCostsDescription: "",
+        otherCostsAmount: "",
       },
     ];
     updateData({ properties: newProperties });
@@ -240,6 +242,32 @@ const PropertyStep = ({ data, updateData, onNext, onBack }: PropertyStepProps) =
                         className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))]"
                       />
                     </div>
+                  </div>
+
+                  <div className="space-y-2 pt-2">
+                    <Label className="text-[hsl(var(--glass-text))] text-sm">
+                      Weitere Kosten (optional)
+                    </Label>
+                    <Input
+                      type="text"
+                      value={property.otherCostsDescription || ""}
+                      onChange={(e) => updateProperty(index, "otherCostsDescription", e.target.value)}
+                      placeholder="Beschreibung (z.B. Reparaturkosten, Versicherung)"
+                      className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[hsl(var(--glass-text))] text-sm">
+                      Betrag weitere Kosten (€, optional)
+                    </Label>
+                    <Input
+                      type="number"
+                      value={property.otherCostsAmount || ""}
+                      onChange={(e) => updateProperty(index, "otherCostsAmount", e.target.value)}
+                      placeholder="z.B. 5000"
+                      className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
+                    />
                   </div>
                 </div>
               </div>

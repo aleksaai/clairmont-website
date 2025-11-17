@@ -101,7 +101,7 @@ const IncomeStep = ({ data, updateData, onNext, onBack }: IncomeStepProps) => {
 
         <div className="space-y-3">
           <Label className="text-[hsl(var(--glass-text))]">
-            Weitere Einkünfte aus Crypto, Aktien oder Trading?
+            Haben Sie weitere Einkünfte? (z.B. Kryptowährungen, Aktien, Trading, Vermietung, etc.)
           </Label>
           <RadioGroup
             value={showCryptoInfo ? "ja" : "nein"}
