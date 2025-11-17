@@ -79,19 +79,15 @@ const Kontakt = () => {
     <div className="min-h-screen relative overflow-hidden">
       {/* Background Image */}
       <div 
-        className="fixed inset-0 z-0"
-        style={{
-          backgroundImage: `url(${officeBackground})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent" />
-      </div>
-
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${officeBackground})` }}
+      />
+      
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-[hsl(var(--glass-bg))] backdrop-blur-sm" />
+      
       {/* Content */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-6">
+      <div className="relative z-10 min-h-screen flex items-center justify-center px-6 py-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -99,14 +95,14 @@ const Kontakt = () => {
           className="w-full max-w-2xl"
         >
           {/* Glass Container */}
-          <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 md:p-12 border border-white/20">
+          <div className="bg-white/10 backdrop-blur-2xl rounded-[2.5rem] border border-white/20 p-8 md:p-12 shadow-[0_20px_70px_rgba(0,0,0,0.3)]">
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => navigate("/")}
-                className="text-primary hover:bg-primary/10"
+                className="text-[hsl(var(--glass-text))] hover:bg-white/10"
               >
                 <Home className="h-5 w-5" />
               </Button>
@@ -114,10 +110,10 @@ const Kontakt = () => {
 
             {/* Title */}
             <div className="text-center mb-10">
-              <h1 className="text-4xl md:text-5xl font-light text-primary mb-4">
+              <h1 className="text-4xl md:text-5xl font-light text-[hsl(var(--glass-text))] mb-4">
                 Kontakt aufnehmen
               </h1>
-              <p className="text-lg text-primary/70 font-light">
+              <p className="text-lg text-[hsl(var(--glass-text))]/80 font-light">
                 Wir freuen uns auf Ihre Nachricht und melden uns schnellstmöglich bei Ihnen.
               </p>
             </div>
@@ -127,32 +123,32 @@ const Kontakt = () => {
               {/* Name Row */}
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="firstName" className="text-primary font-light">
+                  <Label htmlFor="firstName" className="text-[hsl(var(--glass-text))] font-light">
                     Vorname *
                   </Label>
                   <Input
                     id="firstName"
                     {...register("firstName")}
-                    className="mt-2 bg-white/50 border-primary/20 focus:border-primary"
+                    className="mt-2 bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50 focus:bg-white/20 focus:border-white/40"
                     disabled={isSubmitting}
                   />
                   {errors.firstName && (
-                    <p className="text-red-500 text-sm mt-1">{errors.firstName.message}</p>
+                    <p className="text-red-300 text-sm mt-1">{errors.firstName.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="lastName" className="text-primary font-light">
+                  <Label htmlFor="lastName" className="text-[hsl(var(--glass-text))] font-light">
                     Nachname *
                   </Label>
                   <Input
                     id="lastName"
                     {...register("lastName")}
-                    className="mt-2 bg-white/50 border-primary/20 focus:border-primary"
+                    className="mt-2 bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50 focus:bg-white/20 focus:border-white/40"
                     disabled={isSubmitting}
                   />
                   {errors.lastName && (
-                    <p className="text-red-500 text-sm mt-1">{errors.lastName.message}</p>
+                    <p className="text-red-300 text-sm mt-1">{errors.lastName.message}</p>
                   )}
                 </div>
               </div>
@@ -160,58 +156,58 @@ const Kontakt = () => {
               {/* Email & Phone Row */}
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="email" className="text-primary font-light">
+                  <Label htmlFor="email" className="text-[hsl(var(--glass-text))] font-light">
                     E-Mail *
                   </Label>
                   <Input
                     id="email"
                     type="email"
                     {...register("email")}
-                    className="mt-2 bg-white/50 border-primary/20 focus:border-primary"
+                    className="mt-2 bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50 focus:bg-white/20 focus:border-white/40"
                     disabled={isSubmitting}
                   />
                   {errors.email && (
-                    <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+                    <p className="text-red-300 text-sm mt-1">{errors.email.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="phone" className="text-primary font-light">
+                  <Label htmlFor="phone" className="text-[hsl(var(--glass-text))] font-light">
                     Telefonnummer *
                   </Label>
                   <Input
                     id="phone"
                     type="tel"
                     {...register("phone")}
-                    className="mt-2 bg-white/50 border-primary/20 focus:border-primary"
+                    className="mt-2 bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50 focus:bg-white/20 focus:border-white/40"
                     disabled={isSubmitting}
                   />
                   {errors.phone && (
-                    <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>
+                    <p className="text-red-300 text-sm mt-1">{errors.phone.message}</p>
                   )}
                 </div>
               </div>
 
               {/* Subject */}
               <div>
-                <Label htmlFor="subject" className="text-primary font-light">
+                <Label htmlFor="subject" className="text-[hsl(var(--glass-text))] font-light">
                   Betreff *
                 </Label>
                 <Input
                   id="subject"
                   {...register("subject")}
                   placeholder="Worum geht es?"
-                  className="mt-2 bg-white/50 border-primary/20 focus:border-primary"
+                  className="mt-2 bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50 focus:bg-white/20 focus:border-white/40"
                   disabled={isSubmitting}
                 />
                 {errors.subject && (
-                  <p className="text-red-500 text-sm mt-1">{errors.subject.message}</p>
+                  <p className="text-red-300 text-sm mt-1">{errors.subject.message}</p>
                 )}
               </div>
 
               {/* Message */}
               <div>
-                <Label htmlFor="message" className="text-primary font-light">
+                <Label htmlFor="message" className="text-[hsl(var(--glass-text))] font-light">
                   Nachricht (optional)
                 </Label>
                 <Textarea
@@ -219,11 +215,11 @@ const Kontakt = () => {
                   {...register("message")}
                   placeholder="Bitte erläutern Sie Ihr Anliegen..."
                   rows={6}
-                  className="mt-2 bg-white/50 border-primary/20 focus:border-primary resize-none"
+                  className="mt-2 bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50 focus:bg-white/20 focus:border-white/40 resize-none"
                   disabled={isSubmitting}
                 />
                 {errors.message && (
-                  <p className="text-red-500 text-sm mt-1">{errors.message.message}</p>
+                  <p className="text-red-300 text-sm mt-1">{errors.message.message}</p>
                 )}
               </div>
 
@@ -247,7 +243,7 @@ const Kontakt = () => {
                 )}
               </Button>
 
-              <p className="text-sm text-primary/50 text-center font-light">
+              <p className="text-sm text-[hsl(var(--glass-text))]/60 text-center font-light">
                 * Pflichtfelder
               </p>
             </form>
