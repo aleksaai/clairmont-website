@@ -123,7 +123,7 @@ export interface FormData {
     disabilityCertificate?: File[];
     otherDocuments?: File[];
   };
-  taxCertificateFiles?: File[];
+  taxCertificatesByYear?: Record<string, File[]>;
   propertyDocuments?: File[];
   additionalDocuments?: File[];
   
@@ -219,10 +219,13 @@ const Prognose = () => {
   };
 
   // Calculate total steps dynamically based on form data
-  const totalSteps = BASE_STEPS + (formData.hasCryptoIncome ? 1 : 0);
+  const hasTaxYears = formData.taxYears && formData.taxYears.length > 0;
+  const totalSteps = BASE_STEPS + (formData.hasCryptoIncome ? 1 : 0) + (hasTaxYears ? 1 : 0);
   const progress = (currentStep / totalSteps) * 100;
 
   const renderStep = () => {
+    const hasTaxYears = formData.taxYears && formData.taxYears.length > 0;
+    
     switch (currentStep) {
       case 0:
         return <WelcomeStep onNext={nextStep} />;
@@ -239,46 +242,67 @@ const Prognose = () => {
       case 6:
         return <IncomeStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
       case 7:
-        return <TaxCertificateUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-      case 8:
-        // If crypto income is selected, show crypto upload step
-        if (formData.hasCryptoIncome) {
+        // Show TaxCertificateUploadStep only if taxYears are selected
+        if (hasTaxYears) {
+          return <TaxCertificateUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+        } else if (formData.hasCryptoIncome) {
           return <CryptoUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
         } else {
           return <InsuranceStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
         }
-      case 9:
-        if (formData.hasCryptoIncome) {
+      case 8:
+        // Adjust based on whether tax certificate step was shown
+        if (hasTaxYears && formData.hasCryptoIncome) {
+          return <CryptoUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+        } else if (hasTaxYears) {
+          return <InsuranceStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+        } else if (formData.hasCryptoIncome) {
           return <InsuranceStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
         } else {
           return <PropertyStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
         }
-      case 10:
-        if (formData.hasCryptoIncome) {
+      case 9:
+        if (hasTaxYears && formData.hasCryptoIncome) {
+          return <InsuranceStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+        } else if (hasTaxYears || formData.hasCryptoIncome) {
           return <PropertyStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
         } else {
           return <SpecialCircumstancesStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
         }
-      case 11:
-        if (formData.hasCryptoIncome) {
+      case 10:
+        if (hasTaxYears && formData.hasCryptoIncome) {
+          return <PropertyStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+        } else if (hasTaxYears || formData.hasCryptoIncome) {
           return <SpecialCircumstancesStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
         } else {
           return <AdditionalDocumentsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
         }
-      case 12:
-        if (formData.hasCryptoIncome) {
+      case 11:
+        if (hasTaxYears && formData.hasCryptoIncome) {
+          return <SpecialCircumstancesStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+        } else if (hasTaxYears || formData.hasCryptoIncome) {
           return <AdditionalDocumentsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
         } else {
           return <DocumentUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
         }
-      case 13:
-        if (formData.hasCryptoIncome) {
+      case 12:
+        if (hasTaxYears && formData.hasCryptoIncome) {
+          return <AdditionalDocumentsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+        } else if (hasTaxYears || formData.hasCryptoIncome) {
           return <DocumentUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
         } else {
           return <BankDetailsStep data={formData} updateData={updateFormData} onNext={handleSubmit} onBack={prevStep} />;
         }
+      case 13:
+        if (hasTaxYears && formData.hasCryptoIncome) {
+          return <DocumentUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+        } else if (hasTaxYears || formData.hasCryptoIncome) {
+          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={handleSubmit} onBack={prevStep} />;
+        } else {
+          return <SuccessStep formData={formData} />;
+        }
       case 14:
-        if (formData.hasCryptoIncome) {
+        if (hasTaxYears && formData.hasCryptoIncome) {
           return <BankDetailsStep data={formData} updateData={updateFormData} onNext={handleSubmit} onBack={prevStep} />;
         } else {
           return <SuccessStep formData={formData} />;

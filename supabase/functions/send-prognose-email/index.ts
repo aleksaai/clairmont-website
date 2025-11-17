@@ -119,7 +119,10 @@ const handler = async (req: Request): Promise<Response> => {
         <p><strong>Unterhaltszahlungen:</strong> ${formData.paysAlimony ? 'Ja' : 'Nein'}</p>
         
         <h2>Hochgeladene Dokumente</h2>
-        <p><strong>Lohnsteuerbescheid(e):</strong> ${formData.taxCertificateFiles?.length || 0} Datei(en)</p>
+        <p><strong>Lohnsteuerbescheide nach Jahr:</strong></p>
+        ${formData.taxCertificatesByYear ? Object.entries(formData.taxCertificatesByYear).map(([year, files]: [string, any]) => `
+          <p style="margin-left: 20px;"><strong>${year}:</strong> ${files?.length || 0} Datei(en)</p>
+        `).join('') : '<p style="margin-left: 20px;">Keine</p>'}
         <p><strong>Lohnsteuerbescheinigung:</strong> ${formData.documents?.taxCertificate?.length || 0} Datei(en)</p>
         <p><strong>Personalausweis:</strong> ${formData.documents?.idCard?.length || 0} Datei(en)</p>
         ${formData.hasDisability ? `<p><strong>Behindertenausweis:</strong> ${formData.documents?.disabilityCertificate?.length || 0} Datei(en)</p>` : ''}
