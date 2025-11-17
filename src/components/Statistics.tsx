@@ -85,7 +85,7 @@ const Statistics = () => {
       value: 3800,
       prefix: "€",
       label: "⌀ Rückerstattung",
-      tooltip: "Basierend auf den Erstattungen unserer Mandanten der letzten Jahre. Die tatsächliche Rückerstattung hängt immer von Ihrer persönlichen Situation ab und kann höher oder niedriger ausfallen.",
+      tooltip: "Mit unserer Hilfe erreichen Kunden oft bis zu €3.800 oder mehr.",
       duration: 2.5,
     },
     {
@@ -93,7 +93,7 @@ const Statistics = () => {
       value: 5000,
       suffix: "+",
       label: "Zufriedene Kunden",
-      tooltip: "Mehr als 5.000 zufriedene Mandanten in allen 16 Bundesländern Deutschlands.",
+      tooltip: "Vertrauen Sie auf unsere Erfahrung: Über 5.000 Kunden haben wir bereits erfolgreich beraten.",
       duration: 2,
     },
     {
@@ -101,7 +101,7 @@ const Statistics = () => {
       value: 98,
       suffix: "%",
       label: "Erfolgsquote",
-      tooltip: "In über 98 % der Fälle weicht die tatsächliche Erstattung höchstens im Rahmen von ca. 50–150 € von unserer Prognose ab. Sollte die Abweichung größer sein und nicht nachvollziehbar begründet werden können, suchen wir gemeinsam nach einer Lösung – Kundenzufriedenheit hat bei uns oberste Priorität.",
+      tooltip: "Wir maximieren Ihre Sicherheit: In 98% der Fälle erhalten Sie die von uns erwartete Rückerstattung wie berechnet.",
       duration: 1.5,
     },
     {
@@ -109,7 +109,7 @@ const Statistics = () => {
       value: 14,
       suffix: " Tage",
       label: "⌀ Bearbeitungszeit",
-      tooltip: "Durchschnittliche Bearbeitungszeit durch unser Team ab Vorliegen aller Unterlagen. Die Bearbeitungszeit des Finanzamts ist hiervon unabhängig und kann je nach Bundesland und Auslastung zwischen ca. 1–3 Monaten (schnelle Fälle) und 4–6 Monaten oder länger liegen.",
+      tooltip: "Wir sorgen für eine zügige Bearbeitung Ihres Vorgangs – weit unter dem Branchendurchschnitt.",
       duration: 1,
     },
   ];
