@@ -108,7 +108,7 @@ const Statistics = () => {
       icon: <Clock className="w-8 h-8" />,
       value: 14,
       suffix: " Tage",
-      label: "⌀ Bearbeitungszeit (unser Anteil)",
+      label: "⌀ Bearbeitungszeit",
       tooltip: "Durchschnittliche Bearbeitungszeit durch unser Team ab Vorliegen aller Unterlagen. Die Bearbeitungszeit des Finanzamts ist hiervon unabhängig und kann je nach Bundesland und Auslastung zwischen ca. 1–3 Monaten (schnelle Fälle) und 4–6 Monaten oder länger liegen.",
       duration: 1,
     },
