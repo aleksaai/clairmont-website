@@ -79,11 +79,6 @@ const DocumentUploadStep = ({ data, updateData, onNext, onBack }: DocumentUpload
     const docs = data.documents || {};
     
     // Validate mandatory documents
-    if (!docs.taxCertificate || docs.taxCertificate.length === 0) {
-      alert("Bitte laden Sie Ihre Lohnsteuerbescheinigung hoch.");
-      return;
-    }
-    
     if (!docs.idCard || docs.idCard.length === 0) {
       alert("Bitte laden Sie Ihren Personalausweis hoch.");
       return;
@@ -187,7 +182,6 @@ const DocumentUploadStep = ({ data, updateData, onNext, onBack }: DocumentUpload
       </div>
 
       <div className="space-y-6">
-        {renderUploadArea("taxCertificate", "Lohnsteuerbescheinigung", true)}
         {renderUploadArea("idCard", "Personalausweis", true)}
         
         {data.hasDisability && renderUploadArea("disabilityCertificate", "Behindertenausweis", true)}
