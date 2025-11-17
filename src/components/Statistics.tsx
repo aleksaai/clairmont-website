@@ -53,10 +53,13 @@ const StatCard = ({ icon, value, suffix = "", prefix = "", label, duration }: St
           <div className="p-2 rounded-xl bg-primary/10 text-primary flex-shrink-0">
             {icon}
           </div>
-          <div className="text-2xl md:text-3xl font-light text-primary tracking-tight">
-            {prefix}
-            <AnimatedCounter value={value} duration={duration} />
-            {suffix}
+          <div className="flex flex-col">
+            <div className="text-2xl md:text-3xl font-light text-primary tracking-tight">
+              {prefix}
+              <AnimatedCounter value={value} duration={duration} />
+              {suffix}
+            </div>
+            <p className="text-xs md:text-sm text-primary/60 font-light mt-0.5">{label}</p>
           </div>
         </div>
       </div>
