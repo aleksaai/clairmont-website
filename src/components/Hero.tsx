@@ -35,10 +35,13 @@ const Hero = () => {
       {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-20">
         <div className="max-w-2xl">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-normal text-[hsl(var(--glass-text))] mb-6 leading-tight">
-            Willkommen bei Clairmont Advisory & Partners<br />
-            – die Zukunft der Finanzberatung.
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-medium text-[hsl(var(--glass-text))] mb-4 leading-tight">
+            Willkommen bei<br />
+            Clairmont Advisory & Partners
           </h1>
+          <p className="text-2xl md:text-3xl lg:text-4xl font-light text-[hsl(var(--glass-text))]/90 mb-6 leading-relaxed">
+            Die Zukunft der Finanzberatung.
+          </p>
           
           <p className="text-lg md:text-xl text-[hsl(var(--glass-text))]/90 mb-6 leading-relaxed max-w-xl">
             Erfahrung trifft auf moderne Technologie – für klare, effiziente und zukunftssichere Finanzen. Persönlich. Präzise. Intelligent.
