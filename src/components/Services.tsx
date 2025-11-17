@@ -57,10 +57,13 @@ const Services = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+          <div className="inline-flex items-center justify-center px-4 py-1.5 border border-primary/20 rounded-full mb-6">
+            <span className="text-sm font-medium text-primary">Leistungen</span>
+          </div>
+          <h2 className="text-4xl md:text-5xl font-light text-primary mb-4">
             Unsere Leistungen – alles aus einer Hand
           </h2>
-          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-lg md:text-xl text-primary/70 max-w-3xl mx-auto font-light">
             Wir bieten moderne, technologiegestützte Finanz- und Beratungsleistungen in den Bereichen Steuern, Finanzierung, Immobilien und Vermögensaufbau.
           </p>
         </motion.div>
@@ -85,9 +88,11 @@ const Services = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button asChild variant="outline" className="w-full">
-                    <Link to={service.link}>{service.cta || "Mehr erfahren"}</Link>
-                  </Button>
+                  {service.cta && (
+                    <Button asChild className="w-full">
+                      <Link to={service.link}>{service.cta}</Link>
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
