@@ -1,14 +1,15 @@
 import { TimelineContent } from "@/components/ui/timeline-animation";
 import { Star } from "lucide-react";
 import { useRef } from "react";
+import aleksaImage from "@/assets/aleksa-spalevic.png";
 
 const testimonials = [
   {
-    name: "Michael Schmidt",
-    role: "Immobilieninvestor aus München",
-    content: "Die Steuerprognose war präzise und hat mir geholfen, meine Investitionen optimal zu planen. Clairmont Advisory hat meine Erwartungen übertroffen!",
+    name: "Aleksa Spalevic",
+    role: "KI-Berater aus Köln",
+    content: "Die Zusammenarbeit mit Clairmont Advisory war hervorragend. Professionelle Beratung und innovative Lösungen, die wirklich überzeugen!",
     rating: 5,
-    image: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=687&auto=format&fit=crop",
+    image: aleksaImage,
   },
   {
     name: "Sarah Kowalski",
