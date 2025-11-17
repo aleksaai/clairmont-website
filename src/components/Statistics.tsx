@@ -48,17 +48,16 @@ const StatCard = ({ icon, value, suffix = "", prefix = "", label, duration }: St
       viewport={{ once: true }}
       className="relative"
     >
-      <div className="relative p-10 rounded-3xl bg-gradient-to-br from-card to-card/50 backdrop-blur-sm border border-primary/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-        <div className="flex flex-col items-center text-center gap-4">
-          <div className="p-4 rounded-2xl bg-primary/5 text-primary">
+      <div className="relative px-6 py-4 rounded-2xl bg-white/40 backdrop-blur-sm border border-primary/10 hover:border-primary/20 transition-colors duration-300">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-primary/10 text-primary flex-shrink-0">
             {icon}
           </div>
-          <div className="text-5xl md:text-6xl font-light text-primary tracking-tight">
+          <div className="text-2xl md:text-3xl font-light text-primary tracking-tight">
             {prefix}
             <AnimatedCounter value={value} duration={duration} />
             {suffix}
           </div>
-          <p className="text-muted-foreground text-sm md:text-base leading-relaxed max-w-[200px]">{label}</p>
         </div>
       </div>
     </motion.div>
@@ -68,28 +67,28 @@ const StatCard = ({ icon, value, suffix = "", prefix = "", label, duration }: St
 const Statistics = () => {
   const stats = [
     {
-      icon: <Euro className="w-8 h-8" />,
+      icon: <Euro className="w-5 h-5" />,
       value: 3800,
       prefix: "€",
       label: "⌀ Rückerstattung",
       duration: 2.5,
     },
     {
-      icon: <Users className="w-8 h-8" />,
+      icon: <Users className="w-5 h-5" />,
       value: 5000,
       suffix: "+",
       label: "Zufriedene Kunden",
       duration: 2,
     },
     {
-      icon: <TrendingUp className="w-8 h-8" />,
+      icon: <TrendingUp className="w-5 h-5" />,
       value: 98,
       suffix: "%",
       label: "Erfolgsquote",
       duration: 1.5,
     },
     {
-      icon: <Clock className="w-8 h-8" />,
+      icon: <Clock className="w-5 h-5" />,
       value: 14,
       suffix: " Tage",
       label: "⌀ Bearbeitungszeit",
@@ -98,28 +97,9 @@ const Statistics = () => {
   ];
 
   return (
-    <section id="statistics" className="py-32 relative overflow-hidden">
+    <section id="statistics" className="py-12 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-          viewport={{ once: true }}
-          className="flex flex-col items-center justify-center max-w-2xl mx-auto mb-16"
-        >
-          <div className="inline-flex items-center justify-center px-4 py-1.5 border border-primary/20 rounded-full mb-6">
-            <span className="text-sm font-medium text-primary">Unsere Erfolge</span>
-          </div>
-
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-light text-primary text-center mb-6">
-            Zahlen, die überzeugen
-          </h2>
-          <p className="text-center text-lg text-primary/70 leading-relaxed">
-            Tausende Deutsche vertrauen bereits auf unsere Expertise. Werden Sie Teil unserer Erfolgsgeschichte.
-          </p>
-        </motion.div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {stats.map((stat, index) => (
             <StatCard key={index} {...stat} />
           ))}

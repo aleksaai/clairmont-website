@@ -30,12 +30,12 @@ const Index = () => {
     <div className="min-h-screen">
       <Navigation />
       <Hero />
+      <Statistics />
       <HowItWorks />
       <WhyClairmont />
       <CreditServices />
       <RealEstateFinancing />
       <Testimonials />
-      <Statistics />
       <FAQ />
       <CTA />
       <Footer />
