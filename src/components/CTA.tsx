@@ -32,7 +32,7 @@ const CTA = () => {
               transition={{ duration: 0.6, delay: 0.1 }}
             >
               <h2 className="text-4xl md:text-5xl lg:text-6xl font-light text-primary mb-6">
-                Bereit für Ihre Steuererstattung?
+                Bereit für Ihre finanzielle Zukunft?
               </h2>
             </motion.div>
             
@@ -43,8 +43,8 @@ const CTA = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-lg md:text-xl text-primary/70 mb-10 max-w-2xl mx-auto font-light leading-relaxed"
             >
-              Starten Sie jetzt Ihre kostenlose Prognose und erfahren Sie in nur 2 Minuten, 
-              wie viel Geld Sie zurückbekommen können.
+              Ob Steuern, Kredite, Baufinanzierung oder Investments – wir beraten Sie umfassend 
+              und finden die beste Lösung für Ihre individuelle Situation.
             </motion.p>
             
             <motion.div
@@ -59,7 +59,7 @@ const CTA = () => {
                 className="rounded-full px-8 text-base md:text-lg h-14 shadow-lg hover:shadow-xl transition-shadow group"
                 onClick={() => navigate("/prognose")}
               >
-                Kostenlose Prognose starten
+                Jetzt Kontakt aufnehmen
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </motion.div>
@@ -71,7 +71,7 @@ const CTA = () => {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="text-sm text-primary/50 mt-8 font-light"
             >
-              100% kostenlos • Keine Verpflichtung • Datenschutzkonform
+              100% kostenlose Erstberatung • Keine Verpflichtung • Datenschutzkonform
             </motion.p>
           </div>
         </motion.div>
