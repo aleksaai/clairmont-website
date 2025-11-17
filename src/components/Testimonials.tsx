@@ -5,6 +5,13 @@ import aleksaImage from "@/assets/aleksa-spalevic.png";
 
 const testimonials = [
   {
+    name: "Michael Schmidt",
+    role: "Selbstständiger Unternehmer",
+    content: "Dank der professionellen Steuerberatung konnte ich erhebliche Einsparungen erzielen. Absolute Empfehlung!",
+    rating: 5,
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=687&auto=format&fit=crop",
+  },
+  {
     name: "Aleksa Spalevic",
     role: "KI-Berater aus Köln",
     content: "Die Zusammenarbeit mit Clairmont Advisory war hervorragend. Professionelle Beratung und innovative Lösungen, die wirklich überzeugen!",
