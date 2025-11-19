@@ -39,8 +39,8 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     await resend.emails.send({
-      from: "Clairmont Advisory <onboarding@resend.dev>",
-      to: ["info@clairmont-advisory.com"],
+      from: "Clairmont Advisory <noreply@tax.clairmont-advisory.com>",
+      to: ["info@aleksa.ai"],
       subject: `Neue Selbstauskunft: ${formData.firstName} ${formData.lastName}`,
       html: emailHtml,
     });
