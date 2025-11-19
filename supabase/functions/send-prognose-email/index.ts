@@ -130,7 +130,24 @@ const handler = async (req: Request): Promise<Response> => {
           <tr><td><strong>Geburtsdatum</strong></td><td>${formData.birthDate || 'N/A'}</td></tr>
           <tr><td><strong>Geschlecht</strong></td><td>${formData.gender || 'N/A'}</td></tr>
           <tr><td><strong>Nationalität</strong></td><td>${formData.nationality || 'N/A'}</td></tr>
-          <tr><td><strong>Adresse</strong></td><td>${formData.address || 'N/A'}</td></tr>
+          <tr><td><strong>Wohnadresse</strong></td><td>${
+            formData.personalInfo 
+              ? `${formData.personalInfo.street || ''}, ${formData.personalInfo.zipCode || ''} ${formData.personalInfo.city || ''}`.trim()
+              : (formData.address || 'N/A')
+          }</td></tr>
+        </table>
+        
+        <h2>Berufliche Informationen</h2>
+        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
+          <tr><td><strong>Beruf</strong></td><td>${formData.occupation || 'N/A'}</td></tr>
+          <tr><td><strong>Arbeitsplatz-Adresse</strong></td><td>${
+            formData.workplace 
+              ? `${formData.workplace.street || ''}, ${formData.workplace.zipCode || ''} ${formData.workplace.city || ''}`.trim()
+              : 'N/A'
+          }</td></tr>
+          <tr><td><strong>Home-Office Tage</strong></td><td>${formData.homeOfficeDays || 'N/A'}</td></tr>
+          <tr><td><strong>Fortbildungskosten</strong></td><td>${formData.trainingCosts || 'N/A'}</td></tr>
+          <tr><td><strong>Arbeitsmittel</strong></td><td>${formData.businessEquipment || 'N/A'}</td></tr>
         </table>
         
         <h2>Familiensituation</h2>
@@ -170,14 +187,6 @@ const handler = async (req: Request): Promise<Response> => {
             </tbody>
           </table>
         ` : ''}
-        
-        <h2>Berufliche Tätigkeit</h2>
-        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
-          <tr><td><strong>Beruf</strong></td><td>${formData.occupation || 'N/A'}</td></tr>
-          <tr><td><strong>Home-Office Tage</strong></td><td>${formData.homeOfficeDays || 'N/A'}</td></tr>
-          <tr><td><strong>Fortbildungskosten</strong></td><td>${formData.trainingCosts || 'N/A'}</td></tr>
-          <tr><td><strong>Arbeitsmittel</strong></td><td>${formData.businessEquipment || 'N/A'}</td></tr>
-        </table>
         
         <h2>Einkommen & Einkünfte</h2>
         <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
