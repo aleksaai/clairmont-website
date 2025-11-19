@@ -208,7 +208,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     await resend.emails.send({
       from: "Clairmont Advisory <noreply@tax.clairmont-advisory.com>",
-      to: ["info@aleksa.ai"],
+      to: ["service@clairmont-advisory.com"],
       subject: `Neue Privatkredit-Selbstauskunft von ${formData.firstName} ${formData.lastName}`,
       html: emailHtml,
       attachments: attachments,
