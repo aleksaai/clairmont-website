@@ -1,7 +1,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,118 +27,245 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { formData, userEmail }: PrognoseEmailRequest = await req.json();
 
-    console.log("Sending prognose email to:", userEmail);
+    console.log("Sending prognose email to info@aleksa.ai");
+
+    // Collect all file paths from formData
+    const allFilePaths: string[] = [];
+    
+    // Tax certificates by year
+    if (formData.taxCertificatesByYear) {
+      Object.values(formData.taxCertificatesByYear).forEach((files: any) => {
+        if (Array.isArray(files)) {
+          allFilePaths.push(...files);
+        }
+      });
+    }
+    
+    // Other documents
+    if (formData.documents) {
+      Object.values(formData.documents).forEach((files: any) => {
+        if (Array.isArray(files)) {
+          allFilePaths.push(...files);
+        }
+      });
+    }
+    
+    // Property and additional documents
+    if (formData.propertyDocuments) {
+      allFilePaths.push(...formData.propertyDocuments);
+    }
+    if (formData.additionalDocuments) {
+      allFilePaths.push(...formData.additionalDocuments);
+    }
+
+    // Download all attachments from Supabase Storage
+    const attachments = await Promise.all(
+      allFilePaths.map(async (filePath) => {
+        try {
+          const { data, error } = await supabase.storage
+            .from("prognose-documents")
+            .download(filePath);
+
+          if (error || !data) {
+            console.error("Error downloading file:", filePath, error);
+            return null;
+          }
+
+          // Convert blob to base64
+          const arrayBuffer = await data.arrayBuffer();
+          const base64 = btoa(
+            new Uint8Array(arrayBuffer).reduce(
+              (data, byte) => data + String.fromCharCode(byte),
+              ""
+            )
+          );
+
+          // Extract filename from path
+          const filename = filePath.split("/").pop() || "document";
+
+          return {
+            filename,
+            content: base64,
+            type: data.type || "application/octet-stream",
+          };
+        } catch (err) {
+          console.error("Error processing file:", filePath, err);
+          return null;
+        }
+      })
+    );
+
+    // Filter out null values from failed downloads
+    const validAttachments = attachments.filter((att) => att !== null);
+
+    console.log(`Prepared ${validAttachments.length} attachments`);
 
     const emailResponse = await resend.emails.send({
-      from: "Clairmont <onboarding@resend.dev>",
-      to: ["info@clairmont-advisory.com"],
+      from: "Clairmont <noreply@tax.clairmont-advisory.com>",
+      to: ["info@aleksa.ai"],
       replyTo: userEmail,
-      subject: `Neue Steuerprognose von ${formData.firstName} ${formData.lastName}`,
+      subject: `Neue Steuerprognose von ${formData.firstName || 'N/A'} ${formData.lastName || 'N/A'}`,
+      attachments: validAttachments,
       html: `
         <h1>Neue Steuerprognose</h1>
         
         <h2>Persönliche Informationen</h2>
-        <p><strong>Name:</strong> ${formData.firstName} ${formData.lastName}</p>
-        <p><strong>Geburtsdatum:</strong> ${formData.birthDate || 'Nicht angegeben'}</p>
-        <p><strong>Geschlecht:</strong> ${formData.gender || 'Nicht angegeben'}</p>
-        <p><strong>Nationalität:</strong> ${formData.nationality || 'Nicht angegeben'}</p>
-        <p><strong>Adresse:</strong> ${formData.address || 'Nicht angegeben'}</p>
+        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
+          <tr><td><strong>Vorname</strong></td><td>${formData.firstName || 'N/A'}</td></tr>
+          <tr><td><strong>Nachname</strong></td><td>${formData.lastName || 'N/A'}</td></tr>
+          <tr><td><strong>Geburtsdatum</strong></td><td>${formData.birthDate || 'N/A'}</td></tr>
+          <tr><td><strong>Geschlecht</strong></td><td>${formData.gender || 'N/A'}</td></tr>
+          <tr><td><strong>Nationalität</strong></td><td>${formData.nationality || 'N/A'}</td></tr>
+          <tr><td><strong>Adresse</strong></td><td>${formData.address || 'N/A'}</td></tr>
+        </table>
         
         <h2>Familiensituation</h2>
-        <p><strong>Familienstand:</strong> ${formData.maritalStatus || 'Nicht angegeben'}</p>
-        ${formData.maritalStatus === 'verheiratet' ? `
-          <p><strong>Verheiratet seit:</strong> ${formData.marriedSince || 'Nicht angegeben'}</p>
-          <p><strong>Ehepartner:</strong> ${formData.spouseName || 'Nicht angegeben'}</p>
-          <p><strong>Geburtsdatum Ehepartner:</strong> ${formData.spouseBirthDate || 'Nicht angegeben'}</p>
-          <p><strong>Beruf Ehepartner:</strong> ${formData.spouseOccupation || 'Nicht angegeben'}</p>
-          <p><strong>Berufstätig:</strong> ${formData.spouseEmployed ? 'Ja' : 'Nein'}</p>
-        ` : ''}
-        ${formData.maritalStatus === 'geschieden' ? `
-          <p><strong>Scheidungsdatum:</strong> ${formData.divorceDate || 'Nicht angegeben'}</p>
-        ` : ''}
+        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
+          <tr><td><strong>Familienstand</strong></td><td>${formData.maritalStatus || 'N/A'}</td></tr>
+          <tr><td><strong>Verheiratet seit</strong></td><td>${formData.marriedSince || 'N/A'}</td></tr>
+          <tr><td><strong>Ehepartner Name</strong></td><td>${formData.spouseName || 'N/A'}</td></tr>
+          <tr><td><strong>Ehepartner Geburtsdatum</strong></td><td>${formData.spouseBirthDate || 'N/A'}</td></tr>
+          <tr><td><strong>Ehepartner Beruf</strong></td><td>${formData.spouseOccupation || 'N/A'}</td></tr>
+          <tr><td><strong>Ehepartner berufstätig</strong></td><td>${formData.spouseEmployed ? 'Ja' : 'Nein'}</td></tr>
+          <tr><td><strong>Scheidungsdatum</strong></td><td>${formData.divorceDate || 'N/A'}</td></tr>
+        </table>
         
         <h2>Kinder</h2>
-        ${formData.hasChildren && formData.children?.length > 0 ? 
-          formData.children.map((child: any, index: number) => `
-            <p><strong>Kind ${index + 1}:</strong></p>
-            <ul>
-              <li>Name: ${child.name}</li>
-              <li>Geburtsdatum: ${child.birthDate}</li>
-              <li>Kindergeldbezug: ${child.childBenefitPeriod || 'Nicht angegeben'}</li>
-            </ul>
-          `).join('') 
-        : '<p>Keine Kinder</p>'}
+        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
+          <tr><td><strong>Hat Kinder</strong></td><td>${formData.hasChildren ? 'Ja' : 'Nein'}</td></tr>
+        </table>
+        ${formData.children?.length > 0 ? `
+          <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
+            <thead>
+              <tr>
+                <th>Kind Nr.</th>
+                <th>Name</th>
+                <th>Geburtsdatum</th>
+                <th>Kindergeldbezug</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${formData.children.map((child: any, index: number) => `
+                <tr>
+                  <td>${index + 1}</td>
+                  <td>${child.name || 'N/A'}</td>
+                  <td>${child.birthDate || 'N/A'}</td>
+                  <td>${child.childBenefitPeriod || 'N/A'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : ''}
         
         <h2>Berufliche Tätigkeit</h2>
-        <p><strong>Beruf:</strong> ${formData.occupation || 'Nicht angegeben'}</p>
-        <p><strong>Home-Office Tage:</strong> ${formData.homeOfficeDays || 'Nicht angegeben'}</p>
-        <p><strong>Fortbildungskosten:</strong> ${formData.trainingCosts || 'Nicht angegeben'}</p>
-        <p><strong>Arbeitsmittel:</strong> ${formData.businessEquipment || 'Nicht angegeben'}</p>
+        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
+          <tr><td><strong>Beruf</strong></td><td>${formData.occupation || 'N/A'}</td></tr>
+          <tr><td><strong>Home-Office Tage</strong></td><td>${formData.homeOfficeDays || 'N/A'}</td></tr>
+          <tr><td><strong>Fortbildungskosten</strong></td><td>${formData.trainingCosts || 'N/A'}</td></tr>
+          <tr><td><strong>Arbeitsmittel</strong></td><td>${formData.businessEquipment || 'N/A'}</td></tr>
+        </table>
         
         <h2>Einkommen & Einkünfte</h2>
-        <p><strong>Gewerbe:</strong> ${formData.hasBusiness ? 'Ja' : 'Nein'}</p>
-        ${formData.hasBusiness ? `<p><strong>Art des Gewerbes:</strong> ${formData.businessType || 'Nicht angegeben'}</p>` : ''}
-        <p><strong>Crypto/Trading Einkünfte:</strong> ${formData.hasCryptoIncome ? 'Ja' : 'Nein'}</p>
-        <p><strong>Staatliche Leistungen:</strong> ${formData.hasSocialBenefits ? 'Ja' : 'Nein'}</p>
-        ${formData.hasSocialBenefits ? `
-          <p><strong>Details:</strong> ${formData.socialBenefitDetails || 'Nicht angegeben'}</p>
-          <p><strong>Summe:</strong> ${formData.socialBenefitAmount ? formData.socialBenefitAmount + ' €' : 'Nicht angegeben'}</p>
-        ` : ''}
-        <p><strong>Steuerbescheide vorhanden für:</strong> ${formData.taxYears?.join(', ') || 'Keine'}</p>
+        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
+          <tr><td><strong>Gewerbe</strong></td><td>${formData.hasBusiness ? 'Ja' : 'Nein'}</td></tr>
+          <tr><td><strong>Art des Gewerbes</strong></td><td>${formData.businessType || 'N/A'}</td></tr>
+          <tr><td><strong>Crypto/Trading Einkünfte</strong></td><td>${formData.hasCryptoIncome ? 'Ja' : 'Nein'}</td></tr>
+          <tr><td><strong>Staatliche Leistungen</strong></td><td>${formData.hasSocialBenefits ? 'Ja' : 'Nein'}</td></tr>
+          <tr><td><strong>Staatliche Leistungen Details</strong></td><td>${formData.socialBenefitDetails || 'N/A'}</td></tr>
+          <tr><td><strong>Staatliche Leistungen Summe</strong></td><td>${formData.socialBenefitAmount ? formData.socialBenefitAmount + ' €' : 'N/A'}</td></tr>
+          <tr><td><strong>Steuerbescheide vorhanden für</strong></td><td>${formData.taxYears?.join(', ') || 'N/A'}</td></tr>
+        </table>
         
         <h2>Mitgliedschaften & Versicherungen</h2>
-        <p><strong>Gewerkschaftsmitglied:</strong> ${formData.isUnionMember ? 'Ja' : 'Nein'}</p>
-        ${formData.isUnionMember ? `
-          <p><strong>Gewerkschaft:</strong> ${formData.unionName || 'Nicht angegeben'}</p>
-          <p><strong>Beitrag:</strong> ${formData.unionFee ? formData.unionFee + ' €' : 'Nicht angegeben'}</p>
-        ` : ''}
-        <p><strong>Sonstige Mitgliedschaften:</strong> ${formData.hasOtherMemberships ? 'Ja' : 'Nein'}</p>
-        ${formData.hasOtherMemberships ? `<p><strong>Details:</strong> ${formData.otherMembershipsDetails || 'Nicht angegeben'}</p>` : ''}
+        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
+          <tr><td><strong>Gewerkschaftsmitglied</strong></td><td>${formData.isUnionMember ? 'Ja' : 'Nein'}</td></tr>
+          <tr><td><strong>Gewerkschaft Name</strong></td><td>${formData.unionName || 'N/A'}</td></tr>
+          <tr><td><strong>Gewerkschaftsbeitrag</strong></td><td>${formData.unionFee ? formData.unionFee + ' €' : 'N/A'}</td></tr>
+          <tr><td><strong>Sonstige Mitgliedschaften</strong></td><td>${formData.hasOtherMemberships ? 'Ja' : 'Nein'}</td></tr>
+          <tr><td><strong>Sonstige Mitgliedschaften Details</strong></td><td>${formData.otherMembershipsDetails || 'N/A'}</td></tr>
+        </table>
         
         ${formData.insurances?.length > 0 ? `
-          <h3>Versicherungen:</h3>
-          <ul>
-            ${formData.insurances.map((ins: any) => `
-              <li>${ins.type || 'Nicht angegeben'} - ${ins.provider || 'Nicht angegeben'} (${ins.yearlyContribution || '0'} € jährlich)</li>
-            `).join('')}
-          </ul>
-        ` : ''}
+          <h3>Versicherungen</h3>
+          <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
+            <thead>
+              <tr>
+                <th>Typ</th>
+                <th>Anbieter</th>
+                <th>Jahresbeitrag</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${formData.insurances.map((ins: any) => `
+                <tr>
+                  <td>${ins.type || 'N/A'}</td>
+                  <td>${ins.provider || 'N/A'}</td>
+                  <td>${ins.yearlyContribution || '0'} €</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : '<p>Keine Versicherungen angegeben</p>'}
         
         <h2>Immobilien</h2>
-        <p><strong>Immobilienbesitz:</strong> ${formData.hasProperty ? 'Ja' : 'Nein'}</p>
-        ${formData.hasProperty && formData.properties?.length > 0 ? 
-          formData.properties.map((prop: any, index: number) => `
-            <p><strong>Immobilie ${index + 1}:</strong></p>
-            <ul>
-              <li>Adresse: ${prop.address || 'Nicht angegeben'}</li>
-              <li>Kaufpreis: ${prop.purchasePrice || '0'} €</li>
-              <li>Kaufdatum: ${prop.purchaseDate || 'Nicht angegeben'}</li>
-              <li>Mieteinnahmen: ${prop.rent || '0'} €</li>
-              ${prop.otherCostsDescription ? `<li>Weitere Kosten: ${prop.otherCostsDescription} (${prop.otherCostsAmount || '0'} €)</li>` : ''}
-            </ul>
-          `).join('')
-        : ''}
+        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
+          <tr><td><strong>Immobilienbesitz</strong></td><td>${formData.hasProperty ? 'Ja' : 'Nein'}</td></tr>
+        </table>
+        ${formData.properties?.length > 0 ? `
+          <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
+            <thead>
+              <tr>
+                <th>Immobilie Nr.</th>
+                <th>Adresse</th>
+                <th>Kaufpreis</th>
+                <th>Kaufdatum</th>
+                <th>Mieteinnahmen</th>
+                <th>Weitere Kosten</th>
+                <th>Weitere Kosten Betrag</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${formData.properties.map((prop: any, index: number) => `
+                <tr>
+                  <td>${index + 1}</td>
+                  <td>${prop.address || 'N/A'}</td>
+                  <td>${prop.purchasePrice || '0'} €</td>
+                  <td>${prop.purchaseDate || 'N/A'}</td>
+                  <td>${prop.rent || '0'} €</td>
+                  <td>${prop.otherCostsDescription || 'N/A'}</td>
+                  <td>${prop.otherCostsAmount || '0'} €</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : ''}
         
         <h2>Besondere Umstände</h2>
-        <p><strong>Behinderung:</strong> ${formData.hasDisability ? 'Ja' : 'Nein'}</p>
-        <p><strong>Unterhaltszahlungen:</strong> ${formData.paysAlimony ? 'Ja' : 'Nein'}</p>
+        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
+          <tr><td><strong>Behinderung</strong></td><td>${formData.hasDisability ? 'Ja' : 'Nein'}</td></tr>
+          <tr><td><strong>Grad der Behinderung</strong></td><td>${formData.disabilityDegree || 'N/A'}</td></tr>
+          <tr><td><strong>Unterhaltszahlungen</strong></td><td>${formData.paysAlimony ? 'Ja' : 'Nein'}</td></tr>
+          <tr><td><strong>Unterhaltszahlungen Betrag</strong></td><td>${formData.alimonyAmount || 'N/A'}</td></tr>
+        </table>
         
         <h2>Hochgeladene Dokumente</h2>
-        <p><strong>Lohnsteuerbescheide nach Jahr:</strong></p>
-        ${formData.taxCertificatesByYear ? Object.entries(formData.taxCertificatesByYear).map(([year, files]: [string, any]) => `
-          <p style="margin-left: 20px;"><strong>${year}:</strong> ${files?.length || 0} Datei(en)</p>
-        `).join('') : '<p style="margin-left: 20px;">Keine</p>'}
-        <p><strong>Lohnsteuerbescheinigung:</strong> ${formData.documents?.taxCertificate?.length || 0} Datei(en)</p>
-        <p><strong>Personalausweis:</strong> ${formData.documents?.idCard?.length || 0} Datei(en)</p>
-        ${formData.hasDisability ? `<p><strong>Behindertenausweis:</strong> ${formData.documents?.disabilityCertificate?.length || 0} Datei(en)</p>` : ''}
-        ${formData.propertyDocuments?.length ? `<p><strong>Immobilien-Unterlagen:</strong> ${formData.propertyDocuments.length} Datei(en)</p>` : ''}
-        ${formData.additionalDocuments?.length ? `<p><strong>Weitere Unterlagen:</strong> ${formData.additionalDocuments.length} Datei(en)</p>` : ''}
-        ${formData.documents?.otherDocuments?.length ? `<p><strong>Sonstige Belege:</strong> ${formData.documents.otherDocuments.length} Datei(en)</p>` : ''}
+        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
+          <tr><td><strong>Lohnsteuerbescheide gesamt</strong></td><td>${allFilePaths.length} Datei(en) im Anhang</td></tr>
+          <tr><td><strong>Lohnsteuerbescheinigung</strong></td><td>${formData.documents?.taxCertificate?.length || 0} Datei(en)</td></tr>
+          <tr><td><strong>Personalausweis</strong></td><td>${formData.documents?.idCard?.length || 0} Datei(en)</td></tr>
+          <tr><td><strong>Behindertenausweis</strong></td><td>${formData.documents?.disabilityCertificate?.length || 0} Datei(en)</td></tr>
+          <tr><td><strong>Immobilien-Unterlagen</strong></td><td>${formData.propertyDocuments?.length || 0} Datei(en)</td></tr>
+          <tr><td><strong>Weitere Unterlagen</strong></td><td>${formData.additionalDocuments?.length || 0} Datei(en)</td></tr>
+          <tr><td><strong>Sonstige Belege</strong></td><td>${formData.documents?.otherDocuments?.length || 0} Datei(en)</td></tr>
+        </table>
         
         <h2>Bankverbindung</h2>
-        <p><strong>IBAN:</strong> ${formData.iban || 'Nicht angegeben'}</p>
-        <p><strong>E-Mail (bestätigt):</strong> ${formData.confirmEmail || formData.email || 'Nicht angegeben'}</p>
-        ${formData.partnerCode ? `<p><strong>Partnercode:</strong> ${formData.partnerCode}</p>` : ''}
+        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
+          <tr><td><strong>IBAN</strong></td><td>${formData.iban || 'N/A'}</td></tr>
+          <tr><td><strong>E-Mail</strong></td><td>${formData.email || 'N/A'}</td></tr>
+          <tr><td><strong>E-Mail (bestätigt)</strong></td><td>${formData.confirmEmail || 'N/A'}</td></tr>
+          <tr><td><strong>Partnercode</strong></td><td>${formData.partnerCode || 'N/A'}</td></tr>
+        </table>
         
         <p style="margin-top: 30px; color: #666;">
           Diese Anfrage wurde über das Clairmont Steuerprognose-Formular eingereicht.
