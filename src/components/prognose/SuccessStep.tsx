@@ -28,34 +28,46 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
     // Upload all files and send email
     const uploadFilesAndSendEmail = async () => {
       try {
+        console.log('Starting file upload and email send process...');
         const uploadedData = { ...formData };
         
         // Helper function to upload files and return paths
-        const uploadFiles = async (files: File[] | undefined, folder: string): Promise<string[]> => {
+        const uploadFiles = async (files: any, folder: string): Promise<string[]> => {
           if (!files || files.length === 0) return [];
           
           const paths: string[] = [];
           for (const file of files) {
-            const timestamp = Date.now();
-            const fileName = `${timestamp}_${file.name}`;
-            const filePath = `${folder}/${fileName}`;
-            
-            const { error } = await supabase.storage
-              .from('prognose-documents')
-              .upload(filePath, file);
-            
-            if (error) {
-              console.error('Upload error:', error);
-              throw error;
+            // Check if it's already a string path (already uploaded)
+            if (typeof file === 'string') {
+              paths.push(file);
+              continue;
             }
             
-            paths.push(filePath);
+            // Check if it's a File object
+            if (file instanceof File) {
+              const timestamp = Date.now();
+              const fileName = `${timestamp}_${file.name}`;
+              const filePath = `${folder}/${fileName}`;
+              
+              console.log('Uploading file:', fileName);
+              const { error } = await supabase.storage
+                .from('prognose-documents')
+                .upload(filePath, file);
+              
+              if (error) {
+                console.error('Upload error:', error);
+                throw error;
+              }
+              
+              paths.push(filePath);
+            }
           }
           return paths;
         };
 
         // Upload all document types
         if (formData.documents) {
+          console.log('Processing documents...');
           const uploadedDocs: Record<string, string[]> = {};
           
           if (formData.documents.taxCertificate) {
@@ -76,24 +88,27 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
 
         // Upload tax certificates by year
         if (formData.taxCertificatesByYear) {
+          console.log('Processing tax certificates by year...');
           const uploadedByYear: Record<string, string[]> = {};
           for (const [year, files] of Object.entries(formData.taxCertificatesByYear)) {
-            uploadedByYear[year] = await uploadFiles(files as File[], `tax-certificates/${year}`);
+            uploadedByYear[year] = await uploadFiles(files, `tax-certificates/${year}`);
           }
           uploadedData.taxCertificatesByYear = uploadedByYear as any;
         }
 
         // Upload property documents
         if (formData.propertyDocuments) {
+          console.log('Processing property documents...');
           uploadedData.propertyDocuments = await uploadFiles(formData.propertyDocuments, 'property-documents') as any;
         }
 
         // Upload additional documents
         if (formData.additionalDocuments) {
+          console.log('Processing additional documents...');
           uploadedData.additionalDocuments = await uploadFiles(formData.additionalDocuments, 'additional-documents') as any;
         }
 
-        console.log('All files uploaded successfully');
+        console.log('All files uploaded successfully, sending email...');
 
         // Send email with uploaded file paths
         const { error: emailError } = await supabase.functions.invoke('send-prognose-email', {
@@ -102,6 +117,8 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
             userEmail: formData.email || 'no-email@example.com'
           }
         });
+        
+        console.log('Email function invoked, checking for errors...');
         
         if (emailError) throw emailError;
         toast.success('E-Mail erfolgreich gesendet');
