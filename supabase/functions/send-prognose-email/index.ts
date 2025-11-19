@@ -32,36 +32,48 @@ const handler = async (req: Request): Promise<Response> => {
     // Collect all file paths from formData
     const allFilePaths: string[] = [];
     
+    // Helper function to extract file paths from various structures
+    const extractPaths = (items: any) => {
+      if (!items) return;
+      if (Array.isArray(items)) {
+        items.forEach(item => {
+          if (typeof item === 'string' && item.trim()) {
+            allFilePaths.push(item);
+          } else if (item && typeof item === 'object' && item.path) {
+            allFilePaths.push(item.path);
+          }
+        });
+      } else if (typeof items === 'string' && items.trim()) {
+        allFilePaths.push(items);
+      }
+    };
+    
     // Tax certificates by year
     if (formData.taxCertificatesByYear) {
       Object.values(formData.taxCertificatesByYear).forEach((files: any) => {
-        if (Array.isArray(files)) {
-          allFilePaths.push(...files);
-        }
+        extractPaths(files);
       });
     }
     
     // Other documents
     if (formData.documents) {
       Object.values(formData.documents).forEach((files: any) => {
-        if (Array.isArray(files)) {
-          allFilePaths.push(...files);
-        }
+        extractPaths(files);
       });
     }
     
     // Property and additional documents
-    if (formData.propertyDocuments) {
-      allFilePaths.push(...formData.propertyDocuments);
-    }
-    if (formData.additionalDocuments) {
-      allFilePaths.push(...formData.additionalDocuments);
-    }
+    extractPaths(formData.propertyDocuments);
+    extractPaths(formData.additionalDocuments);
+    
+    console.log("Collected file paths:", allFilePaths);
 
     // Download all attachments from Supabase Storage
     const attachments = await Promise.all(
       allFilePaths.map(async (filePath) => {
         try {
+          console.log("Attempting to download file:", filePath);
+          
           const { data, error } = await supabase.storage
             .from("prognose-documents")
             .download(filePath);
@@ -70,6 +82,8 @@ const handler = async (req: Request): Promise<Response> => {
             console.error("Error downloading file:", filePath, error);
             return null;
           }
+
+          console.log("Successfully downloaded file:", filePath, "Type:", data.type);
 
           // Convert blob to base64
           const arrayBuffer = await data.arrayBuffer();
@@ -98,7 +112,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Filter out null values from failed downloads
     const validAttachments = attachments.filter((att) => att !== null);
 
-    console.log(`Prepared ${validAttachments.length} attachments`);
+    console.log(`Prepared ${validAttachments.length} attachments out of ${allFilePaths.length} files`);
 
     const emailResponse = await resend.emails.send({
       from: "Clairmont <noreply@tax.clairmont-advisory.com>",
