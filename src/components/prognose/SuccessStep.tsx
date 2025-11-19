@@ -30,6 +30,16 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
       try {
         console.log('Starting file upload and email send process...');
         const uploadedData = { ...formData };
+        const failedUploads: string[] = [];
+        
+        // Helper function to sanitize filenames
+        const sanitizeFileName = (name: string): string => {
+          return name
+            .normalize('NFKD')
+            .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+            .replace(/\s+/g, '_') // Replace spaces with underscores
+            .replace(/[^a-zA-Z0-9._-]/g, '_'); // Replace other special chars with underscores
+        };
         
         // Helper function to upload files and return paths
         const uploadFiles = async (files: any, folder: string): Promise<string[]> => {
@@ -45,21 +55,31 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
             
             // Check if it's a File object
             if (file instanceof File) {
-              const timestamp = Date.now();
-              const fileName = `${timestamp}_${file.name}`;
-              const filePath = `${folder}/${fileName}`;
-              
-              console.log('Uploading file:', fileName);
-              const { error } = await supabase.storage
-                .from('prognose-documents')
-                .upload(filePath, file);
-              
-              if (error) {
-                console.error('Upload error:', error);
-                throw error;
+              try {
+                const timestamp = Date.now();
+                const rawName = file.name || 'upload';
+                const safeName = sanitizeFileName(rawName);
+                const fileName = `${timestamp}_${safeName}`;
+                const filePath = `${folder}/${fileName}`;
+                
+                console.log('Uploading file:', fileName, '(original:', rawName, ')');
+                const { error } = await supabase.storage
+                  .from('prognose-documents')
+                  .upload(filePath, file);
+                
+                if (error) {
+                  console.error('Upload error for', rawName, ':', error);
+                  failedUploads.push(rawName);
+                  continue; // Continue with next file instead of throwing
+                }
+                
+                paths.push(filePath);
+                console.log('Successfully uploaded:', fileName);
+              } catch (err) {
+                console.error('Unexpected error uploading file:', file.name, err);
+                failedUploads.push(file.name || 'unknown file');
+                continue;
               }
-              
-              paths.push(filePath);
             }
           }
           return paths;
@@ -108,11 +128,17 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
           uploadedData.additionalDocuments = await uploadFiles(formData.additionalDocuments, 'additional-documents') as any;
         }
 
-        console.log('All files uploaded successfully, sending email...');
+        console.log('All files processed, sending email...');
+        
+        // Add failed uploads to the data
+        if (failedUploads.length > 0) {
+          (uploadedData as any).failedUploads = failedUploads;
+          console.warn('Some files failed to upload:', failedUploads);
+        }
 
         // Send email with uploaded file paths
         const { error: emailError } = await supabase.functions.invoke('send-prognose-email', {
-          body: { 
+          body: {
             formData: uploadedData,
             userEmail: formData.email || 'no-email@example.com'
           }
@@ -121,7 +147,12 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
         console.log('Email function invoked, checking for errors...');
         
         if (emailError) throw emailError;
-        toast.success('E-Mail erfolgreich gesendet');
+        
+        if (failedUploads.length > 0) {
+          toast.warning(`E-Mail gesendet, aber ${failedUploads.length} Datei(en) konnten nicht hochgeladen werden`);
+        } else {
+          toast.success('E-Mail erfolgreich gesendet');
+        }
       } catch (error) {
         console.error('Upload or email error:', error);
         toast.error('Fehler beim Hochladen der Dateien oder Senden der E-Mail');

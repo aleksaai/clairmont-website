@@ -281,6 +281,28 @@ const handler = async (req: Request): Promise<Response> => {
           <tr><td><strong>Partnercode</strong></td><td>${formData.partnerCode || 'N/A'}</td></tr>
         </table>
         
+        ${formData.failedUploads && formData.failedUploads.length > 0 ? `
+          <h2 style="color: #d97706;">⚠️ Fehlgeschlagene Datei-Uploads</h2>
+          <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-bottom: 20px; background-color: #fef3c7;">
+            <thead>
+              <tr style="background-color: #fcd34d;">
+                <th>Dateiname</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${formData.failedUploads.map((filename: string) => `
+                <tr>
+                  <td>${filename}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <p style="color: #d97706; font-weight: bold;">
+            Hinweis: Die oben genannten Dateien konnten nicht hochgeladen werden. 
+            Bitte den Kunden bitten, diese Dateien erneut zu senden oder direkt per E-Mail nachzureichen.
+          </p>
+        ` : ''}
+        
         <p style="margin-top: 30px; color: #666;">
           Diese Anfrage wurde über das Clairmont Steuerprognose-Formular eingereicht.
         </p>
