@@ -25,6 +25,92 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
       toast.error('PDF konnte nicht erstellt werden');
     }
 
+    // Upload all files and send email
+    const uploadFilesAndSendEmail = async () => {
+      try {
+        const uploadedData = { ...formData };
+        
+        // Helper function to upload files and return paths
+        const uploadFiles = async (files: File[] | undefined, folder: string): Promise<string[]> => {
+          if (!files || files.length === 0) return [];
+          
+          const paths: string[] = [];
+          for (const file of files) {
+            const timestamp = Date.now();
+            const fileName = `${timestamp}_${file.name}`;
+            const filePath = `${folder}/${fileName}`;
+            
+            const { error } = await supabase.storage
+              .from('prognose-documents')
+              .upload(filePath, file);
+            
+            if (error) {
+              console.error('Upload error:', error);
+              throw error;
+            }
+            
+            paths.push(filePath);
+          }
+          return paths;
+        };
+
+        // Upload all document types
+        if (formData.documents) {
+          const uploadedDocs: Record<string, string[]> = {};
+          
+          if (formData.documents.taxCertificate) {
+            uploadedDocs.taxCertificate = await uploadFiles(formData.documents.taxCertificate, 'tax-certificates');
+          }
+          if (formData.documents.idCard) {
+            uploadedDocs.idCard = await uploadFiles(formData.documents.idCard, 'id-cards');
+          }
+          if (formData.documents.disabilityCertificate) {
+            uploadedDocs.disabilityCertificate = await uploadFiles(formData.documents.disabilityCertificate, 'disability-certificates');
+          }
+          if (formData.documents.otherDocuments) {
+            uploadedDocs.otherDocuments = await uploadFiles(formData.documents.otherDocuments, 'other-documents');
+          }
+          
+          uploadedData.documents = uploadedDocs as any;
+        }
+
+        // Upload tax certificates by year
+        if (formData.taxCertificatesByYear) {
+          const uploadedByYear: Record<string, string[]> = {};
+          for (const [year, files] of Object.entries(formData.taxCertificatesByYear)) {
+            uploadedByYear[year] = await uploadFiles(files as File[], `tax-certificates/${year}`);
+          }
+          uploadedData.taxCertificatesByYear = uploadedByYear as any;
+        }
+
+        // Upload property documents
+        if (formData.propertyDocuments) {
+          uploadedData.propertyDocuments = await uploadFiles(formData.propertyDocuments, 'property-documents') as any;
+        }
+
+        // Upload additional documents
+        if (formData.additionalDocuments) {
+          uploadedData.additionalDocuments = await uploadFiles(formData.additionalDocuments, 'additional-documents') as any;
+        }
+
+        console.log('All files uploaded successfully');
+
+        // Send email with uploaded file paths
+        const { error: emailError } = await supabase.functions.invoke('send-prognose-email', {
+          body: { 
+            formData: uploadedData,
+            userEmail: formData.email || 'no-email@example.com'
+          }
+        });
+        
+        if (emailError) throw emailError;
+        toast.success('E-Mail erfolgreich gesendet');
+      } catch (error) {
+        console.error('Upload or email error:', error);
+        toast.error('Fehler beim Hochladen der Dateien oder Senden der E-Mail');
+      }
+    };
+
     // Submit to webhook
     const submitToWebhook = async () => {
       try {
@@ -58,27 +144,9 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
         toast.error('Daten konnten nicht übermittelt werden');
       }
     };
-
-    // Send email
-    const sendEmail = async () => {
-      try {
-        const { error } = await supabase.functions.invoke('send-prognose-email', {
-          body: { 
-            formData,
-            userEmail: formData.firstName + '@example.com'
-          }
-        });
-        
-        if (error) throw error;
-        toast.success('E-Mail erfolgreich gesendet');
-      } catch (error) {
-        console.error('Email error:', error);
-        toast.error('E-Mail konnte nicht gesendet werden');
-      }
-    };
     
     submitToWebhook();
-    sendEmail();
+    uploadFilesAndSendEmail();
   }, [formData]);
 
   const downloadPDF = () => {
