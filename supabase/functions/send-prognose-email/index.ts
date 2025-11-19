@@ -116,7 +116,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await resend.emails.send({
       from: "Clairmont <noreply@tax.clairmont-advisory.com>",
-      to: ["info@aleksa.ai"],
+      to: ["service@clairmont-advisory.com"],
       replyTo: userEmail,
       subject: `Neue Steuerprognose von ${formData.firstName || 'N/A'} ${formData.lastName || 'N/A'}`,
       attachments: validAttachments,
