@@ -61,12 +61,6 @@ const Impressum = () => {
               
               <div className="space-y-3 text-primary/70 leading-relaxed">
                 <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4" />
-                  <a href="tel:+4917684569934" className="hover:text-primary transition-colors">
-                    +49 176 84569934
-                  </a>
-                </div>
-                <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4" />
                   <a href="mailto:info@clairmont-advisory.com" className="hover:text-primary transition-colors">
                     info@clairmont-advisory.com
