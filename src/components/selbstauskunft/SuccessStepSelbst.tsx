@@ -100,6 +100,29 @@ const SuccessStepSelbst = ({ formData }: SuccessStepSelbstProps) => {
 
         if (error) throw error;
 
+        // Also send to credit-webhook
+        try {
+          const webhookFormData = new FormData();
+          webhookFormData.append('data', JSON.stringify(emailData));
+          
+          const webhookResponse = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-selbstauskunft-webhook`,
+            {
+              method: 'POST',
+              body: webhookFormData,
+            }
+          );
+          
+          if (!webhookResponse.ok) {
+            console.error('Webhook submission failed:', await webhookResponse.text());
+          } else {
+            console.log('Webhook submission successful');
+          }
+        } catch (webhookError) {
+          console.error('Error sending to webhook:', webhookError);
+          // Don't fail the whole submission if webhook fails
+        }
+
         if (failedUploads.length > 0) {
           toast.warning(`E-Mail erfolgreich gesendet, aber ${failedUploads.length} Datei(en) konnten nicht hochgeladen werden.`);
         }

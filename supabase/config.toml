@@ -2,3 +2,6 @@ project_id = "hvwovrurvleityqyshqv"
 
 [functions.submit-baufinanzierung-webhook]
 verify_jwt = false
+
+[functions.submit-selbstauskunft-webhook]
+verify_jwt = false
