@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { PDFDocument, StandardFonts, rgb } from "https://esm.sh/pdf-lib@1.17.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -20,9 +21,9 @@ interface FormDataRequest {
   };
 }
 
-// Helper function to convert ArrayBuffer to base64
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
+// Helper function to convert Uint8Array or ArrayBuffer to base64
+function arrayBufferToBase64(buffer: ArrayBuffer | Uint8Array): string {
+  const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
   let binary = '';
   for (let i = 0; i < bytes.length; i++) {
     binary += String.fromCharCode(bytes[i]);
@@ -30,98 +31,126 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
   return btoa(binary);
 }
 
-// Simple PDF generator for server-side
-function generatePDFContent(jsonData: any): string {
-  const lines: string[] = [];
+// Generate actual PDF using pdf-lib
+async function generatePDF(jsonData: any): Promise<Uint8Array> {
+  const pdfDoc = await PDFDocument.create();
+  const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   
-  lines.push('Steuer-Selbstauskunft');
-  lines.push(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`);
-  lines.push('');
+  let page = pdfDoc.addPage([595.28, 841.89]); // A4 size
+  const { height } = page.getSize();
+  let yPos = height - 50;
+  const lineHeight = 16;
+  const margin = 50;
+  
+  const addText = (text: string, bold: boolean = false, size: number = 11) => {
+    if (yPos < 50) {
+      page = pdfDoc.addPage([595.28, 841.89]);
+      yPos = height - 50;
+    }
+    page.drawText(text, {
+      x: margin,
+      y: yPos,
+      size: size,
+      font: bold ? helveticaBold : helveticaFont,
+      color: rgb(0, 0, 0),
+    });
+    yPos -= lineHeight;
+  };
+  
+  const addSection = (title: string) => {
+    yPos -= 10;
+    addText(title, true, 13);
+    yPos -= 5;
+  };
+  
+  // Header
+  addText('Steuer-Selbstauskunft', true, 18);
+  yPos -= 5;
+  addText(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, false, 10);
+  yPos -= 10;
   
   // Personal Info
-  lines.push('=== Persönliche Informationen ===');
-  lines.push(`Name: ${jsonData.firstName || ''} ${jsonData.lastName || ''}`);
-  lines.push(`Geburtsdatum: ${jsonData.birthDate || 'Nicht angegeben'}`);
-  lines.push(`E-Mail: ${jsonData.email || 'Nicht angegeben'}`);
-  lines.push(`Adresse: ${jsonData.street || ''} ${jsonData.houseNumber || ''}, ${jsonData.postalCode || ''} ${jsonData.city || ''}`);
-  lines.push(`Telefon: ${jsonData.phone || 'Nicht angegeben'}`);
-  lines.push('');
+  addSection('Persoenliche Informationen');
+  addText(`Name: ${jsonData.firstName || ''} ${jsonData.lastName || ''}`);
+  addText(`Geburtsdatum: ${jsonData.birthDate || 'Nicht angegeben'}`);
+  addText(`E-Mail: ${jsonData.email || 'Nicht angegeben'}`);
+  addText(`Adresse: ${jsonData.street || ''} ${jsonData.houseNumber || ''}, ${jsonData.postalCode || ''} ${jsonData.city || ''}`);
+  addText(`Telefon: ${jsonData.phone || 'Nicht angegeben'}`);
   
   // Family
-  lines.push('=== Familiensituation ===');
-  lines.push(`Familienstand: ${jsonData.maritalStatus || 'Nicht angegeben'}`);
+  addSection('Familiensituation');
+  addText(`Familienstand: ${jsonData.maritalStatus || 'Nicht angegeben'}`);
   if (jsonData.maritalStatus === 'verheiratet') {
-    lines.push(`Verheiratet seit: ${jsonData.marriedSince || 'Nicht angegeben'}`);
-    lines.push(`Ehepartner: ${jsonData.spouseName || 'Nicht angegeben'}`);
+    addText(`Verheiratet seit: ${jsonData.marriedSince || 'Nicht angegeben'}`);
+    addText(`Ehepartner: ${jsonData.spouseName || 'Nicht angegeben'}`);
   }
   if (jsonData.maritalStatus === 'geschieden') {
-    lines.push(`Scheidungsdatum: ${jsonData.divorceDate || 'Nicht angegeben'}`);
+    addText(`Scheidungsdatum: ${jsonData.divorceDate || 'Nicht angegeben'}`);
   }
-  lines.push('');
   
   // Children
-  lines.push('=== Kinder ===');
+  addSection('Kinder');
   if (jsonData.hasChildren && jsonData.children && jsonData.children.length > 0) {
     jsonData.children.forEach((child: any, index: number) => {
-      lines.push(`Kind ${index + 1}: ${child.name || 'Nicht angegeben'}, geboren ${child.birthDate || 'Nicht angegeben'}`);
+      addText(`Kind ${index + 1}: ${child.name || 'Nicht angegeben'}, geboren ${child.birthDate || 'Nicht angegeben'}`);
     });
   } else {
-    lines.push('Keine Kinder');
+    addText('Keine Kinder');
   }
-  lines.push('');
   
   // Work
-  lines.push('=== Berufliche Tätigkeit ===');
-  lines.push(`Beschäftigungsstatus: ${jsonData.employmentStatus || 'Nicht angegeben'}`);
-  lines.push(`Arbeitgeber: ${jsonData.employer || 'Nicht angegeben'}`);
-  lines.push(`Berufsbezeichnung: ${jsonData.jobTitle || 'Nicht angegeben'}`);
-  lines.push(`Beschäftigt seit: ${jsonData.employmentSince || 'Nicht angegeben'}`);
-  lines.push('');
+  addSection('Berufliche Taetigkeit');
+  addText(`Beschaeftigungsstatus: ${jsonData.employmentStatus || 'Nicht angegeben'}`);
+  addText(`Arbeitgeber: ${jsonData.employer || 'Nicht angegeben'}`);
+  addText(`Berufsbezeichnung: ${jsonData.jobTitle || 'Nicht angegeben'}`);
+  addText(`Beschaeftigt seit: ${jsonData.employmentSince || 'Nicht angegeben'}`);
   
   // Income
-  lines.push('=== Einkommen ===');
-  lines.push(`Monatliches Einkommen: ${jsonData.monthlyIncome || 0} €`);
-  lines.push(`Mieteinnahmen: ${jsonData.hasRentalIncome ? `Ja (${jsonData.rentalIncome || 0} €)` : 'Nein'}`);
-  lines.push(`Sozialleistungen: ${jsonData.hasSocialBenefits ? `Ja (${jsonData.socialBenefitAmount || 0} €)` : 'Nein'}`);
-  lines.push(`Kapitalerträge: ${jsonData.hasCapitalGains ? `Ja (${jsonData.capitalGains || 0} €)` : 'Nein'}`);
-  lines.push(`Selbstständige Einkünfte: ${jsonData.hasSelfEmploymentIncome ? `Ja (${jsonData.selfEmploymentIncome || 0} €)` : 'Nein'}`);
-  lines.push(`Crypto-Einkünfte: ${jsonData.hasCryptoIncome ? 'Ja' : 'Nein'}`);
-  lines.push('');
+  addSection('Einkommen');
+  addText(`Monatliches Einkommen: ${jsonData.monthlyIncome || 0} EUR`);
+  addText(`Mieteinnahmen: ${jsonData.hasRentalIncome ? `Ja (${jsonData.rentalIncome || 0} EUR)` : 'Nein'}`);
+  addText(`Sozialleistungen: ${jsonData.hasSocialBenefits ? `Ja (${jsonData.socialBenefitAmount || 0} EUR)` : 'Nein'}`);
+  addText(`Kapitalertraege: ${jsonData.hasCapitalGains ? `Ja (${jsonData.capitalGains || 0} EUR)` : 'Nein'}`);
+  addText(`Selbststaendige Einkuenfte: ${jsonData.hasSelfEmploymentIncome ? `Ja (${jsonData.selfEmploymentIncome || 0} EUR)` : 'Nein'}`);
+  addText(`Crypto-Einkuenfte: ${jsonData.hasCryptoIncome ? 'Ja' : 'Nein'}`);
   
   // Insurance
-  lines.push('=== Versicherungen ===');
-  lines.push(`Krankenversicherung: ${jsonData.hasHealthInsurance ? 'Ja' : 'Nein'}`);
+  addSection('Versicherungen');
+  addText(`Krankenversicherung: ${jsonData.hasHealthInsurance ? 'Ja' : 'Nein'}`);
   if (jsonData.hasHealthInsurance) {
-    lines.push(`Versicherer: ${jsonData.insuranceProvider || 'Nicht angegeben'}`);
-    lines.push(`Art: ${jsonData.insuranceType || 'Nicht angegeben'}`);
-    lines.push(`Monatliche Kosten: ${jsonData.monthlyInsuranceCost || 0} €`);
+    addText(`Versicherer: ${jsonData.insuranceProvider || 'Nicht angegeben'}`);
+    addText(`Art: ${jsonData.insuranceType || 'Nicht angegeben'}`);
+    addText(`Monatliche Kosten: ${jsonData.monthlyInsuranceCost || 0} EUR`);
   }
-  lines.push(`Gewerkschaftsmitglied: ${jsonData.isUnionMember ? `Ja (${jsonData.unionName || ''})` : 'Nein'}`);
-  lines.push('');
+  addText(`Gewerkschaftsmitglied: ${jsonData.isUnionMember ? `Ja (${jsonData.unionName || ''})` : 'Nein'}`);
   
   // Property
-  lines.push('=== Immobilien ===');
-  lines.push(`Immobilienbesitz: ${jsonData.ownsProperty ? 'Ja' : 'Nein'}`);
+  addSection('Immobilien');
+  addText(`Immobilienbesitz: ${jsonData.ownsProperty ? 'Ja' : 'Nein'}`);
   if (jsonData.ownsProperty) {
-    lines.push(`Wert: ${jsonData.propertyValue || 0} €`);
-    lines.push(`Nutzung: ${jsonData.propertyUsage || 'Nicht angegeben'}`);
+    addText(`Wert: ${jsonData.propertyValue || 0} EUR`);
+    addText(`Nutzung: ${jsonData.propertyUsage || 'Nicht angegeben'}`);
   }
-  lines.push('');
   
   // Special Circumstances
-  lines.push('=== Besondere Umstände ===');
-  lines.push(`Behinderung: ${jsonData.hasDisability ? `Ja (${jsonData.disabilityDegree || ''})` : 'Nein'}`);
-  lines.push(`Kirchensteuer: ${jsonData.hasChurchTax ? `Ja (${jsonData.religion || ''})` : 'Nein'}`);
-  lines.push('');
+  addSection('Besondere Umstaende');
+  addText(`Behinderung: ${jsonData.hasDisability ? `Ja (${jsonData.disabilityDegree || ''})` : 'Nein'}`);
+  addText(`Kirchensteuer: ${jsonData.hasChurchTax ? `Ja (${jsonData.religion || ''})` : 'Nein'}`);
   
   // Bank Details
-  lines.push('=== Bankverbindung ===');
-  lines.push(`Kontoinhaber: ${jsonData.accountHolder || 'Nicht angegeben'}`);
-  lines.push(`IBAN: ${jsonData.iban || 'Nicht angegeben'}`);
-  lines.push(`BIC: ${jsonData.bic || 'Nicht angegeben'}`);
-  lines.push(`Bank: ${jsonData.bankName || 'Nicht angegeben'}`);
+  addSection('Bankverbindung');
+  addText(`Kontoinhaber: ${jsonData.accountHolder || 'Nicht angegeben'}`);
+  addText(`IBAN: ${jsonData.iban || 'Nicht angegeben'}`);
+  addText(`BIC: ${jsonData.bic || 'Nicht angegeben'}`);
+  addText(`Bank: ${jsonData.bankName || 'Nicht angegeben'}`);
   
-  return lines.join('\n');
+  // Footer
+  yPos -= 20;
+  addText('Diese Selbstauskunft wurde ueber das Clairmont Advisory Prognose-Formular erstellt.', false, 9);
+  
+  const pdfBytes = await pdfDoc.save();
+  return pdfBytes;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -303,9 +332,9 @@ const handler = async (req: Request): Promise<Response> => {
       console.log('Make.com webhook sent successfully');
     }
 
-    // Generate PDF content as text (base64 encoded)
-    const pdfTextContent = generatePDFContent(jsonData);
-    const pdfBase64 = btoa(unescape(encodeURIComponent(pdfTextContent)));
+    // Generate actual PDF
+    const pdfBytes = await generatePDF(jsonData);
+    const pdfBase64 = arrayBufferToBase64(pdfBytes);
 
     // Prepare additional webhook payload
     const additionalWebhookPayload = {
@@ -313,8 +342,8 @@ const handler = async (req: Request): Promise<Response> => {
       submittedAt: new Date().toISOString(),
       formData: jsonData,
       pdfContent: {
-        name: `Steuer-Selbstauskunft_${jsonData.firstName || 'Unknown'}_${jsonData.lastName || 'User'}.txt`,
-        type: 'text/plain',
+        name: `Steuer-Selbstauskunft_${jsonData.firstName || 'Unknown'}_${jsonData.lastName || 'User'}.pdf`,
+        type: 'application/pdf',
         data: pdfBase64
       },
       files: filesForWebhook,
