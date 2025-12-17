@@ -4,6 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowRight, ArrowLeft, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import officeBackground from "@/assets/office-background.png";
 
 // Import step components
@@ -148,8 +149,88 @@ const BaufinanzierungSelbstauskunft = () => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     console.log("Baufi form submitted:", formData);
+    
+    try {
+      // Prepare FormData for file upload
+      const submitFormData = new FormData();
+      
+      // Add JSON data
+      const jsonData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+        email: formData.email,
+        address: formData.address,
+        livingThereSince: formData.livingThereSince,
+        isMarried: formData.isMarried,
+        hasChildren: formData.hasChildren,
+        children: formData.children,
+        isSelfEmployed: formData.isSelfEmployed,
+        hasPrivateHealthInsurance: formData.hasPrivateHealthInsurance,
+        currentLoans: formData.currentLoans,
+        hasOtherObligations: formData.hasOtherObligations,
+        otherObligations: formData.otherObligations,
+        hasLandRegisterExtract: formData.hasLandRegisterExtract,
+        hasEnergyCertificate: formData.hasEnergyCertificate,
+        hasLivingSpaceCalculation: formData.hasLivingSpaceCalculation,
+        isRented: formData.isRented,
+        iban: formData.iban,
+        confirmCorrectness: formData.confirmCorrectness,
+        acceptTerms: formData.acceptTerms,
+        acceptPrivacy: formData.acceptPrivacy,
+      };
+      
+      submitFormData.append('data', JSON.stringify(jsonData));
+      
+      // Add files
+      const fileFields: (keyof BaufiFormData)[] = [
+        'idCardFront', 'idCardBack', 'spouseIdCard',
+        'taxReturns2021', 'taxReturns2022', 'taxReturns2023', 'taxReturns2024',
+        'balanceSheets2024', 'bwa2024', 'privateHealthInsuranceProof',
+        'landRegisterExtract', 'energyCertificate', 'livingSpaceCalculation',
+        'cadastralMap', 'divisionDeclaration', 'buildingPlans',
+        'photosInterior', 'photosExterior',
+        'rentalContracts', 'rentalList', 'rentalIncomeProof'
+      ];
+      
+      for (const field of fileFields) {
+        const fileData = formData[field];
+        if (fileData instanceof File) {
+          submitFormData.append(field, fileData);
+        } else if (Array.isArray(fileData)) {
+          fileData.forEach((file) => {
+            if (file instanceof File) {
+              submitFormData.append(field, file);
+            }
+          });
+        }
+      }
+      
+      // Send to webhook using direct fetch
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-baufinanzierung-webhook`,
+        {
+          method: 'POST',
+          body: submitFormData,
+        }
+      );
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Webhook error:', errorText);
+        toast.error('Fehler beim Senden der Daten');
+      } else {
+        const result = await response.json();
+        console.log('Webhook response:', result);
+        toast.success('Daten erfolgreich gesendet!');
+      }
+    } catch (error) {
+      console.error('Submit error:', error);
+      toast.error('Fehler beim Senden der Anfrage');
+    }
+    
     localStorage.removeItem("baufiFormData");
     localStorage.removeItem("baufiCurrentStep");
     nextStep();
