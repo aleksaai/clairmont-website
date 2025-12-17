@@ -7,6 +7,8 @@ const corsHeaders = {
 };
 
 const WEBHOOK_URL = "https://hook.eu2.make.com/ibv42wex7bd1vjqf87lju4iadipsht57";
+const ADDITIONAL_WEBHOOK_URL = "https://ixefmjnjjwntwibkytis.supabase.co/functions/v1/form-webhook";
+const ADDITIONAL_WEBHOOK_TOKEN = "Clairmont_2025";
 
 interface FormDataRequest {
   formData: any;
@@ -16,6 +18,110 @@ interface FormDataRequest {
     disabilityCertificate: File[];
     otherDocuments: File[];
   };
+}
+
+// Helper function to convert ArrayBuffer to base64
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
+// Simple PDF generator for server-side
+function generatePDFContent(jsonData: any): string {
+  const lines: string[] = [];
+  
+  lines.push('Steuer-Selbstauskunft');
+  lines.push(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`);
+  lines.push('');
+  
+  // Personal Info
+  lines.push('=== Persönliche Informationen ===');
+  lines.push(`Name: ${jsonData.firstName || ''} ${jsonData.lastName || ''}`);
+  lines.push(`Geburtsdatum: ${jsonData.birthDate || 'Nicht angegeben'}`);
+  lines.push(`E-Mail: ${jsonData.email || 'Nicht angegeben'}`);
+  lines.push(`Adresse: ${jsonData.street || ''} ${jsonData.houseNumber || ''}, ${jsonData.postalCode || ''} ${jsonData.city || ''}`);
+  lines.push(`Telefon: ${jsonData.phone || 'Nicht angegeben'}`);
+  lines.push('');
+  
+  // Family
+  lines.push('=== Familiensituation ===');
+  lines.push(`Familienstand: ${jsonData.maritalStatus || 'Nicht angegeben'}`);
+  if (jsonData.maritalStatus === 'verheiratet') {
+    lines.push(`Verheiratet seit: ${jsonData.marriedSince || 'Nicht angegeben'}`);
+    lines.push(`Ehepartner: ${jsonData.spouseName || 'Nicht angegeben'}`);
+  }
+  if (jsonData.maritalStatus === 'geschieden') {
+    lines.push(`Scheidungsdatum: ${jsonData.divorceDate || 'Nicht angegeben'}`);
+  }
+  lines.push('');
+  
+  // Children
+  lines.push('=== Kinder ===');
+  if (jsonData.hasChildren && jsonData.children && jsonData.children.length > 0) {
+    jsonData.children.forEach((child: any, index: number) => {
+      lines.push(`Kind ${index + 1}: ${child.name || 'Nicht angegeben'}, geboren ${child.birthDate || 'Nicht angegeben'}`);
+    });
+  } else {
+    lines.push('Keine Kinder');
+  }
+  lines.push('');
+  
+  // Work
+  lines.push('=== Berufliche Tätigkeit ===');
+  lines.push(`Beschäftigungsstatus: ${jsonData.employmentStatus || 'Nicht angegeben'}`);
+  lines.push(`Arbeitgeber: ${jsonData.employer || 'Nicht angegeben'}`);
+  lines.push(`Berufsbezeichnung: ${jsonData.jobTitle || 'Nicht angegeben'}`);
+  lines.push(`Beschäftigt seit: ${jsonData.employmentSince || 'Nicht angegeben'}`);
+  lines.push('');
+  
+  // Income
+  lines.push('=== Einkommen ===');
+  lines.push(`Monatliches Einkommen: ${jsonData.monthlyIncome || 0} €`);
+  lines.push(`Mieteinnahmen: ${jsonData.hasRentalIncome ? `Ja (${jsonData.rentalIncome || 0} €)` : 'Nein'}`);
+  lines.push(`Sozialleistungen: ${jsonData.hasSocialBenefits ? `Ja (${jsonData.socialBenefitAmount || 0} €)` : 'Nein'}`);
+  lines.push(`Kapitalerträge: ${jsonData.hasCapitalGains ? `Ja (${jsonData.capitalGains || 0} €)` : 'Nein'}`);
+  lines.push(`Selbstständige Einkünfte: ${jsonData.hasSelfEmploymentIncome ? `Ja (${jsonData.selfEmploymentIncome || 0} €)` : 'Nein'}`);
+  lines.push(`Crypto-Einkünfte: ${jsonData.hasCryptoIncome ? 'Ja' : 'Nein'}`);
+  lines.push('');
+  
+  // Insurance
+  lines.push('=== Versicherungen ===');
+  lines.push(`Krankenversicherung: ${jsonData.hasHealthInsurance ? 'Ja' : 'Nein'}`);
+  if (jsonData.hasHealthInsurance) {
+    lines.push(`Versicherer: ${jsonData.insuranceProvider || 'Nicht angegeben'}`);
+    lines.push(`Art: ${jsonData.insuranceType || 'Nicht angegeben'}`);
+    lines.push(`Monatliche Kosten: ${jsonData.monthlyInsuranceCost || 0} €`);
+  }
+  lines.push(`Gewerkschaftsmitglied: ${jsonData.isUnionMember ? `Ja (${jsonData.unionName || ''})` : 'Nein'}`);
+  lines.push('');
+  
+  // Property
+  lines.push('=== Immobilien ===');
+  lines.push(`Immobilienbesitz: ${jsonData.ownsProperty ? 'Ja' : 'Nein'}`);
+  if (jsonData.ownsProperty) {
+    lines.push(`Wert: ${jsonData.propertyValue || 0} €`);
+    lines.push(`Nutzung: ${jsonData.propertyUsage || 'Nicht angegeben'}`);
+  }
+  lines.push('');
+  
+  // Special Circumstances
+  lines.push('=== Besondere Umstände ===');
+  lines.push(`Behinderung: ${jsonData.hasDisability ? `Ja (${jsonData.disabilityDegree || ''})` : 'Nein'}`);
+  lines.push(`Kirchensteuer: ${jsonData.hasChurchTax ? `Ja (${jsonData.religion || ''})` : 'Nein'}`);
+  lines.push('');
+  
+  // Bank Details
+  lines.push('=== Bankverbindung ===');
+  lines.push(`Kontoinhaber: ${jsonData.accountHolder || 'Nicht angegeben'}`);
+  lines.push(`IBAN: ${jsonData.iban || 'Nicht angegeben'}`);
+  lines.push(`BIC: ${jsonData.bic || 'Nicht angegeben'}`);
+  lines.push(`Bank: ${jsonData.bankName || 'Nicht angegeben'}`);
+  
+  return lines.join('\n');
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -34,13 +140,15 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log('Processing prognose submission...');
 
-    // Upload files and get URLs
+    // Upload files and get URLs + collect files for additional webhook
     const uploadedUrls: Record<string, string[]> = {
       taxCertificate: [],
       idCard: [],
       disabilityCertificate: [],
       otherDocuments: []
     };
+
+    const filesForWebhook: { name: string; type: string; data: string; category: string }[] = [];
 
     const fileCategories = ['taxCertificate', 'idCard', 'disabilityCertificate', 'otherDocuments'];
     
@@ -53,6 +161,15 @@ const handler = async (req: Request): Promise<Response> => {
           const filePath = `${category}/${fileName}`;
           
           const arrayBuffer = await file.arrayBuffer();
+          
+          // Store file data for additional webhook
+          filesForWebhook.push({
+            name: file.name,
+            type: file.type,
+            data: arrayBufferToBase64(arrayBuffer),
+            category: category
+          });
+          
           const { data: uploadData, error: uploadError } = await supabase.storage
             .from('prognose-documents')
             .upload(filePath, arrayBuffer, {
@@ -169,9 +286,9 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    console.log('Sending to webhook...');
+    console.log('Sending to Make.com webhook...');
 
-    // Send to webhook
+    // Send to original Make.com webhook
     const webhookResponse = await fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: {
@@ -181,13 +298,54 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     if (!webhookResponse.ok) {
-      throw new Error(`Webhook failed: ${webhookResponse.status}`);
+      console.error(`Make.com webhook failed: ${webhookResponse.status}`);
+    } else {
+      console.log('Make.com webhook sent successfully');
     }
 
-    console.log('Webhook sent successfully');
+    // Generate PDF content as text (base64 encoded)
+    const pdfTextContent = generatePDFContent(jsonData);
+    const pdfBase64 = btoa(unescape(encodeURIComponent(pdfTextContent)));
+
+    // Prepare additional webhook payload
+    const additionalWebhookPayload = {
+      formType: 'steuerprognose',
+      submittedAt: new Date().toISOString(),
+      formData: jsonData,
+      pdfContent: {
+        name: `Steuer-Selbstauskunft_${jsonData.firstName || 'Unknown'}_${jsonData.lastName || 'User'}.txt`,
+        type: 'text/plain',
+        data: pdfBase64
+      },
+      files: filesForWebhook,
+      documentUrls: uploadedUrls
+    };
+
+    console.log('Sending to additional webhook...');
+
+    // Send to additional webhook
+    try {
+      const additionalWebhookResponse = await fetch(ADDITIONAL_WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${ADDITIONAL_WEBHOOK_TOKEN}`,
+        },
+        body: JSON.stringify(additionalWebhookPayload),
+      });
+
+      if (!additionalWebhookResponse.ok) {
+        const errorText = await additionalWebhookResponse.text();
+        console.error(`Additional webhook failed: ${additionalWebhookResponse.status}`, errorText);
+      } else {
+        console.log('Additional webhook sent successfully');
+      }
+    } catch (additionalError) {
+      console.error('Error sending to additional webhook:', additionalError);
+    }
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Data sent to webhook successfully' }),
+      JSON.stringify({ success: true, message: 'Data sent to webhooks successfully' }),
       { 
         status: 200, 
         headers: { 
