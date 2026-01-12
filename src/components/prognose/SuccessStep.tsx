@@ -97,43 +97,53 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
 
   // Helper function to upload files and return paths with error tracking
   const uploadFiles = async (files: any, folder: string): Promise<UploadResult> => {
-    if (!files || files.length === 0) return { paths: [], errors: [] };
-    
+    const list = Array.isArray(files) ? files : [];
+    if (list.length === 0) return { paths: [], errors: [] };
+
+    // Filter out legacy placeholders like `{}` that can appear after a reload.
+    const validItems = list.filter((f) => typeof f === 'string' || f instanceof File);
+
+    // If EVERYTHING is invalid, we treat it as "files lost" and surface a single clear error.
+    if (validItems.length === 0) {
+      return {
+        paths: [],
+        errors: ['Dokumente wurden nach einem Neuladen der Seite nicht korrekt übernommen. Bitte laden Sie die Dokumente erneut hoch.'],
+      };
+    }
+
     const paths: string[] = [];
     const errors: string[] = [];
-    
-    for (const file of files) {
+
+    // If there are some invalid items but also valid ones, ignore the invalid placeholders silently.
+    if (validItems.length !== list.length) {
+      console.warn('Some invalid file placeholders were ignored during upload.');
+    }
+
+    for (const file of validItems) {
       if (typeof file === 'string') {
         paths.push(file);
         continue;
       }
-      
-      if (!(file instanceof File)) {
-        // Not a valid File object - this is the localStorage issue
-        const fileName = file?.name || 'Unbekannte Datei';
-        errors.push(`${fileName} ist kein gültiges File-Objekt (Seite wurde möglicherweise neu geladen)`);
-        console.error('Invalid file object:', file);
-        continue;
-      }
-      
+
+      // Here: file is guaranteed to be File
       try {
         const timestamp = Date.now();
         const rawName = file.name || 'upload';
         const safeName = sanitizeFileName(rawName);
         const fileName = `${timestamp}_${safeName}`;
         const filePath = `${folder}/${fileName}`;
-        
+
         console.log('Uploading file:', fileName);
         const { error } = await supabase.storage
           .from('prognose-documents')
           .upload(filePath, file);
-        
+
         if (error) {
           console.error('Upload error for', rawName, ':', error);
           errors.push(`Upload von ${rawName} fehlgeschlagen: ${error.message}`);
           continue;
         }
-        
+
         paths.push(filePath);
         console.log('Successfully uploaded:', fileName);
       } catch (err: any) {
@@ -141,7 +151,7 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
         errors.push(`Fehler bei ${file.name}: ${err.message || 'Unbekannter Fehler'}`);
       }
     }
-    
+
     return { paths, errors };
   };
 
@@ -270,11 +280,31 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
 
       console.log('All files uploaded. Paths:', uploadedPaths);
 
-      // Check if critical files are missing
+      // Check if required files are missing (after upload) - block webhook & show re-upload UI
+      const requiredMissing: MissingDocument[] = [];
+
       const hasIdCard = uploadedPaths.documents.idCard?.length > 0;
-      
       if (!hasIdCard) {
-        toast.error('Personalausweis fehlt - Bitte laden Sie Ihren Personalausweis hoch');
+        requiredMissing.push({ key: 'idCard', label: 'Personalausweis', required: true });
+      }
+
+      if (formData.taxYears?.length > 0) {
+        const hasAnyTaxCert = Object.values(uploadedPaths.taxCertificatesByYear).some((arr) => (arr?.length || 0) > 0);
+        if (!hasAnyTaxCert) {
+          requiredMissing.push({ key: 'taxCertificates', label: 'Lohnsteuerbescheide', required: true });
+        }
+      }
+
+      if (formData.hasDisability) {
+        const hasDisability = uploadedPaths.documents.disabilityCertificate?.length > 0;
+        if (!hasDisability) {
+          requiredMissing.push({ key: 'disabilityCertificate', label: 'Behindertenausweis', required: true });
+        }
+      }
+
+      if (requiredMissing.length > 0) {
+        toast.error(`Fehlende Dokumente: ${requiredMissing.map((d) => d.label).join(', ')}. Bitte laden Sie diese erneut hoch.`);
+        setMissingDocuments(requiredMissing);
         setIsSubmitting(false);
         return;
       }

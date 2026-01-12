@@ -178,9 +178,35 @@ const Prognose = () => {
   useEffect(() => {
     const savedData = localStorage.getItem("prognoseFormData");
     const savedStep = localStorage.getItem("prognoseCurrentStep");
+
     if (savedData) {
-      setFormData(JSON.parse(savedData));
+      try {
+        const parsed = JSON.parse(savedData);
+
+        // Defensive: ensure no legacy/invalid "File" placeholders survive reload.
+        const sanitized = {
+          ...parsed,
+          documents: undefined,
+          taxCertificatesByYear: undefined,
+          propertyDocuments: undefined,
+          additionalDocuments: undefined,
+          cryptoDocuments: undefined,
+          spouseTaxDocument: undefined,
+          disabilityProof: undefined,
+          alimonyProof: undefined,
+          // legacy keys that might exist from older versions
+          taxCertificateFiles: undefined,
+          cryptoUploads: undefined,
+        };
+
+        setFormData((prev) => ({ ...prev, ...sanitized }));
+      } catch (e) {
+        console.warn("Could not parse saved prognose form data; clearing.", e);
+        localStorage.removeItem("prognoseFormData");
+        localStorage.removeItem("prognoseCurrentStep");
+      }
     }
+
     if (savedStep) {
       setCurrentStep(parseInt(savedStep));
     }
