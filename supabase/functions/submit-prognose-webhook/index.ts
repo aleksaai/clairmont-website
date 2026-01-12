@@ -31,124 +31,223 @@ function arrayBufferToBase64(buffer: ArrayBuffer | Uint8Array): string {
   return btoa(binary);
 }
 
-// Generate actual PDF using pdf-lib
-async function generatePDF(jsonData: any): Promise<Uint8Array> {
+// Generate actual PDF using pdf-lib - COMPLETE with all form fields
+async function generatePDF(data: any): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.create();
-  const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  let page = pdfDoc.addPage([595, 842]); // A4
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   
-  let page = pdfDoc.addPage([595.28, 841.89]); // A4 size
-  const { height } = page.getSize();
-  let yPos = height - 50;
+  let yPosition = 800;
+  const leftMargin = 50;
   const lineHeight = 16;
-  const margin = 50;
+  const sectionSpacing = 25;
   
-  const addText = (text: string, bold: boolean = false, size: number = 11) => {
-    if (yPos < 50) {
-      page = pdfDoc.addPage([595.28, 841.89]);
-      yPos = height - 50;
+  const addText = (text: string, isBold = false, fontSize = 10) => {
+    if (yPosition < 60) {
+      page = pdfDoc.addPage([595, 842]);
+      yPosition = 800;
     }
     page.drawText(text, {
-      x: margin,
-      y: yPos,
-      size: size,
-      font: bold ? helveticaBold : helveticaFont,
+      x: leftMargin,
+      y: yPosition,
+      size: fontSize,
+      font: isBold ? boldFont : font,
       color: rgb(0, 0, 0),
     });
-    yPos -= lineHeight;
+    yPosition -= lineHeight;
   };
   
   const addSection = (title: string) => {
-    yPos -= 10;
-    addText(title, true, 13);
-    yPos -= 5;
+    yPosition -= sectionSpacing;
+    if (yPosition < 60) {
+      page = pdfDoc.addPage([595, 842]);
+      yPosition = 800;
+    }
+    addText(title, true, 12);
+    yPosition -= 5;
   };
-  
+
+  const formatDate = (dateStr: string | undefined) => {
+    if (!dateStr) return '-';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('de-DE');
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const formatBoolean = (val: boolean | undefined) => val ? 'Ja' : 'Nein';
+
   // Header
-  addText('Steuer-Selbstauskunft', true, 18);
-  yPos -= 5;
-  addText(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, false, 10);
-  yPos -= 10;
+  addText('STEUER-SELBSTAUSKUNFT', true, 18);
+  yPosition -= 10;
+  addText(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, false, 9);
+  yPosition -= 20;
+
+  // ==================== PERSÖNLICHE INFORMATIONEN ====================
+  addSection('PERSOENLICHE INFORMATIONEN');
+  addText(`Vorname: ${data.firstName || '-'}`);
+  addText(`Nachname: ${data.lastName || '-'}`);
+  addText(`Geburtsdatum: ${formatDate(data.birthDate)}`);
+  addText(`Geschlecht: ${data.gender || '-'}`);
+  addText(`Nationalitaet: ${data.nationality || '-'}`);
+  addText(`E-Mail: ${data.email || '-'}`);
+  addText(`Adresse: ${data.address || '-'}`);
   
-  // Personal Info
-  addSection('Persoenliche Informationen');
-  addText(`Name: ${jsonData.firstName || ''} ${jsonData.lastName || ''}`);
-  addText(`Geburtsdatum: ${jsonData.birthDate || 'Nicht angegeben'}`);
-  addText(`E-Mail: ${jsonData.email || 'Nicht angegeben'}`);
-  addText(`Adresse: ${jsonData.street || ''} ${jsonData.houseNumber || ''}, ${jsonData.postalCode || ''} ${jsonData.city || ''}`);
-  addText(`Telefon: ${jsonData.phone || 'Nicht angegeben'}`);
-  
-  // Family
-  addSection('Familiensituation');
-  addText(`Familienstand: ${jsonData.maritalStatus || 'Nicht angegeben'}`);
-  if (jsonData.maritalStatus === 'verheiratet') {
-    addText(`Verheiratet seit: ${jsonData.marriedSince || 'Nicht angegeben'}`);
-    addText(`Ehepartner: ${jsonData.spouseName || 'Nicht angegeben'}`);
-  }
-  if (jsonData.maritalStatus === 'geschieden') {
-    addText(`Scheidungsdatum: ${jsonData.divorceDate || 'Nicht angegeben'}`);
+  if (data.differentAddress) {
+    addText(`Abweichende Adresse: Ja`);
+    addText(`Alternative Adresse: ${data.alternativeAddress || '-'}`);
   }
   
-  // Children
-  addSection('Kinder');
-  if (jsonData.hasChildren && jsonData.children && jsonData.children.length > 0) {
-    jsonData.children.forEach((child: any, index: number) => {
-      addText(`Kind ${index + 1}: ${child.name || 'Nicht angegeben'}, geboren ${child.birthDate || 'Nicht angegeben'}`);
+  if (data.personalInfo) {
+    if (data.personalInfo.street) addText(`Strasse: ${data.personalInfo.street}`);
+    if (data.personalInfo.zipCode) addText(`PLZ: ${data.personalInfo.zipCode}`);
+    if (data.personalInfo.city) addText(`Stadt: ${data.personalInfo.city}`);
+  }
+
+  // ==================== FAMILIENSITUATION ====================
+  addSection('FAMILIENSITUATION');
+  addText(`Familienstand: ${data.maritalStatus || '-'}`);
+  
+  if (data.maritalStatus === 'married' || data.maritalStatus === 'verheiratet') {
+    addText(`Verheiratet seit: ${formatDate(data.marriedSince)}`);
+    addText(`Name des Ehepartners: ${data.spouseName || '-'}`);
+    addText(`Geburtsdatum Ehepartner: ${formatDate(data.spouseBirthDate)}`);
+    addText(`Beruf Ehepartner: ${data.spouseOccupation || '-'}`);
+    addText(`Ehepartner berufstaetig: ${formatBoolean(data.spouseEmployed)}`);
+  }
+  
+  if (data.maritalStatus === 'divorced' || data.maritalStatus === 'geschieden') {
+    addText(`Scheidungsdatum: ${formatDate(data.divorceDate)}`);
+  }
+
+  // ==================== KINDER ====================
+  addSection('KINDER');
+  addText(`Kinder vorhanden: ${formatBoolean(data.hasChildren)}`);
+  
+  if (data.hasChildren && data.children && Array.isArray(data.children) && data.children.length > 0) {
+    addText(`Anzahl Kinder: ${data.children.length}`);
+    yPosition -= 5;
+    data.children.forEach((child: any, index: number) => {
+      addText(`Kind ${index + 1}:`, true);
+      addText(`  Name: ${child.name || '-'}`);
+      addText(`  Geburtsdatum: ${formatDate(child.birthDate)}`);
+      addText(`  Kindergeld-Bezugszeitraum: ${child.childBenefitPeriod || '-'}`);
     });
-  } else {
-    addText('Keine Kinder');
+  }
+
+  // ==================== BERUFLICHE TÄTIGKEIT ====================
+  addSection('BERUFLICHE TAETIGKEIT');
+  addText(`Beruf/Taetigkeit: ${data.occupation || '-'}`);
+  addText(`Home-Office-Tage pro Woche: ${data.homeOfficeDays || '-'}`);
+  
+  if (data.workplace) {
+    addText(`Arbeitsplatz-Adresse:`, true);
+    addText(`  Strasse: ${data.workplace.street || '-'}`);
+    addText(`  PLZ: ${data.workplace.zipCode || '-'}`);
+    addText(`  Stadt: ${data.workplace.city || '-'}`);
   }
   
-  // Work
-  addSection('Berufliche Taetigkeit');
-  addText(`Beschaeftigungsstatus: ${jsonData.employmentStatus || 'Nicht angegeben'}`);
-  addText(`Arbeitgeber: ${jsonData.employer || 'Nicht angegeben'}`);
-  addText(`Berufsbezeichnung: ${jsonData.jobTitle || 'Nicht angegeben'}`);
-  addText(`Beschaeftigt seit: ${jsonData.employmentSince || 'Nicht angegeben'}`);
-  
-  // Income
-  addSection('Einkommen');
-  addText(`Monatliches Einkommen: ${jsonData.monthlyIncome || 0} EUR`);
-  addText(`Mieteinnahmen: ${jsonData.hasRentalIncome ? `Ja (${jsonData.rentalIncome || 0} EUR)` : 'Nein'}`);
-  addText(`Sozialleistungen: ${jsonData.hasSocialBenefits ? `Ja (${jsonData.socialBenefitAmount || 0} EUR)` : 'Nein'}`);
-  addText(`Kapitalertraege: ${jsonData.hasCapitalGains ? `Ja (${jsonData.capitalGains || 0} EUR)` : 'Nein'}`);
-  addText(`Selbststaendige Einkuenfte: ${jsonData.hasSelfEmploymentIncome ? `Ja (${jsonData.selfEmploymentIncome || 0} EUR)` : 'Nein'}`);
-  addText(`Crypto-Einkuenfte: ${jsonData.hasCryptoIncome ? 'Ja' : 'Nein'}`);
-  
-  // Insurance
-  addSection('Versicherungen');
-  addText(`Krankenversicherung: ${jsonData.hasHealthInsurance ? 'Ja' : 'Nein'}`);
-  if (jsonData.hasHealthInsurance) {
-    addText(`Versicherer: ${jsonData.insuranceProvider || 'Nicht angegeben'}`);
-    addText(`Art: ${jsonData.insuranceType || 'Nicht angegeben'}`);
-    addText(`Monatliche Kosten: ${jsonData.monthlyInsuranceCost || 0} EUR`);
-  }
-  addText(`Gewerkschaftsmitglied: ${jsonData.isUnionMember ? `Ja (${jsonData.unionName || ''})` : 'Nein'}`);
-  
-  // Property
-  addSection('Immobilien');
-  addText(`Immobilienbesitz: ${jsonData.ownsProperty ? 'Ja' : 'Nein'}`);
-  if (jsonData.ownsProperty) {
-    addText(`Wert: ${jsonData.propertyValue || 0} EUR`);
-    addText(`Nutzung: ${jsonData.propertyUsage || 'Nicht angegeben'}`);
+  addText(`Fortbildungskosten: ${data.trainingCosts || '-'}`);
+  addText(`Arbeitsmittel: ${data.businessEquipment || '-'}`);
+
+  // ==================== EINKOMMEN ====================
+  addSection('EINKOMMEN');
+  addText(`Gewerbliche Einkuenfte: ${formatBoolean(data.hasBusiness)}`);
+  if (data.hasBusiness) {
+    addText(`Art des Gewerbes: ${data.businessType || '-'}`);
   }
   
-  // Special Circumstances
-  addSection('Besondere Umstaende');
-  addText(`Behinderung: ${jsonData.hasDisability ? `Ja (${jsonData.disabilityDegree || ''})` : 'Nein'}`);
-  addText(`Kirchensteuer: ${jsonData.hasChurchTax ? `Ja (${jsonData.religion || ''})` : 'Nein'}`);
+  addText(`Krypto-Einkuenfte: ${formatBoolean(data.hasCryptoIncome)}`);
   
-  // Bank Details
-  addSection('Bankverbindung');
-  addText(`Kontoinhaber: ${jsonData.accountHolder || 'Nicht angegeben'}`);
-  addText(`IBAN: ${jsonData.iban || 'Nicht angegeben'}`);
-  addText(`BIC: ${jsonData.bic || 'Nicht angegeben'}`);
-  addText(`Bank: ${jsonData.bankName || 'Nicht angegeben'}`);
+  addText(`Sozialleistungen: ${formatBoolean(data.hasSocialBenefits)}`);
+  if (data.hasSocialBenefits) {
+    addText(`Art der Sozialleistung: ${data.socialBenefitDetails || '-'}`);
+    addText(`Betrag Sozialleistung: ${data.socialBenefitAmount || '-'}`);
+  }
   
+  if (data.taxYears && Array.isArray(data.taxYears) && data.taxYears.length > 0) {
+    addText(`Steuerjahre: ${data.taxYears.join(', ')}`);
+  }
+
+  // ==================== VERSICHERUNGEN & MITGLIEDSCHAFTEN ====================
+  addSection('VERSICHERUNGEN & MITGLIEDSCHAFTEN');
+  addText(`Gewerkschaftsmitglied: ${formatBoolean(data.isUnionMember)}`);
+  if (data.isUnionMember) {
+    addText(`Name der Gewerkschaft: ${data.unionName || '-'}`);
+    addText(`Gewerkschaftsbeitrag (jaehrlich): ${data.unionFee || '-'} EUR`);
+  }
+  
+  addText(`Andere Mitgliedschaften: ${formatBoolean(data.hasOtherMemberships)}`);
+  if (data.hasOtherMemberships) {
+    addText(`Details andere Mitgliedschaften: ${data.otherMembershipsDetails || '-'}`);
+  }
+  
+  if (data.insurances && Array.isArray(data.insurances) && data.insurances.length > 0) {
+    yPosition -= 5;
+    addText(`Versicherungen (${data.insurances.length}):`, true);
+    data.insurances.forEach((insurance: any, index: number) => {
+      addText(`Versicherung ${index + 1}:`, true);
+      addText(`  Art: ${insurance.type || '-'}`);
+      addText(`  Anbieter: ${insurance.provider || '-'}`);
+      addText(`  Jahresbeitrag: ${insurance.yearlyContribution || '-'} EUR`);
+    });
+  }
+
+  // ==================== IMMOBILIEN ====================
+  addSection('IMMOBILIEN');
+  addText(`Immobilienbesitz: ${formatBoolean(data.hasProperty)}`);
+  
+  if (data.hasProperty && data.properties && Array.isArray(data.properties) && data.properties.length > 0) {
+    addText(`Anzahl Immobilien: ${data.properties.length}`);
+    yPosition -= 5;
+    data.properties.forEach((property: any, index: number) => {
+      addText(`Immobilie ${index + 1}:`, true);
+      addText(`  Adresse: ${property.address || '-'}`);
+      addText(`  Kaufpreis: ${property.purchasePrice || '-'} EUR`);
+      addText(`  Kaufdatum: ${formatDate(property.purchaseDate)}`);
+      addText(`  Fertigstellungsdatum: ${formatDate(property.completionDate)}`);
+      addText(`  Anzahl Einheiten: ${property.numberOfUnits || '-'}`);
+      addText(`  Vermietete Flaeche: ${property.rentedArea || '-'} m2`);
+      addText(`  Monatliche Miete: ${property.rent || '-'} EUR`);
+      addText(`  Nebenkosten: ${property.additionalCosts || '-'} EUR`);
+      addText(`  Zinsaufwendungen: ${property.interestExpense || '-'} EUR`);
+      addText(`  Notarkosten: ${property.notaryCosts || '-'} EUR`);
+      addText(`  Grundsteuer: ${property.propertyTax || '-'} EUR`);
+      if (property.otherCostsDescription) {
+        addText(`  Sonstige Kosten: ${property.otherCostsDescription}`);
+        addText(`  Sonstige Kosten Betrag: ${property.otherCostsAmount || '-'} EUR`);
+      }
+    });
+  }
+
+  // ==================== BESONDERE UMSTÄNDE ====================
+  addSection('BESONDERE UMSTAENDE');
+  addText(`Behinderung vorhanden: ${formatBoolean(data.hasDisability)}`);
+  addText(`Unterhaltszahlungen: ${formatBoolean(data.paysAlimony)}`);
+
+  // ==================== BANKVERBINDUNG ====================
+  addSection('BANKVERBINDUNG');
+  addText(`IBAN: ${data.iban || '-'}`);
+  if (data.partnerCode) {
+    addText(`Partnercode: ${data.partnerCode}`);
+  }
+
+  // ==================== BESTÄTIGUNGEN ====================
+  addSection('BESTAETIGUNGEN');
+  addText(`Richtigkeit bestaetigt: ${formatBoolean(data.confirmCorrectness)}`);
+  addText(`AGB akzeptiert: ${formatBoolean(data.acceptTerms)}`);
+  addText(`Datenschutz akzeptiert: ${formatBoolean(data.acceptPrivacy)}`);
+  addText(`E-Mail bestaetigt: ${formatBoolean(data.confirmEmail)}`);
+
   // Footer
-  yPos -= 20;
-  addText('Diese Selbstauskunft wurde ueber das Clairmont Advisory Prognose-Formular erstellt.', false, 9);
-  
+  yPosition -= 30;
+  addText('---', false, 8);
+  addText('Dieses Dokument wurde automatisch generiert.', false, 8);
+  addText('Clairmont Advisory - Steuer-Selbstauskunft', false, 8);
+
   const pdfBytes = await pdfDoc.save();
   return pdfBytes;
 }
@@ -225,71 +324,76 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Files uploaded successfully');
 
-    // Flatten all form data for webhook
+    // Flatten all form data for webhook - COMPLETE with correct field names
     const webhookPayload: Record<string, any> = {
       // Personal Info
       firstName: jsonData.firstName || '',
       lastName: jsonData.lastName || '',
       birthDate: jsonData.birthDate || '',
+      gender: jsonData.gender || '',
+      nationality: jsonData.nationality || '',
       email: jsonData.email || '',
-      street: jsonData.street || '',
-      houseNumber: jsonData.houseNumber || '',
-      postalCode: jsonData.postalCode || '',
-      city: jsonData.city || '',
-      phone: jsonData.phone || '',
+      address: jsonData.address || '',
+      differentAddress: jsonData.differentAddress || false,
+      alternativeAddress: jsonData.alternativeAddress || '',
+      personalInfoStreet: jsonData.personalInfo?.street || '',
+      personalInfoZipCode: jsonData.personalInfo?.zipCode || '',
+      personalInfoCity: jsonData.personalInfo?.city || '',
       
       // Family
       maritalStatus: jsonData.maritalStatus || '',
       marriedSince: jsonData.marriedSince || '',
       spouseName: jsonData.spouseName || '',
+      spouseBirthDate: jsonData.spouseBirthDate || '',
+      spouseOccupation: jsonData.spouseOccupation || '',
+      spouseEmployed: jsonData.spouseEmployed || false,
       divorceDate: jsonData.divorceDate || '',
       
       // Children
       hasChildren: jsonData.hasChildren || false,
       childrenCount: jsonData.children?.length || 0,
       
-      // Work
-      employmentStatus: jsonData.employmentStatus || '',
-      employer: jsonData.employer || '',
-      jobTitle: jsonData.jobTitle || '',
-      employmentSince: jsonData.employmentSince || '',
+      // Work - CORRECT field names
+      occupation: jsonData.occupation || '',
+      homeOfficeDays: jsonData.homeOfficeDays || '',
+      workplaceStreet: jsonData.workplace?.street || '',
+      workplaceZipCode: jsonData.workplace?.zipCode || '',
+      workplaceCity: jsonData.workplace?.city || '',
+      trainingCosts: jsonData.trainingCosts || '',
+      businessEquipment: jsonData.businessEquipment || '',
       
-      // Income
-      monthlyIncome: jsonData.monthlyIncome || 0,
-      hasRentalIncome: jsonData.hasRentalIncome || false,
-      rentalIncome: jsonData.rentalIncome || 0,
-      hasSocialBenefits: jsonData.hasSocialBenefits || false,
-      socialBenefitAmount: jsonData.socialBenefitAmount || 0,
-      hasCapitalGains: jsonData.hasCapitalGains || false,
-      capitalGains: jsonData.capitalGains || 0,
-      hasSelfEmploymentIncome: jsonData.hasSelfEmploymentIncome || false,
-      selfEmploymentIncome: jsonData.selfEmploymentIncome || 0,
+      // Income - CORRECT field names
+      hasBusiness: jsonData.hasBusiness || false,
+      businessType: jsonData.businessType || '',
       hasCryptoIncome: jsonData.hasCryptoIncome || false,
+      hasSocialBenefits: jsonData.hasSocialBenefits || false,
+      socialBenefitDetails: jsonData.socialBenefitDetails || '',
+      socialBenefitAmount: jsonData.socialBenefitAmount || '',
+      taxYears: jsonData.taxYears || [],
       
-      // Insurance
-      hasHealthInsurance: jsonData.hasHealthInsurance || false,
-      insuranceProvider: jsonData.insuranceProvider || '',
-      insuranceType: jsonData.insuranceType || '',
-      monthlyInsuranceCost: jsonData.monthlyInsuranceCost || 0,
+      // Insurance & Memberships - CORRECT field names
       isUnionMember: jsonData.isUnionMember || false,
       unionName: jsonData.unionName || '',
+      unionFee: jsonData.unionFee || '',
+      hasOtherMemberships: jsonData.hasOtherMemberships || false,
+      otherMembershipsDetails: jsonData.otherMembershipsDetails || '',
+      insurancesCount: jsonData.insurances?.length || 0,
       
-      // Property
-      ownsProperty: jsonData.ownsProperty || false,
-      propertyValue: jsonData.propertyValue || 0,
-      propertyUsage: jsonData.propertyUsage || '',
+      // Property - CORRECT field names
+      hasProperty: jsonData.hasProperty || false,
+      propertiesCount: jsonData.properties?.length || 0,
       
-      // Special Circumstances
+      // Special Circumstances - CORRECT field names
       hasDisability: jsonData.hasDisability || false,
-      disabilityDegree: jsonData.disabilityDegree || '',
-      hasChurchTax: jsonData.hasChurchTax || false,
-      religion: jsonData.religion || '',
+      paysAlimony: jsonData.paysAlimony || false,
       
-      // Bank Details
-      accountHolder: jsonData.accountHolder || '',
+      // Bank Details - CORRECT field names
       iban: jsonData.iban || '',
-      bic: jsonData.bic || '',
-      bankName: jsonData.bankName || '',
+      partnerCode: jsonData.partnerCode || '',
+      confirmCorrectness: jsonData.confirmCorrectness || false,
+      acceptTerms: jsonData.acceptTerms || false,
+      acceptPrivacy: jsonData.acceptPrivacy || false,
+      confirmEmail: jsonData.confirmEmail || false,
       
       // Document URLs
       taxCertificateUrls: uploadedUrls.taxCertificate,
@@ -303,7 +407,35 @@ const handler = async (req: Request): Promise<Response> => {
       jsonData.children.forEach((child: any, index: number) => {
         webhookPayload[`child_${index + 1}_name`] = child.name || '';
         webhookPayload[`child_${index + 1}_birthDate`] = child.birthDate || '';
-        webhookPayload[`child_${index + 1}_livesWithYou`] = child.livesWithYou || false;
+        webhookPayload[`child_${index + 1}_childBenefitPeriod`] = child.childBenefitPeriod || '';
+      });
+    }
+
+    // Add insurances details individually
+    if (jsonData.insurances && jsonData.insurances.length > 0) {
+      jsonData.insurances.forEach((insurance: any, index: number) => {
+        webhookPayload[`insurance_${index + 1}_type`] = insurance.type || '';
+        webhookPayload[`insurance_${index + 1}_provider`] = insurance.provider || '';
+        webhookPayload[`insurance_${index + 1}_yearlyContribution`] = insurance.yearlyContribution || '';
+      });
+    }
+
+    // Add properties details individually
+    if (jsonData.properties && jsonData.properties.length > 0) {
+      jsonData.properties.forEach((property: any, index: number) => {
+        webhookPayload[`property_${index + 1}_address`] = property.address || '';
+        webhookPayload[`property_${index + 1}_purchasePrice`] = property.purchasePrice || '';
+        webhookPayload[`property_${index + 1}_purchaseDate`] = property.purchaseDate || '';
+        webhookPayload[`property_${index + 1}_completionDate`] = property.completionDate || '';
+        webhookPayload[`property_${index + 1}_numberOfUnits`] = property.numberOfUnits || '';
+        webhookPayload[`property_${index + 1}_rentedArea`] = property.rentedArea || '';
+        webhookPayload[`property_${index + 1}_rent`] = property.rent || '';
+        webhookPayload[`property_${index + 1}_additionalCosts`] = property.additionalCosts || '';
+        webhookPayload[`property_${index + 1}_interestExpense`] = property.interestExpense || '';
+        webhookPayload[`property_${index + 1}_notaryCosts`] = property.notaryCosts || '';
+        webhookPayload[`property_${index + 1}_propertyTax`] = property.propertyTax || '';
+        webhookPayload[`property_${index + 1}_otherCostsDescription`] = property.otherCostsDescription || '';
+        webhookPayload[`property_${index + 1}_otherCostsAmount`] = property.otherCostsAmount || '';
       });
     }
 
