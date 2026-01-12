@@ -273,13 +273,20 @@ const handler = async (req: Request): Promise<Response> => {
       taxCertificate: [],
       idCard: [],
       disabilityCertificate: [],
-      otherDocuments: []
+      otherDocuments: [],
+      additionalDocuments: [],
+      propertyDocuments: []
     };
+
+    // Also track tax certificates by year
+    const taxCertificatesByYearUrls: Record<string, string[]> = {};
 
     const filesForWebhook: { name: string; type: string; data: string; category: string }[] = [];
 
-    const fileCategories = ['taxCertificate', 'idCard', 'disabilityCertificate', 'otherDocuments'];
+    // Base file categories
+    const fileCategories = ['taxCertificate', 'idCard', 'disabilityCertificate', 'otherDocuments', 'additionalDocuments', 'propertyDocuments'];
     
+    // Process base categories
     for (const category of fileCategories) {
       const files = formData.getAll(category);
       
@@ -322,7 +329,61 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // Process tax certificates by year (dynamic keys like taxCertificateYear_2023, taxCertificateYear_2024)
+    const allFormKeys = Array.from(formData.keys());
+    const taxYearCategories = allFormKeys.filter(key => key.startsWith('taxCertificateYear_'));
+    
+    for (const category of taxYearCategories) {
+      const year = category.replace('taxCertificateYear_', '');
+      const files = formData.getAll(category);
+      
+      if (!taxCertificatesByYearUrls[year]) {
+        taxCertificatesByYearUrls[year] = [];
+      }
+      
+      for (const file of files) {
+        if (file && file instanceof File) {
+          const fileName = `${Date.now()}-${file.name}`;
+          const filePath = `tax-certificates/${year}/${fileName}`;
+          
+          const arrayBuffer = await file.arrayBuffer();
+          
+          // Store file data for additional webhook
+          filesForWebhook.push({
+            name: file.name,
+            type: file.type,
+            data: arrayBufferToBase64(arrayBuffer),
+            category: `taxCertificate_${year}`
+          });
+          
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('prognose-documents')
+            .upload(filePath, arrayBuffer, {
+              contentType: file.type,
+              upsert: false
+            });
+
+          if (uploadError) {
+            console.error(`Upload error for tax certificate year ${year}:`, uploadError);
+            continue;
+          }
+
+          // Generate signed URL (valid for 1 year)
+          const { data: urlData } = await supabase.storage
+            .from('prognose-documents')
+            .createSignedUrl(filePath, 31536000); // 1 year in seconds
+
+          if (urlData?.signedUrl) {
+            taxCertificatesByYearUrls[year].push(urlData.signedUrl);
+          }
+        }
+      }
+    }
+
     console.log('Files uploaded successfully');
+    console.log('Tax certificates by year:', Object.keys(taxCertificatesByYearUrls));
+    console.log('Additional documents count:', uploadedUrls.additionalDocuments.length);
+    console.log('Property documents count:', uploadedUrls.propertyDocuments.length);
 
     // Flatten all form data for webhook - COMPLETE with correct field names
     const webhookPayload: Record<string, any> = {
@@ -400,7 +461,14 @@ const handler = async (req: Request): Promise<Response> => {
       idCardUrls: uploadedUrls.idCard,
       disabilityCertificateUrls: uploadedUrls.disabilityCertificate,
       otherDocumentUrls: uploadedUrls.otherDocuments,
+      additionalDocumentUrls: uploadedUrls.additionalDocuments,
+      propertyDocumentUrls: uploadedUrls.propertyDocuments,
     };
+
+    // Add tax certificates by year URLs to webhook payload
+    for (const [year, urls] of Object.entries(taxCertificatesByYearUrls)) {
+      webhookPayload[`taxCertificateYear_${year}_urls`] = urls;
+    }
 
     // Add children details individually
     if (jsonData.children && jsonData.children.length > 0) {
@@ -479,7 +547,8 @@ const handler = async (req: Request): Promise<Response> => {
         data: pdfBase64
       },
       files: filesForWebhook,
-      documentUrls: uploadedUrls
+      documentUrls: uploadedUrls,
+      taxCertificatesByYearUrls: taxCertificatesByYearUrls
     };
 
     console.log('Sending to additional webhook...');

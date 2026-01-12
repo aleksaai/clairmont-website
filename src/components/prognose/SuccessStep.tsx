@@ -181,6 +181,37 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
           });
         }
 
+        // Add tax certificates by year
+        if (formData.taxCertificatesByYear) {
+          for (const [year, files] of Object.entries(formData.taxCertificatesByYear)) {
+            if (files && Array.isArray(files)) {
+              files.forEach((file: File) => {
+                if (file instanceof File) {
+                  formDataToSend.append(`taxCertificateYear_${year}`, file);
+                }
+              });
+            }
+          }
+        }
+
+        // Add additional documents
+        if (formData.additionalDocuments && Array.isArray(formData.additionalDocuments)) {
+          formData.additionalDocuments.forEach((file: File) => {
+            if (file instanceof File) {
+              formDataToSend.append('additionalDocuments', file);
+            }
+          });
+        }
+
+        // Add property documents
+        if (formData.propertyDocuments && Array.isArray(formData.propertyDocuments)) {
+          formData.propertyDocuments.forEach((file: File) => {
+            if (file instanceof File) {
+              formDataToSend.append('propertyDocuments', file);
+            }
+          });
+        }
+
         const { error } = await supabase.functions.invoke('submit-prognose-webhook', {
           body: formDataToSend,
         });
