@@ -159,61 +159,22 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
       }
     };
 
-    // Submit to webhook
-    const submitToWebhook = async () => {
+    // Submit to webhook - now uses already uploaded file paths
+    const submitToWebhook = async (uploadedPaths: {
+      documents: Record<string, string[]>;
+      taxCertificatesByYear: Record<string, string[]>;
+      additionalDocuments: string[];
+      propertyDocuments: string[];
+    }) => {
       try {
-        const formDataToSend = new FormData();
-        formDataToSend.append('data', JSON.stringify(formData));
-
-        // Add all document files
-        if (formData.documents) {
-          formData.documents.taxCertificate?.forEach((file: File) => {
-            formDataToSend.append('taxCertificate', file);
-          });
-          formData.documents.idCard?.forEach((file: File) => {
-            formDataToSend.append('idCard', file);
-          });
-          formData.documents.disabilityCertificate?.forEach((file: File) => {
-            formDataToSend.append('disabilityCertificate', file);
-          });
-          formData.documents.otherDocuments?.forEach((file: File) => {
-            formDataToSend.append('otherDocuments', file);
-          });
-        }
-
-        // Add tax certificates by year
-        if (formData.taxCertificatesByYear) {
-          for (const [year, files] of Object.entries(formData.taxCertificatesByYear)) {
-            if (files && Array.isArray(files)) {
-              files.forEach((file: File) => {
-                if (file instanceof File) {
-                  formDataToSend.append(`taxCertificateYear_${year}`, file);
-                }
-              });
-            }
-          }
-        }
-
-        // Add additional documents
-        if (formData.additionalDocuments && Array.isArray(formData.additionalDocuments)) {
-          formData.additionalDocuments.forEach((file: File) => {
-            if (file instanceof File) {
-              formDataToSend.append('additionalDocuments', file);
-            }
-          });
-        }
-
-        // Add property documents
-        if (formData.propertyDocuments && Array.isArray(formData.propertyDocuments)) {
-          formData.propertyDocuments.forEach((file: File) => {
-            if (file instanceof File) {
-              formDataToSend.append('propertyDocuments', file);
-            }
-          });
-        }
-
+        console.log('Submitting to webhook with uploaded paths:', uploadedPaths);
+        
+        // Send JSON with file paths instead of multipart files
         const { error } = await supabase.functions.invoke('submit-prognose-webhook', {
-          body: formDataToSend,
+          body: {
+            data: formData,
+            uploadedPaths: uploadedPaths
+          }
         });
         
         if (error) throw error;
@@ -224,8 +185,151 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
       }
     };
     
-    submitToWebhook();
-    uploadFilesAndSendEmail();
+    // Modified upload function that also triggers webhook after all uploads complete
+    const uploadAndSubmit = async () => {
+      try {
+        console.log('Starting file upload process...');
+        const uploadedData = { ...formData };
+        const failedUploads: string[] = [];
+        
+        // Track all uploaded paths for webhook
+        const uploadedPaths = {
+          documents: {} as Record<string, string[]>,
+          taxCertificatesByYear: {} as Record<string, string[]>,
+          additionalDocuments: [] as string[],
+          propertyDocuments: [] as string[]
+        };
+        
+        // Helper function to sanitize filenames
+        const sanitizeFileName = (name: string): string => {
+          return name
+            .normalize('NFKD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/\s+/g, '_')
+            .replace(/[^a-zA-Z0-9._-]/g, '_');
+        };
+        
+        // Helper function to upload files and return paths
+        const uploadFiles = async (files: any, folder: string): Promise<string[]> => {
+          if (!files || files.length === 0) return [];
+          
+          const paths: string[] = [];
+          for (const file of files) {
+            if (typeof file === 'string') {
+              paths.push(file);
+              continue;
+            }
+            
+            if (file instanceof File) {
+              try {
+                const timestamp = Date.now();
+                const rawName = file.name || 'upload';
+                const safeName = sanitizeFileName(rawName);
+                const fileName = `${timestamp}_${safeName}`;
+                const filePath = `${folder}/${fileName}`;
+                
+                console.log('Uploading file:', fileName);
+                const { error } = await supabase.storage
+                  .from('prognose-documents')
+                  .upload(filePath, file);
+                
+                if (error) {
+                  console.error('Upload error for', rawName, ':', error);
+                  failedUploads.push(rawName);
+                  continue;
+                }
+                
+                paths.push(filePath);
+                console.log('Successfully uploaded:', fileName);
+              } catch (err) {
+                console.error('Unexpected error uploading file:', file.name, err);
+                failedUploads.push(file.name || 'unknown file');
+                continue;
+              }
+            }
+          }
+          return paths;
+        };
+
+        // Upload all document types
+        if (formData.documents) {
+          console.log('Processing documents...');
+          
+          if (formData.documents.taxCertificate) {
+            uploadedPaths.documents.taxCertificate = await uploadFiles(formData.documents.taxCertificate, 'tax-certificates');
+          }
+          if (formData.documents.idCard) {
+            uploadedPaths.documents.idCard = await uploadFiles(formData.documents.idCard, 'id-cards');
+          }
+          if (formData.documents.disabilityCertificate) {
+            uploadedPaths.documents.disabilityCertificate = await uploadFiles(formData.documents.disabilityCertificate, 'disability-certificates');
+          }
+          if (formData.documents.otherDocuments) {
+            uploadedPaths.documents.otherDocuments = await uploadFiles(formData.documents.otherDocuments, 'other-documents');
+          }
+          
+          uploadedData.documents = uploadedPaths.documents as any;
+        }
+
+        // Upload tax certificates by year
+        if (formData.taxCertificatesByYear) {
+          console.log('Processing tax certificates by year...');
+          for (const [year, files] of Object.entries(formData.taxCertificatesByYear)) {
+            uploadedPaths.taxCertificatesByYear[year] = await uploadFiles(files, `tax-certificates/${year}`);
+          }
+          uploadedData.taxCertificatesByYear = uploadedPaths.taxCertificatesByYear as any;
+        }
+
+        // Upload property documents
+        if (formData.propertyDocuments) {
+          console.log('Processing property documents...');
+          uploadedPaths.propertyDocuments = await uploadFiles(formData.propertyDocuments, 'property-documents');
+          uploadedData.propertyDocuments = uploadedPaths.propertyDocuments as any;
+        }
+
+        // Upload additional documents
+        if (formData.additionalDocuments) {
+          console.log('Processing additional documents...');
+          uploadedPaths.additionalDocuments = await uploadFiles(formData.additionalDocuments, 'additional-documents');
+          uploadedData.additionalDocuments = uploadedPaths.additionalDocuments as any;
+        }
+
+        console.log('All files uploaded. Paths:', uploadedPaths);
+        console.log('Tax certificates by year paths:', uploadedPaths.taxCertificatesByYear);
+        console.log('Additional documents paths:', uploadedPaths.additionalDocuments);
+        console.log('Property documents paths:', uploadedPaths.propertyDocuments);
+        
+        // Add failed uploads to the data
+        if (failedUploads.length > 0) {
+          (uploadedData as any).failedUploads = failedUploads;
+          console.warn('Some files failed to upload:', failedUploads);
+        }
+
+        // Now submit to webhook with the uploaded paths
+        await submitToWebhook(uploadedPaths);
+
+        // Send email with uploaded file paths
+        const { error: emailError } = await supabase.functions.invoke('send-prognose-email', {
+          body: {
+            formData: uploadedData,
+            userEmail: formData.email || 'no-email@example.com'
+          }
+        });
+        
+        if (emailError) throw emailError;
+        
+        if (failedUploads.length > 0) {
+          toast.warning(`E-Mail gesendet, aber ${failedUploads.length} Datei(en) konnten nicht hochgeladen werden`);
+        } else {
+          toast.success('E-Mail erfolgreich gesendet');
+        }
+      } catch (error) {
+        console.error('Upload or email error:', error);
+        toast.error('Fehler beim Hochladen der Dateien oder Senden der E-Mail');
+      }
+    };
+    
+    uploadAndSubmit();
   }, [formData]);
 
   const downloadPDF = () => {
