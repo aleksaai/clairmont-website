@@ -7,9 +7,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const WEBHOOK_URL = "https://hook.eu2.make.com/ibv42wex7bd1vjqf87lju4iadipsht57";
-const ADDITIONAL_WEBHOOK_URL = "https://ixefmjnjjwntwibkytis.supabase.co/functions/v1/form-webhook";
-const ADDITIONAL_WEBHOOK_TOKEN = "Clairmont_2025";
+// ONLY ONE TARGET: form-webhook
+const TARGET_WEBHOOK_URL = "https://ixefmjnjjwntwibkytis.supabase.co/functions/v1/form-webhook";
+const WEBHOOK_TOKEN = "Clairmont_2025";
 
 // Helper function to convert Uint8Array or ArrayBuffer to base64
 function arrayBufferToBase64(buffer: ArrayBuffer | Uint8Array): string {
@@ -29,7 +29,11 @@ function mapCategoryToFieldName(category: string): string {
     'disabilityCertificate': 'behindertenausweis',
     'otherDocuments': 'sonstige_dokumente',
     'additionalDocuments': 'weitere_dokumente',
-    'propertyDocuments': 'immobilien_dokumente'
+    'propertyDocuments': 'immobilien_dokumente',
+    'disabilityProof': 'behindertennachweis',
+    'alimonyProof': 'unterhaltsnachweis',
+    'cryptoDocuments': 'krypto_dokumente',
+    'spouseTaxDocument': 'ehepartner_steuerdokument'
   };
   
   // Handle tax certificate by year
@@ -53,8 +57,6 @@ async function generatePDF(data: any): Promise<Uint8Array> {
   const lineHeight = 16;
   const sectionSpacing = 25;
 
-  // pdf-lib StandardFonts (WinAnsi) can't encode many unicode chars.
-  // To avoid hard failures, we normalize & strip diacritics for PDF rendering only.
   const winAnsiSafe = (value: unknown): string => {
     const s = (value ?? '').toString();
     return s
@@ -107,7 +109,7 @@ async function generatePDF(data: any): Promise<Uint8Array> {
   addText(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, false, 9);
   yPosition -= 20;
 
-  // ==================== PERSÖNLICHE INFORMATIONEN ====================
+  // Personal Info
   addSection('PERSOENLICHE INFORMATIONEN');
   addText(`Vorname: ${data.firstName || '-'}`);
   addText(`Nachname: ${data.lastName || '-'}`);
@@ -128,7 +130,7 @@ async function generatePDF(data: any): Promise<Uint8Array> {
     if (data.personalInfo.city) addText(`Stadt: ${data.personalInfo.city}`);
   }
 
-  // ==================== FAMILIENSITUATION ====================
+  // Family
   addSection('FAMILIENSITUATION');
   addText(`Familienstand: ${data.maritalStatus || '-'}`);
   
@@ -144,7 +146,7 @@ async function generatePDF(data: any): Promise<Uint8Array> {
     addText(`Scheidungsdatum: ${formatDate(data.divorceDate)}`);
   }
 
-  // ==================== KINDER ====================
+  // Children
   addSection('KINDER');
   addText(`Kinder vorhanden: ${formatBoolean(data.hasChildren)}`);
   
@@ -159,7 +161,7 @@ async function generatePDF(data: any): Promise<Uint8Array> {
     });
   }
 
-  // ==================== BERUFLICHE TÄTIGKEIT ====================
+  // Work
   addSection('BERUFLICHE TAETIGKEIT');
   addText(`Beruf/Taetigkeit: ${data.occupation || '-'}`);
   addText(`Home-Office-Tage pro Woche: ${data.homeOfficeDays || '-'}`);
@@ -174,7 +176,7 @@ async function generatePDF(data: any): Promise<Uint8Array> {
   addText(`Fortbildungskosten: ${data.trainingCosts || '-'}`);
   addText(`Arbeitsmittel: ${data.businessEquipment || '-'}`);
 
-  // ==================== EINKOMMEN ====================
+  // Income
   addSection('EINKOMMEN');
   addText(`Gewerbliche Einkuenfte: ${formatBoolean(data.hasBusiness)}`);
   if (data.hasBusiness) {
@@ -193,7 +195,7 @@ async function generatePDF(data: any): Promise<Uint8Array> {
     addText(`Steuerjahre: ${data.taxYears.join(', ')}`);
   }
 
-  // ==================== VERSICHERUNGEN & MITGLIEDSCHAFTEN ====================
+  // Insurance
   addSection('VERSICHERUNGEN & MITGLIEDSCHAFTEN');
   addText(`Gewerkschaftsmitglied: ${formatBoolean(data.isUnionMember)}`);
   if (data.isUnionMember) {
@@ -217,7 +219,7 @@ async function generatePDF(data: any): Promise<Uint8Array> {
     });
   }
 
-  // ==================== IMMOBILIEN ====================
+  // Property
   addSection('IMMOBILIEN');
   addText(`Immobilienbesitz: ${formatBoolean(data.hasProperty)}`);
   
@@ -244,19 +246,19 @@ async function generatePDF(data: any): Promise<Uint8Array> {
     });
   }
 
-  // ==================== BESONDERE UMSTÄNDE ====================
+  // Special Circumstances
   addSection('BESONDERE UMSTAENDE');
   addText(`Behinderung vorhanden: ${formatBoolean(data.hasDisability)}`);
   addText(`Unterhaltszahlungen: ${formatBoolean(data.paysAlimony)}`);
 
-  // ==================== BANKVERBINDUNG ====================
+  // Bank
   addSection('BANKVERBINDUNG');
   addText(`IBAN: ${data.iban || '-'}`);
   if (data.partnerCode) {
     addText(`Partnercode: ${data.partnerCode}`);
   }
 
-  // ==================== BESTÄTIGUNGEN ====================
+  // Confirmations
   addSection('BESTAETIGUNGEN');
   addText(`Richtigkeit bestaetigt: ${formatBoolean(data.confirmCorrectness)}`);
   addText(`AGB akzeptiert: ${formatBoolean(data.acceptTerms)}`);
@@ -273,36 +275,102 @@ async function generatePDF(data: any): Promise<Uint8Array> {
   return pdfBytes;
 }
 
+interface DownloadReport {
+  filePath: string;
+  fieldName: string;
+  ok: boolean;
+  errorMessage?: string;
+}
+
 // Download file from storage and convert to base64
 async function downloadFileAsBase64(
   supabase: any,
-  filePath: string
-): Promise<{ data: string; type: string; name: string } | null> {
+  filePath: string,
+  fieldName: string
+): Promise<{ fileData: { data: string; type: string; name: string } | null; report: DownloadReport }> {
+  const report: DownloadReport = {
+    filePath,
+    fieldName,
+    ok: false
+  };
+
   try {
+    console.log(`Downloading file: ${filePath} (${fieldName})`);
+    
     const { data, error } = await supabase.storage
       .from('prognose-documents')
       .download(filePath);
     
     if (error || !data) {
-      console.error(`Error downloading file ${filePath}:`, error);
-      return null;
+      report.errorMessage = error?.message || 'No data returned';
+      console.error(`Download failed for ${filePath}:`, report.errorMessage);
+      return { fileData: null, report };
     }
     
     const arrayBuffer = await data.arrayBuffer();
     const base64 = arrayBufferToBase64(arrayBuffer);
     
-    // Extract filename from path
     const fileName = filePath.split('/').pop() || 'unknown';
     
+    report.ok = true;
+    console.log(`Successfully downloaded: ${fileName} (${base64.length} bytes base64)`);
+    
     return {
-      data: base64,
-      type: data.type || 'application/octet-stream',
-      name: fileName
+      fileData: {
+        data: base64,
+        type: data.type || 'application/octet-stream',
+        name: fileName
+      },
+      report
     };
-  } catch (err) {
+  } catch (err: any) {
+    report.errorMessage = err?.message || 'Unknown error';
     console.error(`Error processing file ${filePath}:`, err);
-    return null;
+    return { fileData: null, report };
   }
+}
+
+// Count expected files from uploadedPaths
+function countExpectedFiles(uploadedPaths: any): number {
+  let count = 0;
+  
+  if (uploadedPaths?.documents) {
+    for (const paths of Object.values(uploadedPaths.documents)) {
+      if (Array.isArray(paths)) count += paths.length;
+    }
+  }
+  
+  if (uploadedPaths?.taxCertificatesByYear) {
+    for (const paths of Object.values(uploadedPaths.taxCertificatesByYear)) {
+      if (Array.isArray(paths)) count += paths.length;
+    }
+  }
+  
+  if (Array.isArray(uploadedPaths?.additionalDocuments)) {
+    count += uploadedPaths.additionalDocuments.length;
+  }
+  
+  if (Array.isArray(uploadedPaths?.propertyDocuments)) {
+    count += uploadedPaths.propertyDocuments.length;
+  }
+  
+  if (Array.isArray(uploadedPaths?.cryptoDocuments)) {
+    count += uploadedPaths.cryptoDocuments.length;
+  }
+  
+  if (Array.isArray(uploadedPaths?.disabilityProof)) {
+    count += uploadedPaths.disabilityProof.length;
+  }
+  
+  if (Array.isArray(uploadedPaths?.alimonyProof)) {
+    count += uploadedPaths.alimonyProof.length;
+  }
+  
+  if (Array.isArray(uploadedPaths?.spouseTaxDocument)) {
+    count += uploadedPaths.spouseTaxDocument.length;
+  }
+  
+  return count;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -316,327 +384,153 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Parse request body - now expects JSON with uploadedPaths
     const requestBody = await req.json();
     const jsonData = requestBody.data;
     const uploadedPaths = requestBody.uploadedPaths;
     
-    console.log('Processing prognose submission (path-based)...');
+    console.log('=== PROGNOSE WEBHOOK PROCESSING ===');
     console.log('Received uploadedPaths:', JSON.stringify(uploadedPaths, null, 2));
 
-    // Collect files from storage for webhook
     const filesForWebhook: { fieldName: string; fileName: string; mimeType: string; data: string }[] = [];
-    const uploadedUrls: Record<string, string[]> = {
-      taxCertificate: [],
-      idCard: [],
-      disabilityCertificate: [],
-      otherDocuments: [],
-      additionalDocuments: [],
-      propertyDocuments: []
-    };
+    const downloadReports: DownloadReport[] = [];
+    const uploadedUrls: Record<string, string[]> = {};
     const taxCertificatesByYearUrls: Record<string, string[]> = {};
 
-    // Process document paths from uploadedPaths.documents
-    if (uploadedPaths?.documents) {
-      for (const [category, paths] of Object.entries(uploadedPaths.documents)) {
-        if (!Array.isArray(paths)) continue;
+    // Helper to process a category of files
+    async function processFileCategory(paths: any, category: string, urlsArray?: string[]) {
+      if (!Array.isArray(paths)) return;
+      
+      console.log(`Processing ${category}: ${paths.length} files`);
+      
+      for (const filePath of paths) {
+        if (typeof filePath !== 'string') continue;
         
-        console.log(`Processing ${category}: ${paths.length} files`);
+        const fieldName = mapCategoryToFieldName(category);
+        const { fileData, report } = await downloadFileAsBase64(supabase, filePath, fieldName);
+        downloadReports.push(report);
         
-        for (const filePath of paths) {
-          if (typeof filePath !== 'string') continue;
-          
-          // Download file and convert to base64
-          const fileData = await downloadFileAsBase64(supabase, filePath);
-          if (fileData) {
-            filesForWebhook.push({
-              fieldName: mapCategoryToFieldName(category),
-              fileName: fileData.name,
-              mimeType: fileData.type,
-              data: fileData.data
-            });
-            console.log(`Added file to webhook: ${fileData.name} (${category})`);
-          }
-          
-          // Generate signed URL
+        if (fileData) {
+          filesForWebhook.push({
+            fieldName,
+            fileName: fileData.name,
+            mimeType: fileData.type,
+            data: fileData.data
+          });
+        }
+        
+        // Generate signed URL
+        if (urlsArray) {
           const { data: urlData } = await supabase.storage
             .from('prognose-documents')
             .createSignedUrl(filePath, 31536000);
           
           if (urlData?.signedUrl) {
-            if (!uploadedUrls[category]) {
-              uploadedUrls[category] = [];
-            }
-            uploadedUrls[category].push(urlData.signedUrl);
+            urlsArray.push(urlData.signedUrl);
           }
         }
+      }
+    }
+
+    // Process all document categories
+    if (uploadedPaths?.documents) {
+      for (const [category, paths] of Object.entries(uploadedPaths.documents)) {
+        if (!uploadedUrls[category]) uploadedUrls[category] = [];
+        await processFileCategory(paths, category, uploadedUrls[category]);
       }
     }
 
     // Process tax certificates by year
     if (uploadedPaths?.taxCertificatesByYear) {
       for (const [year, paths] of Object.entries(uploadedPaths.taxCertificatesByYear)) {
-        if (!Array.isArray(paths)) continue;
-        
-        console.log(`Processing tax certificates for year ${year}: ${paths.length} files`);
         taxCertificatesByYearUrls[year] = [];
-        
-        for (const filePath of paths) {
-          if (typeof filePath !== 'string') continue;
-          
-          const fileData = await downloadFileAsBase64(supabase, filePath);
-          if (fileData) {
-            filesForWebhook.push({
-              fieldName: `lohnsteuerbescheid_${year}`,
-              fileName: fileData.name,
-              mimeType: fileData.type,
-              data: fileData.data
-            });
-            console.log(`Added tax certificate to webhook: ${fileData.name} (year ${year})`);
-          }
-          
-          const { data: urlData } = await supabase.storage
-            .from('prognose-documents')
-            .createSignedUrl(filePath, 31536000);
-          
-          if (urlData?.signedUrl) {
-            taxCertificatesByYearUrls[year].push(urlData.signedUrl);
-          }
-        }
+        await processFileCategory(paths, `taxCertificate_${year}`, taxCertificatesByYearUrls[year]);
       }
     }
 
     // Process additional documents
-    if (uploadedPaths?.additionalDocuments && Array.isArray(uploadedPaths.additionalDocuments)) {
-      console.log(`Processing additional documents: ${uploadedPaths.additionalDocuments.length} files`);
-      
-      for (const filePath of uploadedPaths.additionalDocuments) {
-        if (typeof filePath !== 'string') continue;
-        
-        const fileData = await downloadFileAsBase64(supabase, filePath);
-        if (fileData) {
-          filesForWebhook.push({
-            fieldName: 'weitere_dokumente',
-            fileName: fileData.name,
-            mimeType: fileData.type,
-            data: fileData.data
-          });
-          console.log(`Added additional document to webhook: ${fileData.name}`);
-        }
-        
-        const { data: urlData } = await supabase.storage
-          .from('prognose-documents')
-          .createSignedUrl(filePath, 31536000);
-        
-        if (urlData?.signedUrl) {
-          uploadedUrls.additionalDocuments.push(urlData.signedUrl);
-        }
-      }
+    if (uploadedPaths?.additionalDocuments) {
+      uploadedUrls.additionalDocuments = [];
+      await processFileCategory(uploadedPaths.additionalDocuments, 'additionalDocuments', uploadedUrls.additionalDocuments);
     }
 
     // Process property documents
-    if (uploadedPaths?.propertyDocuments && Array.isArray(uploadedPaths.propertyDocuments)) {
-      console.log(`Processing property documents: ${uploadedPaths.propertyDocuments.length} files`);
-      
-      for (const filePath of uploadedPaths.propertyDocuments) {
-        if (typeof filePath !== 'string') continue;
-        
-        const fileData = await downloadFileAsBase64(supabase, filePath);
-        if (fileData) {
-          filesForWebhook.push({
-            fieldName: 'immobilien_dokumente',
-            fileName: fileData.name,
-            mimeType: fileData.type,
-            data: fileData.data
-          });
-          console.log(`Added property document to webhook: ${fileData.name}`);
-        }
-        
-        const { data: urlData } = await supabase.storage
-          .from('prognose-documents')
-          .createSignedUrl(filePath, 31536000);
-        
-        if (urlData?.signedUrl) {
-          uploadedUrls.propertyDocuments.push(urlData.signedUrl);
-        }
-      }
+    if (uploadedPaths?.propertyDocuments) {
+      uploadedUrls.propertyDocuments = [];
+      await processFileCategory(uploadedPaths.propertyDocuments, 'propertyDocuments', uploadedUrls.propertyDocuments);
     }
+
+    // Process crypto documents
+    if (uploadedPaths?.cryptoDocuments) {
+      uploadedUrls.cryptoDocuments = [];
+      await processFileCategory(uploadedPaths.cryptoDocuments, 'cryptoDocuments', uploadedUrls.cryptoDocuments);
+    }
+
+    // Process disability proof
+    if (uploadedPaths?.disabilityProof) {
+      uploadedUrls.disabilityProof = [];
+      await processFileCategory(uploadedPaths.disabilityProof, 'disabilityProof', uploadedUrls.disabilityProof);
+    }
+
+    // Process alimony proof
+    if (uploadedPaths?.alimonyProof) {
+      uploadedUrls.alimonyProof = [];
+      await processFileCategory(uploadedPaths.alimonyProof, 'alimonyProof', uploadedUrls.alimonyProof);
+    }
+
+    // Process spouse tax document
+    if (uploadedPaths?.spouseTaxDocument) {
+      uploadedUrls.spouseTaxDocument = [];
+      await processFileCategory(uploadedPaths.spouseTaxDocument, 'spouseTaxDocument', uploadedUrls.spouseTaxDocument);
+    }
+
+    // Calculate expected vs actual
+    const expectedFilesCount = countExpectedFiles(uploadedPaths);
+    const actualFilesCount = filesForWebhook.length;
+    const downloadFailures = downloadReports.filter(r => !r.ok);
 
     console.log('=== FILE PROCESSING SUMMARY ===');
-    console.log(`Total files for webhook: ${filesForWebhook.length}`);
-    console.log(`ID Cards: ${uploadedUrls.idCard?.length || 0}`);
-    console.log(`Tax Certificates: ${uploadedUrls.taxCertificate?.length || 0}`);
-    console.log(`Disability Certificates: ${uploadedUrls.disabilityCertificate?.length || 0}`);
-    console.log(`Other Documents: ${uploadedUrls.otherDocuments?.length || 0}`);
-    console.log(`Additional Documents: ${uploadedUrls.additionalDocuments?.length || 0}`);
-    console.log(`Property Documents: ${uploadedUrls.propertyDocuments?.length || 0}`);
-    console.log(`Tax Certificates by Year: ${JSON.stringify(Object.keys(taxCertificatesByYearUrls))}`);
+    console.log(`Expected files: ${expectedFilesCount}`);
+    console.log(`Successfully downloaded: ${actualFilesCount}`);
+    console.log(`Failed downloads: ${downloadFailures.length}`);
+    if (downloadFailures.length > 0) {
+      console.log('Failed files:', JSON.stringify(downloadFailures, null, 2));
+    }
     console.log('=================================');
 
-    // Flatten all form data for webhook - COMPLETE with correct field names
-    const webhookPayload: Record<string, any> = {
-      // Personal Info
-      firstName: jsonData.firstName || '',
-      lastName: jsonData.lastName || '',
-      birthDate: jsonData.birthDate || '',
-      gender: jsonData.gender || '',
-      nationality: jsonData.nationality || '',
-      email: jsonData.email || '',
-      address: jsonData.address || '',
-      differentAddress: jsonData.differentAddress || false,
-      alternativeAddress: jsonData.alternativeAddress || '',
-      personalInfoStreet: jsonData.personalInfo?.street || '',
-      personalInfoZipCode: jsonData.personalInfo?.zipCode || '',
-      personalInfoCity: jsonData.personalInfo?.city || '',
-      
-      // Family
-      maritalStatus: jsonData.maritalStatus || '',
-      marriedSince: jsonData.marriedSince || '',
-      spouseName: jsonData.spouseName || '',
-      spouseBirthDate: jsonData.spouseBirthDate || '',
-      spouseOccupation: jsonData.spouseOccupation || '',
-      spouseEmployed: jsonData.spouseEmployed || false,
-      divorceDate: jsonData.divorceDate || '',
-      
-      // Children
-      hasChildren: jsonData.hasChildren || false,
-      childrenCount: jsonData.children?.length || 0,
-      
-      // Work
-      occupation: jsonData.occupation || '',
-      homeOfficeDays: jsonData.homeOfficeDays || '',
-      workplaceStreet: jsonData.workplace?.street || '',
-      workplaceZipCode: jsonData.workplace?.zipCode || '',
-      workplaceCity: jsonData.workplace?.city || '',
-      trainingCosts: jsonData.trainingCosts || '',
-      businessEquipment: jsonData.businessEquipment || '',
-      
-      // Income
-      hasBusiness: jsonData.hasBusiness || false,
-      businessType: jsonData.businessType || '',
-      hasCryptoIncome: jsonData.hasCryptoIncome || false,
-      hasSocialBenefits: jsonData.hasSocialBenefits || false,
-      socialBenefitDetails: jsonData.socialBenefitDetails || '',
-      socialBenefitAmount: jsonData.socialBenefitAmount || '',
-      taxYears: jsonData.taxYears || [],
-      
-      // Insurance & Memberships
-      isUnionMember: jsonData.isUnionMember || false,
-      unionName: jsonData.unionName || '',
-      unionFee: jsonData.unionFee || '',
-      hasOtherMemberships: jsonData.hasOtherMemberships || false,
-      otherMembershipsDetails: jsonData.otherMembershipsDetails || '',
-      insurancesCount: jsonData.insurances?.length || 0,
-      
-      // Property
-      hasProperty: jsonData.hasProperty || false,
-      propertiesCount: jsonData.properties?.length || 0,
-      
-      // Special Circumstances
-      hasDisability: jsonData.hasDisability || false,
-      paysAlimony: jsonData.paysAlimony || false,
-      
-      // Bank Details
-      iban: jsonData.iban || '',
-      partnerCode: jsonData.partnerCode || '',
-      confirmCorrectness: jsonData.confirmCorrectness || false,
-      acceptTerms: jsonData.acceptTerms || false,
-      acceptPrivacy: jsonData.acceptPrivacy || false,
-      confirmEmail: jsonData.confirmEmail || false,
-      
-      // Document URLs
-      taxCertificateUrls: uploadedUrls.taxCertificate,
-      idCardUrls: uploadedUrls.idCard,
-      disabilityCertificateUrls: uploadedUrls.disabilityCertificate,
-      otherDocumentUrls: uploadedUrls.otherDocuments,
-      additionalDocumentUrls: uploadedUrls.additionalDocuments,
-      propertyDocumentUrls: uploadedUrls.propertyDocuments,
-    };
-
-    // Also include base64 files in the Make.com webhook payload (external systems may rely on this)
-    webhookPayload.files = filesForWebhook;
-    webhookPayload.filesCount = filesForWebhook.length;
-
-    // Add tax certificates by year URLs to webhook payload
-    for (const [year, urls] of Object.entries(taxCertificatesByYearUrls)) {
-      webhookPayload[`taxCertificateYear_${year}_urls`] = urls;
+    // Block if we expected files but got none
+    if (expectedFilesCount > 0 && actualFilesCount === 0) {
+      console.error('BLOCKING: Expected files but none could be downloaded!');
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Keine Dateien konnten heruntergeladen werden',
+          expectedFilesCount,
+          actualFilesCount,
+          downloadFailures
+        }),
+        { 
+          status: 422,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders }
+        }
+      );
     }
 
-    // Add children details individually
-    if (jsonData.children && jsonData.children.length > 0) {
-      jsonData.children.forEach((child: any, index: number) => {
-        webhookPayload[`child_${index + 1}_name`] = child.name || '';
-        webhookPayload[`child_${index + 1}_birthDate`] = child.birthDate || '';
-        webhookPayload[`child_${index + 1}_childBenefitPeriod`] = child.childBenefitPeriod || '';
-      });
-    }
-
-    // Add insurances details individually
-    if (jsonData.insurances && jsonData.insurances.length > 0) {
-      jsonData.insurances.forEach((insurance: any, index: number) => {
-        webhookPayload[`insurance_${index + 1}_type`] = insurance.type || '';
-        webhookPayload[`insurance_${index + 1}_provider`] = insurance.provider || '';
-        webhookPayload[`insurance_${index + 1}_yearlyContribution`] = insurance.yearlyContribution || '';
-      });
-    }
-
-    // Add properties details individually
-    if (jsonData.properties && jsonData.properties.length > 0) {
-      jsonData.properties.forEach((property: any, index: number) => {
-        webhookPayload[`property_${index + 1}_address`] = property.address || '';
-        webhookPayload[`property_${index + 1}_purchasePrice`] = property.purchasePrice || '';
-        webhookPayload[`property_${index + 1}_purchaseDate`] = property.purchaseDate || '';
-        webhookPayload[`property_${index + 1}_completionDate`] = property.completionDate || '';
-        webhookPayload[`property_${index + 1}_numberOfUnits`] = property.numberOfUnits || '';
-        webhookPayload[`property_${index + 1}_rentedArea`] = property.rentedArea || '';
-        webhookPayload[`property_${index + 1}_rent`] = property.rent || '';
-        webhookPayload[`property_${index + 1}_additionalCosts`] = property.additionalCosts || '';
-        webhookPayload[`property_${index + 1}_interestExpense`] = property.interestExpense || '';
-        webhookPayload[`property_${index + 1}_notaryCosts`] = property.notaryCosts || '';
-        webhookPayload[`property_${index + 1}_propertyTax`] = property.propertyTax || '';
-        webhookPayload[`property_${index + 1}_otherCostsDescription`] = property.otherCostsDescription || '';
-        webhookPayload[`property_${index + 1}_otherCostsAmount`] = property.otherCostsAmount || '';
-      });
-    }
-
-    // Add crypto uploads if applicable
-    if (jsonData.cryptoUploads && jsonData.cryptoUploads.length > 0) {
-      jsonData.cryptoUploads.forEach((upload: any, index: number) => {
-        webhookPayload[`crypto_${index + 1}_exchange`] = upload.exchange || '';
-        webhookPayload[`crypto_${index + 1}_date`] = upload.date || '';
-      });
-    }
-
-    console.log('Sending to Make.com webhook...');
-
-    // Send to original Make.com webhook
-    const webhookResponse = await fetch(WEBHOOK_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(webhookPayload),
-    });
-
-    if (!webhookResponse.ok) {
-      console.error(`Make.com webhook failed: ${webhookResponse.status}`);
-    } else {
-      console.log('Make.com webhook sent successfully');
-    }
-
-    // Generate actual PDF (never fail the whole webhook on encoding issues)
+    // Generate PDF
     const pdfFileName = `Steuer-Selbstauskunft_${jsonData.firstName || 'Unknown'}_${jsonData.lastName || 'User'}.pdf`;
     let pdfBase64 = '';
+    let pdfError: string | null = null;
 
     try {
       const pdfBytes = await generatePDF(jsonData);
       pdfBase64 = arrayBufferToBase64(pdfBytes);
-    } catch (pdfError) {
-      console.error('PDF generation failed (continuing without PDF):', pdfError);
+      console.log(`PDF generated successfully: ${pdfBase64.length} bytes base64`);
+    } catch (err: any) {
+      pdfError = err?.message || 'Unknown PDF error';
+      console.error('PDF generation failed:', pdfError);
     }
 
-    // Prepare additional webhook payload with proper file structure
-    const additionalWebhookPayload = {
+    // Prepare webhook payload for form-webhook
+    const webhookPayload = {
       formType: 'steuerprognose',
       submittedAt: new Date().toISOString(),
       formData: jsonData,
@@ -647,55 +541,72 @@ const handler = async (req: Request): Promise<Response> => {
       },
       pdfGenerationFailed: !pdfBase64,
       files: filesForWebhook,
+      filesCount: actualFilesCount,
+      expectedFilesCount,
       documentUrls: uploadedUrls,
-      taxCertificatesByYearUrls: taxCertificatesByYearUrls
+      taxCertificatesByYearUrls
     };
 
-    console.log('Sending to additional webhook...');
-    console.log(`Files array length: ${filesForWebhook.length}`);
+    console.log(`Sending to form-webhook with ${actualFilesCount} files...`);
 
-    // Send to additional webhook
+    // Send to form-webhook (ONLY target)
+    let webhookStatus = 'pending';
+    let webhookError: string | null = null;
+
     try {
-      const additionalWebhookResponse = await fetch(ADDITIONAL_WEBHOOK_URL, {
+      const webhookResponse = await fetch(TARGET_WEBHOOK_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${ADDITIONAL_WEBHOOK_TOKEN}`,
+          'Authorization': `Bearer ${WEBHOOK_TOKEN}`,
         },
-        body: JSON.stringify(additionalWebhookPayload),
+        body: JSON.stringify(webhookPayload),
       });
 
-      if (!additionalWebhookResponse.ok) {
-        const errorText = await additionalWebhookResponse.text();
-        console.error(`Additional webhook failed: ${additionalWebhookResponse.status}`, errorText);
+      if (!webhookResponse.ok) {
+        const errorText = await webhookResponse.text();
+        webhookError = `${webhookResponse.status}: ${errorText}`;
+        webhookStatus = 'failed';
+        console.error(`Webhook failed:`, webhookError);
       } else {
-        console.log('Additional webhook sent successfully');
+        webhookStatus = 'success';
+        console.log('Webhook sent successfully');
       }
-    } catch (additionalError) {
-      console.error('Error sending to additional webhook:', additionalError);
+    } catch (err: any) {
+      webhookError = err?.message || 'Unknown webhook error';
+      webhookStatus = 'failed';
+      console.error('Webhook error:', err);
     }
 
+    // Return detailed response
     return new Response(
-      JSON.stringify({ success: true, message: 'Data sent to webhooks successfully', filesCount: filesForWebhook.length }),
+      JSON.stringify({
+        success: webhookStatus === 'success',
+        message: webhookStatus === 'success' ? 'Daten erfolgreich übermittelt' : 'Webhook fehlgeschlagen',
+        filesCount: actualFilesCount,
+        expectedFilesCount,
+        downloadFailures: downloadFailures.length > 0 ? downloadFailures : undefined,
+        webhookStatus,
+        webhookError,
+        pdfGenerated: !!pdfBase64,
+        pdfError
+      }),
       { 
-        status: 200, 
-        headers: { 
-          'Content-Type': 'application/json',
-          ...corsHeaders 
-        } 
+        status: webhookStatus === 'success' ? 200 : 500,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
       }
     );
 
   } catch (error: any) {
     console.error('Error in submit-prognose-webhook:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        success: false,
+        error: error.message 
+      }),
       { 
-        status: 500, 
-        headers: { 
-          'Content-Type': 'application/json',
-          ...corsHeaders 
-        } 
+        status: 500,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
       }
     );
   }
