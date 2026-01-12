@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Mail, Download, AlertTriangle, Upload } from "lucide-react";
+import { CheckCircle2, Mail, Download, AlertTriangle, Upload, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { FormData } from "@/pages/Prognose";
 import { useEffect, useState, useRef } from "react";
@@ -24,6 +24,18 @@ interface UploadResult {
   errors: string[];
 }
 
+interface WebhookResponse {
+  success: boolean;
+  message?: string;
+  filesCount?: number;
+  expectedFilesCount?: number;
+  downloadFailures?: Array<{ filePath: string; fieldName: string; errorMessage?: string }>;
+  webhookStatus?: string;
+  webhookError?: string;
+  pdfGenerated?: boolean;
+  error?: string;
+}
+
 const SuccessStep = ({ formData }: SuccessStepProps) => {
   const navigate = useNavigate();
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
@@ -31,8 +43,9 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionComplete, setSubmissionComplete] = useState(false);
   const [reuploadedFiles, setReuploadedFiles] = useState<Record<string, File[]>>({});
+  const [uploadErrors, setUploadErrors] = useState<string[]>([]);
+  const [webhookResponse, setWebhookResponse] = useState<WebhookResponse | null>(null);
   
-  // Use ref to track if we've already auto-submitted
   const hasAutoSubmitted = useRef(false);
 
   // Check if required documents are valid File objects
@@ -58,7 +71,8 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
     
     // Check disability certificate if applicable
     if (formData.hasDisability) {
-      const hasValidDisabilityCert = formData.documents?.disabilityCertificate?.some(f => f instanceof File);
+      const hasValidDisabilityCert = formData.documents?.disabilityCertificate?.some(f => f instanceof File) ||
+        (formData.disabilityProof && formData.disabilityProof instanceof File);
       if (!hasValidDisabilityCert) {
         missing.push({ key: 'disabilityCertificate', label: 'Behindertenausweis', required: true });
       }
@@ -86,7 +100,6 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
     }
   }, [missingDocuments]);
 
-  // Helper function to sanitize filenames
   const sanitizeFileName = (name: string): string => {
     return name
       .normalize('NFKD')
@@ -95,16 +108,13 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
       .replace(/[^a-zA-Z0-9._-]/g, '_');
   };
 
-  // Helper function to upload files and return paths with error tracking
   const uploadFiles = async (files: any, folder: string): Promise<UploadResult> => {
-    const list = Array.isArray(files) ? files : [];
+    const list = Array.isArray(files) ? files : (files ? [files] : []);
     if (list.length === 0) return { paths: [], errors: [] };
 
-    // Filter out legacy placeholders like `{}` that can appear after a reload.
     const validItems = list.filter((f) => typeof f === 'string' || f instanceof File);
 
-    // If EVERYTHING is invalid, we treat it as "files lost" and surface a single clear error.
-    if (validItems.length === 0) {
+    if (validItems.length === 0 && list.length > 0) {
       return {
         paths: [],
         errors: ['Dokumente wurden nach einem Neuladen der Seite nicht korrekt übernommen. Bitte laden Sie die Dokumente erneut hoch.'],
@@ -114,18 +124,12 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
     const paths: string[] = [];
     const errors: string[] = [];
 
-    // If there are some invalid items but also valid ones, ignore the invalid placeholders silently.
-    if (validItems.length !== list.length) {
-      console.warn('Some invalid file placeholders were ignored during upload.');
-    }
-
     for (const file of validItems) {
       if (typeof file === 'string') {
         paths.push(file);
         continue;
       }
 
-      // Here: file is guaranteed to be File
       try {
         const timestamp = Date.now();
         const rawName = file.name || 'upload';
@@ -133,14 +137,14 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
         const fileName = `${timestamp}_${safeName}`;
         const filePath = `${folder}/${fileName}`;
 
-        console.log('Uploading file:', fileName);
+        console.log('Uploading file:', fileName, 'to', folder);
         const { error } = await supabase.storage
           .from('prognose-documents')
           .upload(filePath, file);
 
         if (error) {
           console.error('Upload error for', rawName, ':', error);
-          errors.push(`Upload von ${rawName} fehlgeschlagen: ${error.message}`);
+          errors.push(`${rawName}: ${error.message}`);
           continue;
         }
 
@@ -148,52 +152,51 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
         console.log('Successfully uploaded:', fileName);
       } catch (err: any) {
         console.error('Unexpected error uploading file:', file.name, err);
-        errors.push(`Fehler bei ${file.name}: ${err.message || 'Unbekannter Fehler'}`);
+        errors.push(`${file.name}: ${err.message || 'Unbekannter Fehler'}`);
       }
     }
 
     return { paths, errors };
   };
 
-  // Submit to webhook
-  const submitToWebhook = async (uploadedPaths: {
-    documents: Record<string, string[]>;
-    taxCertificatesByYear: Record<string, string[]>;
-    additionalDocuments: string[];
-    propertyDocuments: string[];
-  }) => {
-    try {
-      console.log('Submitting to webhook with uploaded paths:', uploadedPaths);
-      
-      const { error } = await supabase.functions.invoke('submit-prognose-webhook', {
-        body: {
-          data: formData,
-          uploadedPaths: uploadedPaths
-        }
-      });
-      
-      if (error) throw error;
-      toast.success('Daten erfolgreich übermittelt');
-    } catch (error) {
-      console.error('Webhook error:', error);
-      toast.error('Daten konnten nicht übermittelt werden');
+  const submitToWebhook = async (uploadedPaths: Record<string, any>): Promise<WebhookResponse> => {
+    console.log('Submitting to webhook with uploaded paths:', uploadedPaths);
+    
+    const { data, error } = await supabase.functions.invoke('submit-prognose-webhook', {
+      body: {
+        data: formData,
+        uploadedPaths: uploadedPaths
+      }
+    });
+    
+    if (error) {
+      console.error('Webhook invoke error:', error);
+      return { success: false, error: error.message };
     }
+    
+    console.log('Webhook response:', data);
+    return data as WebhookResponse;
   };
 
   const uploadAndSubmit = async () => {
     setIsSubmitting(true);
+    setUploadErrors([]);
+    setWebhookResponse(null);
     
     try {
       console.log('Starting file upload process...');
-      const uploadedData = { ...formData };
       const allErrors: string[] = [];
       
       // Track all uploaded paths for webhook
-      const uploadedPaths = {
+      const uploadedPaths: Record<string, any> = {
         documents: {} as Record<string, string[]>,
         taxCertificatesByYear: {} as Record<string, string[]>,
         additionalDocuments: [] as string[],
-        propertyDocuments: [] as string[]
+        propertyDocuments: [] as string[],
+        cryptoDocuments: [] as string[],
+        disabilityProof: [] as string[],
+        alimonyProof: [] as string[],
+        spouseTaxDocument: [] as string[]
       };
 
       // Merge reuploaded files with formData
@@ -205,7 +208,6 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
         };
       }
       if (reuploadedFiles.taxCertificates?.length) {
-        // For tax certificates, add to first year or create new entry
         const years = formData.taxYears || [];
         if (years.length > 0) {
           effectiveFormData.taxCertificatesByYear = {
@@ -221,7 +223,7 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
         };
       }
 
-      // Upload all document types
+      // Upload all document types from formData.documents
       if (effectiveFormData.documents) {
         console.log('Processing documents...');
         
@@ -245,8 +247,6 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
           uploadedPaths.documents.otherDocuments = result.paths;
           allErrors.push(...result.errors);
         }
-        
-        uploadedData.documents = uploadedPaths.documents as any;
       }
 
       // Upload tax certificates by year
@@ -257,7 +257,6 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
           uploadedPaths.taxCertificatesByYear[year] = result.paths;
           allErrors.push(...result.errors);
         }
-        uploadedData.taxCertificatesByYear = uploadedPaths.taxCertificatesByYear as any;
       }
 
       // Upload property documents
@@ -266,7 +265,6 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
         const result = await uploadFiles(effectiveFormData.propertyDocuments, 'property-documents');
         uploadedPaths.propertyDocuments = result.paths;
         allErrors.push(...result.errors);
-        uploadedData.propertyDocuments = uploadedPaths.propertyDocuments as any;
       }
 
       // Upload additional documents
@@ -275,33 +273,66 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
         const result = await uploadFiles(effectiveFormData.additionalDocuments, 'additional-documents');
         uploadedPaths.additionalDocuments = result.paths;
         allErrors.push(...result.errors);
-        uploadedData.additionalDocuments = uploadedPaths.additionalDocuments as any;
+      }
+
+      // Upload crypto documents
+      if (effectiveFormData.cryptoDocuments) {
+        console.log('Processing crypto documents...');
+        const result = await uploadFiles(effectiveFormData.cryptoDocuments, 'crypto-documents');
+        uploadedPaths.cryptoDocuments = result.paths;
+        allErrors.push(...result.errors);
+      }
+
+      // Upload disability proof (single file field)
+      if (effectiveFormData.disabilityProof) {
+        console.log('Processing disability proof...');
+        const result = await uploadFiles(effectiveFormData.disabilityProof, 'disability-proof');
+        uploadedPaths.disabilityProof = result.paths;
+        allErrors.push(...result.errors);
+      }
+
+      // Upload alimony proof (single file field)
+      if (effectiveFormData.alimonyProof) {
+        console.log('Processing alimony proof...');
+        const result = await uploadFiles(effectiveFormData.alimonyProof, 'alimony-proof');
+        uploadedPaths.alimonyProof = result.paths;
+        allErrors.push(...result.errors);
+      }
+
+      // Upload spouse tax document (single file field)
+      if (effectiveFormData.spouseTaxDocument) {
+        console.log('Processing spouse tax document...');
+        const result = await uploadFiles(effectiveFormData.spouseTaxDocument, 'spouse-tax-documents');
+        uploadedPaths.spouseTaxDocument = result.paths;
+        allErrors.push(...result.errors);
       }
 
       console.log('All files uploaded. Paths:', uploadedPaths);
 
-      // Check if required files are missing (after upload) - block webhook & show re-upload UI
+      // Check if required files are missing after upload
       const requiredMissing: MissingDocument[] = [];
 
-      const hasIdCard = uploadedPaths.documents.idCard?.length > 0;
+      const hasIdCard = (uploadedPaths.documents.idCard?.length || 0) > 0;
       if (!hasIdCard) {
         requiredMissing.push({ key: 'idCard', label: 'Personalausweis', required: true });
       }
 
       if (formData.taxYears?.length > 0) {
-        const hasAnyTaxCert = Object.values(uploadedPaths.taxCertificatesByYear).some((arr) => (arr?.length || 0) > 0);
+        const hasAnyTaxCert = Object.values(uploadedPaths.taxCertificatesByYear).some((arr: any) => (arr?.length || 0) > 0);
         if (!hasAnyTaxCert) {
           requiredMissing.push({ key: 'taxCertificates', label: 'Lohnsteuerbescheide', required: true });
         }
       }
 
       if (formData.hasDisability) {
-        const hasDisability = uploadedPaths.documents.disabilityCertificate?.length > 0;
+        const hasDisability = (uploadedPaths.documents.disabilityCertificate?.length || 0) > 0 ||
+          (uploadedPaths.disabilityProof?.length || 0) > 0;
         if (!hasDisability) {
           requiredMissing.push({ key: 'disabilityCertificate', label: 'Behindertenausweis', required: true });
         }
       }
 
+      // Block submission if required documents are missing
       if (requiredMissing.length > 0) {
         toast.error(`Fehlende Dokumente: ${requiredMissing.map((d) => d.label).join(', ')}. Bitte laden Sie diese erneut hoch.`);
         setMissingDocuments(requiredMissing);
@@ -309,31 +340,47 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
         return;
       }
 
-      // Show warning for non-critical errors but continue
+      // Block submission if there are upload errors
       if (allErrors.length > 0) {
-        console.warn('Upload errors:', allErrors);
-        toast.warning(`${allErrors.length} Datei(en) konnten nicht hochgeladen werden`);
-        (uploadedData as any).failedUploads = allErrors;
+        console.error('Upload errors:', allErrors);
+        setUploadErrors(allErrors);
+        toast.error(`${allErrors.length} Datei(en) konnten nicht hochgeladen werden. Bitte versuchen Sie es erneut.`);
+        setIsSubmitting(false);
+        return;
       }
 
-      // Now submit to webhook with the uploaded paths
-      await submitToWebhook(uploadedPaths);
+      // Submit to webhook
+      const response = await submitToWebhook(uploadedPaths);
+      setWebhookResponse(response);
 
-      // Send email with uploaded file paths
+      if (!response.success) {
+        toast.error(response.error || 'Daten konnten nicht übermittelt werden');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Log success details
+      console.log(`Webhook successful: ${response.filesCount}/${response.expectedFilesCount} files sent`);
+
+      // Send confirmation email
       const { error: emailError } = await supabase.functions.invoke('send-prognose-email', {
         body: {
-          formData: uploadedData,
+          formData: { ...formData, uploadedPaths },
           userEmail: formData.email || 'no-email@example.com'
         }
       });
       
-      if (emailError) throw emailError;
+      if (emailError) {
+        console.error('Email error:', emailError);
+        toast.warning('Daten übermittelt, aber Bestätigungs-E-Mail konnte nicht gesendet werden');
+      } else {
+        toast.success('Daten erfolgreich übermittelt');
+      }
       
-      toast.success('E-Mail erfolgreich gesendet');
       setSubmissionComplete(true);
     } catch (error) {
-      console.error('Upload or email error:', error);
-      toast.error('Fehler beim Hochladen der Dateien oder Senden der E-Mail');
+      console.error('Upload or submission error:', error);
+      toast.error('Fehler beim Hochladen der Dateien');
     } finally {
       setIsSubmitting(false);
     }
@@ -349,7 +396,6 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
   };
 
   const handleReuploadSubmit = () => {
-    // Check if all required missing documents have been reuploaded
     const stillMissing = missingDocuments.filter(doc => 
       doc.required && (!reuploadedFiles[doc.key] || reuploadedFiles[doc.key].length === 0)
     );
@@ -359,6 +405,12 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
       return;
     }
     
+    uploadAndSubmit();
+  };
+
+  const handleRetry = () => {
+    setUploadErrors([]);
+    setWebhookResponse(null);
     uploadAndSubmit();
   };
 
@@ -379,6 +431,55 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
     
     toast.success('PDF heruntergeladen');
   };
+
+  // Show upload errors UI
+  if (uploadErrors.length > 0 && !submissionComplete) {
+    return (
+      <div className="space-y-8">
+        <div className="flex justify-center">
+          <div className="rounded-full bg-red-500/20 p-6">
+            <XCircle className="w-16 h-16 text-red-400" />
+          </div>
+        </div>
+
+        <div className="text-center">
+          <h2 className="text-2xl md:text-3xl font-light text-[hsl(var(--glass-text))] mb-4">
+            Upload fehlgeschlagen
+          </h2>
+          <p className="text-[hsl(var(--glass-text))]/80">
+            Folgende Dateien konnten nicht hochgeladen werden:
+          </p>
+        </div>
+
+        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 space-y-2">
+          {uploadErrors.map((error, index) => (
+            <div key={index} className="text-sm text-red-300 flex items-start gap-2">
+              <span className="text-red-400 mt-0.5">•</span>
+              <span>{error}</span>
+            </div>
+          ))}
+        </div>
+
+        <Button 
+          onClick={handleRetry}
+          size="lg" 
+          className="w-full rounded-full"
+        >
+          <Upload className="mr-2 h-5 w-5" />
+          Erneut versuchen
+        </Button>
+
+        <Button 
+          onClick={() => navigate("/")}
+          size="lg" 
+          variant="outline"
+          className="w-full rounded-full"
+        >
+          Zurück zur Startseite
+        </Button>
+      </div>
+    );
+  }
 
   // Show reupload UI if documents are missing
   if (missingDocuments.length > 0 && !submissionComplete) {
@@ -495,6 +596,19 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
           </div>
         </div>
       </div>
+
+      {webhookResponse && (
+        <div className="bg-white/5 rounded-xl p-4 text-left text-sm">
+          <p className="text-[hsl(var(--glass-text))]/70">
+            <strong>Status:</strong> {webhookResponse.filesCount}/{webhookResponse.expectedFilesCount} Dateien übermittelt
+          </p>
+          {webhookResponse.downloadFailures && webhookResponse.downloadFailures.length > 0 && (
+            <p className="text-yellow-400 mt-1">
+              Hinweis: {webhookResponse.downloadFailures.length} Datei(en) konnten serverseitig nicht verarbeitet werden
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="bg-white/5 rounded-2xl p-6 space-y-3">
         <h3 className="text-lg font-medium text-[hsl(var(--glass-text))]">
