@@ -553,6 +553,10 @@ const handler = async (req: Request): Promise<Response> => {
       propertyDocumentUrls: uploadedUrls.propertyDocuments,
     };
 
+    // Also include base64 files in the Make.com webhook payload (external systems may rely on this)
+    webhookPayload.files = filesForWebhook;
+    webhookPayload.filesCount = filesForWebhook.length;
+
     // Add tax certificates by year URLs to webhook payload
     for (const [year, urls] of Object.entries(taxCertificatesByYearUrls)) {
       webhookPayload[`taxCertificateYear_${year}_urls`] = urls;
