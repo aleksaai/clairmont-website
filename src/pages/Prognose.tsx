@@ -186,9 +186,23 @@ const Prognose = () => {
     }
   }, []);
 
-  // Save form data to localStorage
+  // Save form data to localStorage (excluding File objects which can't be serialized)
   const saveProgress = () => {
-    localStorage.setItem("prognoseFormData", JSON.stringify(formData));
+    // Create a copy without File objects - they lose their type after JSON.parse
+    const dataToSave = {
+      ...formData,
+      // Explicitly exclude all file fields
+      documents: undefined,
+      taxCertificatesByYear: undefined,
+      propertyDocuments: undefined,
+      additionalDocuments: undefined,
+      cryptoDocuments: undefined,
+      spouseTaxDocument: undefined,
+      disabilityProof: undefined,
+      alimonyProof: undefined,
+    };
+    
+    localStorage.setItem("prognoseFormData", JSON.stringify(dataToSave));
     localStorage.setItem("prognoseCurrentStep", currentStep.toString());
   };
 
