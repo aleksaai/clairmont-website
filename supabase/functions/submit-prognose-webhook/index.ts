@@ -47,18 +47,29 @@ async function generatePDF(data: any): Promise<Uint8Array> {
   let page = pdfDoc.addPage([595, 842]); // A4
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  
+
   let yPosition = 800;
   const leftMargin = 50;
   const lineHeight = 16;
   const sectionSpacing = 25;
-  
+
+  // pdf-lib StandardFonts (WinAnsi) can't encode many unicode chars.
+  // To avoid hard failures, we normalize & strip diacritics for PDF rendering only.
+  const winAnsiSafe = (value: unknown): string => {
+    const s = (value ?? '').toString();
+    return s
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/ß/g, 'ss');
+  };
+
   const addText = (text: string, isBold = false, fontSize = 10) => {
     if (yPosition < 60) {
       page = pdfDoc.addPage([595, 842]);
       yPosition = 800;
     }
-    page.drawText(text, {
+
+    page.drawText(winAnsiSafe(text), {
       x: leftMargin,
       y: yPosition,
       size: fontSize,
@@ -609,9 +620,16 @@ const handler = async (req: Request): Promise<Response> => {
       console.log('Make.com webhook sent successfully');
     }
 
-    // Generate actual PDF
-    const pdfBytes = await generatePDF(jsonData);
-    const pdfBase64 = arrayBufferToBase64(pdfBytes);
+    // Generate actual PDF (never fail the whole webhook on encoding issues)
+    const pdfFileName = `Steuer-Selbstauskunft_${jsonData.firstName || 'Unknown'}_${jsonData.lastName || 'User'}.pdf`;
+    let pdfBase64 = '';
+
+    try {
+      const pdfBytes = await generatePDF(jsonData);
+      pdfBase64 = arrayBufferToBase64(pdfBytes);
+    } catch (pdfError) {
+      console.error('PDF generation failed (continuing without PDF):', pdfError);
+    }
 
     // Prepare additional webhook payload with proper file structure
     const additionalWebhookPayload = {
@@ -619,10 +637,11 @@ const handler = async (req: Request): Promise<Response> => {
       submittedAt: new Date().toISOString(),
       formData: jsonData,
       pdfContent: {
-        name: `Steuer-Selbstauskunft_${jsonData.firstName || 'Unknown'}_${jsonData.lastName || 'User'}.pdf`,
+        name: pdfFileName,
         type: 'application/pdf',
-        data: pdfBase64
+        data: pdfBase64,
       },
+      pdfGenerationFailed: !pdfBase64,
       files: filesForWebhook,
       documentUrls: uploadedUrls,
       taxCertificatesByYearUrls: taxCertificatesByYearUrls
