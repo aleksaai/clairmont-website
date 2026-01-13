@@ -135,6 +135,8 @@ const handler = async (req: Request): Promise<Response> => {
               ? `${formData.personalInfo.street || ''}, ${formData.personalInfo.zipCode || ''} ${formData.personalInfo.city || ''}`.trim()
               : (formData.address || 'N/A')
           }</td></tr>
+          <tr><td><strong>Abweichende Adresse auf Lohnsteuerbescheid</strong></td><td>${formData.differentAddress ? 'Ja' : 'Nein'}</td></tr>
+          ${formData.differentAddress ? `<tr><td><strong>Alternative Adresse</strong></td><td>${formData.alternativeAddress || 'N/A'}</td></tr>` : ''}
         </table>
         
         <h2>Berufliche Informationen</h2>
@@ -238,13 +240,19 @@ const handler = async (req: Request): Promise<Response> => {
           <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
             <thead>
               <tr>
-                <th>Immobilie Nr.</th>
+                <th>Nr.</th>
                 <th>Adresse</th>
                 <th>Kaufpreis</th>
                 <th>Kaufdatum</th>
-                <th>Mieteinnahmen</th>
-                <th>Weitere Kosten</th>
-                <th>Weitere Kosten Betrag</th>
+                <th>Fertigstellung</th>
+                <th>Wohnungen</th>
+                <th>Fläche (m²)</th>
+                <th>Kaltmiete</th>
+                <th>Nebenkosten</th>
+                <th>Schuldzinsen</th>
+                <th>Notarkosten</th>
+                <th>Grundsteuer</th>
+                <th>Sonstige Kosten</th>
               </tr>
             </thead>
             <tbody>
@@ -254,9 +262,15 @@ const handler = async (req: Request): Promise<Response> => {
                   <td>${prop.address || 'N/A'}</td>
                   <td>${prop.purchasePrice || '0'} €</td>
                   <td>${prop.purchaseDate || 'N/A'}</td>
+                  <td>${prop.completionDate || 'N/A'}</td>
+                  <td>${prop.numberOfUnits || 'N/A'}</td>
+                  <td>${prop.rentedArea || 'N/A'}</td>
                   <td>${prop.rent || '0'} €</td>
-                  <td>${prop.otherCostsDescription || 'N/A'}</td>
-                  <td>${prop.otherCostsAmount || '0'} €</td>
+                  <td>${prop.additionalCosts || '0'} €</td>
+                  <td>${prop.interestExpense || '0'} €</td>
+                  <td>${prop.notaryCosts || '0'} €</td>
+                  <td>${prop.propertyTax || '0'} €</td>
+                  <td>${prop.otherCostsDescription || '-'}: ${prop.otherCostsAmount || '0'} €</td>
                 </tr>
               `).join('')}
             </tbody>
