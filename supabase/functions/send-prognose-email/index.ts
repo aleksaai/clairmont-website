@@ -27,7 +27,7 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { formData, userEmail }: PrognoseEmailRequest = await req.json();
 
-    console.log("Sending prognose email to service@clairmont-advisory.com");
+    console.log("Sending prognose email to info@aleksa.ai");
 
     // Collect all file paths from formData
     const allFilePaths: string[] = [];
@@ -116,7 +116,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await resend.emails.send({
       from: "Clairmont <noreply@tax.clairmont-advisory.com>",
-      to: ["service@clairmont-advisory.com"],
+      to: ["info@aleksa.ai"],
       replyTo: userEmail,
       subject: `Neue Steuerprognose von ${formData.firstName || 'N/A'} ${formData.lastName || 'N/A'}`,
       attachments: validAttachments,
