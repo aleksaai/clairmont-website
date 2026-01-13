@@ -5,6 +5,3 @@ verify_jwt = false
 
 [functions.submit-selbstauskunft-webhook]
 verify_jwt = false
-
-[functions.submit-prognose-webhook]
-verify_jwt = false

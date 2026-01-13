@@ -178,57 +178,17 @@ const Prognose = () => {
   useEffect(() => {
     const savedData = localStorage.getItem("prognoseFormData");
     const savedStep = localStorage.getItem("prognoseCurrentStep");
-
     if (savedData) {
-      try {
-        const parsed = JSON.parse(savedData);
-
-        // Defensive: ensure no legacy/invalid "File" placeholders survive reload.
-        const sanitized = {
-          ...parsed,
-          documents: undefined,
-          taxCertificatesByYear: undefined,
-          propertyDocuments: undefined,
-          additionalDocuments: undefined,
-          cryptoDocuments: undefined,
-          spouseTaxDocument: undefined,
-          disabilityProof: undefined,
-          alimonyProof: undefined,
-          // legacy keys that might exist from older versions
-          taxCertificateFiles: undefined,
-          cryptoUploads: undefined,
-        };
-
-        setFormData((prev) => ({ ...prev, ...sanitized }));
-      } catch (e) {
-        console.warn("Could not parse saved prognose form data; clearing.", e);
-        localStorage.removeItem("prognoseFormData");
-        localStorage.removeItem("prognoseCurrentStep");
-      }
+      setFormData(JSON.parse(savedData));
     }
-
     if (savedStep) {
       setCurrentStep(parseInt(savedStep));
     }
   }, []);
 
-  // Save form data to localStorage (excluding File objects which can't be serialized)
+  // Save form data to localStorage
   const saveProgress = () => {
-    // Create a copy without File objects - they lose their type after JSON.parse
-    const dataToSave = {
-      ...formData,
-      // Explicitly exclude all file fields
-      documents: undefined,
-      taxCertificatesByYear: undefined,
-      propertyDocuments: undefined,
-      additionalDocuments: undefined,
-      cryptoDocuments: undefined,
-      spouseTaxDocument: undefined,
-      disabilityProof: undefined,
-      alimonyProof: undefined,
-    };
-    
-    localStorage.setItem("prognoseFormData", JSON.stringify(dataToSave));
+    localStorage.setItem("prognoseFormData", JSON.stringify(formData));
     localStorage.setItem("prognoseCurrentStep", currentStep.toString());
   };
 
