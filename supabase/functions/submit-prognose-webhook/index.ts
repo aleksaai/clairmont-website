@@ -278,10 +278,25 @@ const handler = async (req: Request): Promise<Response> => {
 
     const filesForWebhook: { name: string; type: string; data: string; category: string }[] = [];
 
-    const fileCategories = ['taxCertificate', 'idCard', 'disabilityCertificate', 'otherDocuments'];
+    const fileCategories = ['taxCertificate', 'idCard', 'disabilityCertificate', 'otherDocuments', 'additionalDocuments', 'propertyDocuments'];
     
-    for (const category of fileCategories) {
+    // Also collect year-specific tax certificate categories (taxCertificateYear_2023, etc.)
+    const allFormEntries = [...formData.entries()];
+    const yearCategories = new Set<string>();
+    for (const [key] of allFormEntries) {
+      if (key.startsWith('taxCertificateYear_')) {
+        yearCategories.add(key);
+      }
+    }
+    const allCategories = [...fileCategories, ...Array.from(yearCategories)];
+    
+    for (const category of allCategories) {
       const files = formData.getAll(category);
+      
+      // Initialize URL array for this category if not exists
+      if (!uploadedUrls[category]) {
+        uploadedUrls[category] = [];
+      }
       
       for (const file of files) {
         if (file && file instanceof File) {

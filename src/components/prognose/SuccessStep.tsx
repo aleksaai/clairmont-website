@@ -165,21 +165,40 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
         const formDataToSend = new FormData();
         formDataToSend.append('data', JSON.stringify(formData));
 
-        // Add all document files
-        if (formData.documents) {
-          formData.documents.taxCertificate?.forEach((file: File) => {
-            formDataToSend.append('taxCertificate', file);
-          });
-          formData.documents.idCard?.forEach((file: File) => {
-            formDataToSend.append('idCard', file);
-          });
-          formData.documents.disabilityCertificate?.forEach((file: File) => {
-            formDataToSend.append('disabilityCertificate', file);
-          });
-          formData.documents.otherDocuments?.forEach((file: File) => {
-            formDataToSend.append('otherDocuments', file);
+      // Add all document files
+      if (formData.documents) {
+        formData.documents.taxCertificate?.forEach((file: File) => {
+          formDataToSend.append('taxCertificate', file);
+        });
+        formData.documents.idCard?.forEach((file: File) => {
+          formDataToSend.append('idCard', file);
+        });
+        formData.documents.disabilityCertificate?.forEach((file: File) => {
+          formDataToSend.append('disabilityCertificate', file);
+        });
+        formData.documents.otherDocuments?.forEach((file: File) => {
+          formDataToSend.append('otherDocuments', file);
+        });
+      }
+
+      // Lohnsteuerbescheide pro Jahr
+      if (formData.taxCertificatesByYear) {
+        for (const [year, files] of Object.entries(formData.taxCertificatesByYear)) {
+          (files as File[] | undefined)?.forEach((file: File) => {
+            formDataToSend.append(`taxCertificateYear_${year}`, file);
           });
         }
+      }
+
+      // Weitere Dokumente
+      formData.additionalDocuments?.forEach((file: File) => {
+        formDataToSend.append('additionalDocuments', file);
+      });
+
+      // Immobilien-Dokumente
+      formData.propertyDocuments?.forEach((file: File) => {
+        formDataToSend.append('propertyDocuments', file);
+      });
 
         const { error } = await supabase.functions.invoke('submit-prognose-webhook', {
           body: formDataToSend,
