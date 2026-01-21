@@ -20,7 +20,7 @@ const IncomeStep = ({ data, updateData, onNext, onBack }: IncomeStepProps) => {
   const [showCryptoInfo, setShowCryptoInfo] = useState(data.hasCryptoIncome);
   const [showSocialBenefitsDetails, setShowSocialBenefitsDetails] = useState(data.hasSocialBenefits);
 
-  const taxYears = ["2021", "2022", "2023", "2024"];
+  const taxYears = ["2022", "2023", "2024", "2025"];
 
   const handleTaxYearToggle = (year: string, checked: boolean) => {
     const newYears = checked
