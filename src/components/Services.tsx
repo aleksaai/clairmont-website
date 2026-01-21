@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 const services = [
   {
     icon: Calculator,
-    title: "Steuerberatung",
+    title: "Steuerservice",
     description: "Lohnsteuerjahresausgleich, Steuerprognose und Optimierung Ihrer Steuererklärung.",
     link: "/prognose",
     cta: "Kostenlose Steuerprognose",

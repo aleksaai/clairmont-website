@@ -10,7 +10,7 @@ const WelcomeStep = ({ onNext }: WelcomeStepProps) => {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl md:text-4xl lg:text-5xl font-light text-[hsl(var(--glass-text))] mb-4">
-          Willkommen bei Clairmont Steuerberatung!
+          Willkommen bei Clairmont Advisory!
         </h1>
         <p className="text-lg text-[hsl(var(--glass-text))]/80 mb-6">
           Beantworten Sie ein paar kurze Fragen, damit wir Ihre mögliche Steuererstattung kostenlos berechnen können.
