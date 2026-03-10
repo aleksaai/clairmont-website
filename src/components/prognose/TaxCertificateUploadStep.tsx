@@ -133,7 +133,7 @@ const TaxCertificateUploadStep = ({ data, updateData, onNext, onBack }: TaxCerti
                 <input
                   type="file"
                   multiple
-                  accept=".pdf,.jpg,.jpeg,.png"
+                  accept=".pdf,.jpg,.jpeg,.png,.heic,.heif,.webp,.gif,.bmp,.tiff,.tif,.doc,.docx,.xls,.xlsx"
                   onChange={(e) => handleFileInput(e, year)}
                   className="hidden"
                   id={`tax-certificate-${year}`}
