@@ -51,7 +51,7 @@ const CryptoUploadStep = ({ data, updateData, onNext, onBack }: CryptoUploadStep
               type="file"
               id="crypto-file-upload"
               multiple
-              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+              accept=".pdf,.jpg,.jpeg,.png,.heic,.heif,.webp,.gif,.bmp,.tiff,.tif,.doc,.docx,.xls,.xlsx"
               onChange={handleFileChange}
               className="hidden"
             />
