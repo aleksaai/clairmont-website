@@ -22,6 +22,7 @@ import SpecialCircumstancesStep from "@/components/prognose/SpecialCircumstances
 import AdditionalDocumentsStep from "@/components/prognose/AdditionalDocumentsStep";
 import BankDetailsStep from "@/components/prognose/BankDetailsStep";
 import DocumentUploadStep from "@/components/prognose/DocumentUploadStep";
+import VerificationStep from "@/components/prognose/VerificationStep";
 import SuccessStep from "@/components/prognose/SuccessStep";
 
 export interface FormData {
