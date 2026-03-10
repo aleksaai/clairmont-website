@@ -128,7 +128,7 @@ const TaxCertificateUploadStep = ({ data, updateData, onNext, onBack }: TaxCerti
                   Dateien hierher ziehen oder klicken zum Auswählen
                 </p>
                 <p className="text-sm text-[hsl(var(--glass-text))]/60 mb-3">
-                  PDF, JPG oder PNG (max. 10MB pro Datei)
+                  PDF, Bilder (JPG, PNG, HEIC, WEBP) oder Office-Dokumente (max. 10MB)
                 </p>
                 <input
                   type="file"

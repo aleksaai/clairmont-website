@@ -65,7 +65,7 @@ const CryptoUploadStep = ({ data, updateData, onNext, onBack }: CryptoUploadStep
                   Dateien hierher ziehen oder klicken zum Auswählen
                 </p>
                 <p className="text-sm text-[hsl(var(--glass-text))]/60">
-                  PDF, JPG, PNG, DOC, DOCX
+                  PDF, Bilder (JPG, PNG, HEIC, WEBP) oder Office-Dokumente
                 </p>
               </div>
             </label>

@@ -132,7 +132,7 @@ const DocumentUploadStep = ({ data, updateData, onNext, onBack }: DocumentUpload
               Dateien hierher ziehen oder <span className="text-[hsl(var(--primary))] underline">durchsuchen</span>
             </p>
             <p className="text-xs text-[hsl(var(--glass-text))]/60">
-              PDF, JPG oder PNG (max. 10MB pro Datei)
+              PDF, Bilder (JPG, PNG, HEIC, WEBP) oder Office-Dokumente (max. 10MB)
             </p>
           </div>
         </div>
