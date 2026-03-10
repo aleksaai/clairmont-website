@@ -1,9 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import heroMountain from "@/assets/hero-mountain.png";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const Hero = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   
   const scrollToHowItWorks = () => {
     const element = document.getElementById('how-it-works');
@@ -21,42 +23,32 @@ const Hero = () => {
   
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Image */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: `url(${heroMountain})`,
-        }}
+        style={{ backgroundImage: `url(${heroMountain})` }}
       />
-      
-      {/* Dark Overlay */}
       <div className="absolute inset-0 bg-[hsl(var(--glass-bg))] backdrop-blur-sm" />
-      
-      {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-20">
         <div className="max-w-2xl">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-medium text-[hsl(var(--glass-text))] mb-4 leading-tight">
-            Willkommen bei<br />
+            {t('hero', 'welcome')}<br />
             Clairmont Advisory & Partners
           </h1>
           <p className="text-2xl md:text-3xl lg:text-4xl font-light text-[hsl(var(--glass-text))]/90 mb-6 leading-relaxed">
-            Die Zukunft der Finanzberatung.
+            {t('hero', 'subtitle')}
           </p>
-          
           <p className="text-lg md:text-xl text-[hsl(var(--glass-text))]/90 mb-6 leading-relaxed max-w-xl">
-            Erfahrung trifft auf moderne Technologie – für klare, effiziente und zukunftssichere Finanzen. Persönlich. Präzise. Intelligent.
+            {t('hero', 'description')}
           </p>
-          
           <p className="text-xl md:text-2xl font-medium text-[hsl(var(--glass-text))] mb-10">
-            Steuern. Kredite. Vermögen
+            {t('hero', 'tagline')}
           </p>
-          
           <div className="flex flex-wrap gap-4">
             <Button size="lg" className="rounded-full px-8" onClick={scrollToServices}>
-              Leistungen ansehen
+              {t('hero', 'viewServices')}
             </Button>
             <Button variant="glass" size="lg" className="rounded-full px-8" onClick={scrollToHowItWorks}>
-              Mehr erfahren
+              {t('hero', 'learnMore')}
             </Button>
           </div>
         </div>

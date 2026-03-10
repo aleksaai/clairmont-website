@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { LanguageProvider } from "@/i18n/LanguageContext";
 import Index from "./pages/Index";
 import Prognose from "./pages/Prognose";
 import CryptoUpload from "./pages/CryptoUpload";
@@ -28,25 +29,27 @@ function ScrollToTop() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <ScrollToTop />
-        <Routes>
-          <Route path="/" element={<Index />} />
-        <Route path="/prognose" element={<Prognose />} />
-        <Route path="/crypto-upload" element={<CryptoUpload />} />
-        <Route path="/kontakt" element={<Kontakt />} />
-        <Route path="/selbstauskunft" element={<Selbstauskunft />} />
-        <Route path="/baufinanzierung-selbstauskunft" element={<BaufinanzierungSelbstauskunft />} />
-          <Route path="/impressum" element={<Impressum />} />
-          <Route path="/datenschutz" element={<Datenschutz />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <LanguageProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <ScrollToTop />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/prognose" element={<Prognose />} />
+            <Route path="/crypto-upload" element={<CryptoUpload />} />
+            <Route path="/kontakt" element={<Kontakt />} />
+            <Route path="/selbstauskunft" element={<Selbstauskunft />} />
+            <Route path="/baufinanzierung-selbstauskunft" element={<BaufinanzierungSelbstauskunft />} />
+            <Route path="/impressum" element={<Impressum />} />
+            <Route path="/datenschutz" element={<Datenschutz />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </LanguageProvider>
   </QueryClientProvider>
 );
 

@@ -2,6 +2,7 @@ import { motion, useInView, useMotionValue, useSpring } from "motion/react";
 import { useEffect, useRef } from "react";
 import { Euro, Users, TrendingUp, Clock, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface StatCardProps {
   icon: React.ReactNode;
@@ -16,24 +17,17 @@ interface StatCardProps {
 const AnimatedCounter = ({ value, duration = 2 }: { value: number; duration?: number }) => {
   const ref = useRef<HTMLSpanElement>(null);
   const motionValue = useMotionValue(0);
-  const springValue = useSpring(motionValue, {
-    damping: 60,
-    stiffness: 100,
-  });
+  const springValue = useSpring(motionValue, { damping: 60, stiffness: 100 });
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   useEffect(() => {
-    if (isInView) {
-      motionValue.set(value);
-    }
+    if (isInView) motionValue.set(value);
   }, [motionValue, isInView, value]);
 
   useEffect(() => {
     springValue.on("change", (latest) => {
       if (ref.current) {
-        ref.current.textContent = Intl.NumberFormat("de-DE").format(
-          Math.floor(latest)
-        );
+        ref.current.textContent = Intl.NumberFormat("de-DE").format(Math.floor(latest));
       }
     });
   }, [springValue]);
@@ -41,77 +35,45 @@ const AnimatedCounter = ({ value, duration = 2 }: { value: number; duration?: nu
   return <span ref={ref}>0</span>;
 };
 
-const StatCard = ({ icon, value, suffix = "", prefix = "", label, tooltip, duration }: StatCardProps) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      viewport={{ once: true }}
-    >
-      <div className="p-10 rounded-3xl bg-gradient-to-br from-card to-card/50 backdrop-blur-sm border border-primary/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-        <div className="flex flex-col items-center text-center gap-4">
-          <div className="p-4 rounded-2xl bg-primary/5 text-primary">
-            {icon}
-          </div>
-          <div className="text-5xl md:text-6xl font-light text-primary tracking-tight">
-            {prefix}
-            <AnimatedCounter value={value} duration={duration} />
-            {suffix}
-          </div>
-          <div className="flex items-center gap-2 justify-center">
-            <p className="text-muted-foreground text-sm md:text-base leading-relaxed max-w-[200px]">{label}</p>
-            <Tooltip delayDuration={200}>
-              <TooltipTrigger asChild>
-                <button className="text-muted-foreground hover:text-primary transition-colors">
-                  <Info className="w-4 h-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-[280px] md:max-w-[320px] p-4" side="top">
-                <p className="text-sm leading-relaxed">{tooltip}</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
+const StatCard = ({ icon, value, suffix = "", prefix = "", label, tooltip, duration }: StatCardProps) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+    viewport={{ once: true }}
+  >
+    <div className="p-10 rounded-3xl bg-gradient-to-br from-card to-card/50 backdrop-blur-sm border border-primary/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+      <div className="flex flex-col items-center text-center gap-4">
+        <div className="p-4 rounded-2xl bg-primary/5 text-primary">{icon}</div>
+        <div className="text-5xl md:text-6xl font-light text-primary tracking-tight">
+          {prefix}<AnimatedCounter value={value} duration={duration} />{suffix}
+        </div>
+        <div className="flex items-center gap-2 justify-center">
+          <p className="text-muted-foreground text-sm md:text-base leading-relaxed max-w-[200px]">{label}</p>
+          <Tooltip delayDuration={200}>
+            <TooltipTrigger asChild>
+              <button className="text-muted-foreground hover:text-primary transition-colors">
+                <Info className="w-4 h-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-[280px] md:max-w-[320px] p-4" side="top">
+              <p className="text-sm leading-relaxed">{tooltip}</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
-    </motion.div>
-  );
-};
+    </div>
+  </motion.div>
+);
 
 const Statistics = () => {
+  const { t } = useLanguage();
+
   const stats = [
-    {
-      icon: <Euro className="w-8 h-8" />,
-      value: 3800,
-      prefix: "€",
-      label: "⌀ Rückerstattung",
-      tooltip: "Mit unserer Hilfe erreichen Kunden oft bis zu €3.800 oder mehr.",
-      duration: 2.5,
-    },
-    {
-      icon: <Users className="w-8 h-8" />,
-      value: 5000,
-      suffix: "+",
-      label: "Zufriedene Kunden",
-      tooltip: "Vertrauen Sie auf unsere Erfahrung: Über 5.000 Kunden haben wir bereits erfolgreich beraten.",
-      duration: 2,
-    },
-    {
-      icon: <TrendingUp className="w-8 h-8" />,
-      value: 98,
-      suffix: "%",
-      label: "Erfolgsquote",
-      tooltip: "Wir maximieren Ihre Sicherheit: In 98% der Fälle erhalten Sie die von uns erwartete Rückerstattung wie berechnet.",
-      duration: 1.5,
-    },
-    {
-      icon: <Clock className="w-8 h-8" />,
-      value: 14,
-      suffix: " Tage",
-      label: "⌀ Bearbeitungszeit",
-      tooltip: "Wir sorgen für eine zügige Bearbeitung Ihres Vorgangs – weit unter dem Branchendurchschnitt.",
-      duration: 1,
-    },
+    { icon: <Euro className="w-8 h-8" />, value: 3800, prefix: "€", label: t('statistics', 'avgRefund'), tooltip: t('statistics', 'avgRefundTooltip'), duration: 2.5 },
+    { icon: <Users className="w-8 h-8" />, value: 5000, suffix: "+", label: t('statistics', 'happyClients'), tooltip: t('statistics', 'happyClientsTooltip'), duration: 2 },
+    { icon: <TrendingUp className="w-8 h-8" />, value: 98, suffix: "%", label: t('statistics', 'successRate'), tooltip: t('statistics', 'successRateTooltip'), duration: 1.5 },
+    { icon: <Clock className="w-8 h-8" />, value: 14, suffix: t('statistics', 'days'), label: t('statistics', 'processingTime'), tooltip: t('statistics', 'processingTimeTooltip'), duration: 1 },
   ];
 
   return (
@@ -126,14 +88,13 @@ const Statistics = () => {
             className="flex flex-col items-center justify-center max-w-2xl mx-auto mb-16"
           >
             <div className="inline-flex items-center justify-center px-4 py-1.5 border border-primary/20 rounded-full mb-6">
-              <span className="text-sm font-medium text-primary">Unsere Erfolge</span>
+              <span className="text-sm font-medium text-primary">{t('statistics', 'badge')}</span>
             </div>
-
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-light text-primary text-center mb-6">
-              Zahlen, die überzeugen
+              {t('statistics', 'title')}
             </h2>
             <p className="text-center text-lg text-primary/70 leading-relaxed">
-              Tausende Deutsche vertrauen bereits auf unsere Expertise. Werden Sie Teil unserer Erfolgsgeschichte.
+              {t('statistics', 'subtitle')}
             </p>
           </motion.div>
 
