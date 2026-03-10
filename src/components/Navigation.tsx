@@ -50,7 +50,6 @@ const Navigation = () => {
     <DropdownMenu>
       <DropdownMenuTrigger className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors text-sm flex items-center gap-1">
         <Globe className="w-4 h-4" />
-        {languageLabels[language]}
         <ChevronDown className="w-3 h-3" />
       </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-white/10">
