@@ -22,6 +22,7 @@ import SpecialCircumstancesStep from "@/components/prognose/SpecialCircumstances
 import AdditionalDocumentsStep from "@/components/prognose/AdditionalDocumentsStep";
 import BankDetailsStep from "@/components/prognose/BankDetailsStep";
 import DocumentUploadStep from "@/components/prognose/DocumentUploadStep";
+import VerificationStep from "@/components/prognose/VerificationStep";
 import SuccessStep from "@/components/prognose/SuccessStep";
 
 export interface FormData {
@@ -136,7 +137,7 @@ export interface FormData {
   confirmEmail?: string;
 }
 
-const BASE_STEPS = 15; // Updated to include CheckStep, TaxCertificateUploadStep, AdditionalDocumentsStep
+const BASE_STEPS = 16; // Updated to include VerificationStep
 
 const Prognose = () => {
   const navigate = useNavigate();
@@ -207,6 +208,11 @@ const Prognose = () => {
       setCurrentStep((prev) => prev - 1);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
+  };
+
+  const goToStep = (step: number) => {
+    setCurrentStep(step);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleSubmit = () => {
@@ -291,23 +297,31 @@ const Prognose = () => {
         } else if (hasTaxYears || formData.hasCryptoIncome) {
           return <DocumentUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
         } else {
-          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={handleSubmit} onBack={prevStep} />;
+          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
         }
       case 13:
         if (hasTaxYears && formData.hasCryptoIncome) {
           return <DocumentUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
         } else if (hasTaxYears || formData.hasCryptoIncome) {
-          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={handleSubmit} onBack={prevStep} />;
+          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
         } else {
-          return <SuccessStep formData={formData} />;
+          return <VerificationStep data={formData} onSubmit={handleSubmit} onBack={prevStep} onGoToStep={goToStep} />;
         }
       case 14:
         if (hasTaxYears && formData.hasCryptoIncome) {
-          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={handleSubmit} onBack={prevStep} />;
+          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+        } else if (hasTaxYears || formData.hasCryptoIncome) {
+          return <VerificationStep data={formData} onSubmit={handleSubmit} onBack={prevStep} onGoToStep={goToStep} />;
         } else {
           return <SuccessStep formData={formData} />;
         }
       case 15:
+        if (hasTaxYears && formData.hasCryptoIncome) {
+          return <VerificationStep data={formData} onSubmit={handleSubmit} onBack={prevStep} onGoToStep={goToStep} />;
+        } else {
+          return <SuccessStep formData={formData} />;
+        }
+      case 16:
         return <SuccessStep formData={formData} />;
       default:
         return null;

@@ -166,7 +166,7 @@ const BankDetailsStep = ({ data, updateData, onNext, onBack }: BankDetailsStepPr
           size="lg" 
           className="flex-1 rounded-full group"
         >
-          Prognose anfordern
+          Antrag prüfen
           <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
         </Button>
       </div>
