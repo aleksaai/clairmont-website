@@ -1,28 +1,16 @@
 import { motion } from "motion/react";
 import officeImage from "@/assets/clairmont-office.png";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const WhyClairmont = () => {
+  const { t } = useLanguage();
+
   const benefits = [
-    {
-      title: "Schnelle, unkomplizierte Beratung",
-      description: "Zeit ist entscheidend. Sie erhalten direkte Antworten und verständliche Lösungen – ohne Umwege, ohne Fachjargon."
-    },
-    {
-      title: "Expertise trifft auf Präzision",
-      description: "Jahrzehntelange Erfahrung vereint mit datenbasierten Entscheidungsprozessen für Finanzierungslösungen, die wirklich passen."
-    },
-    {
-      title: "Maßgeschneiderte Konzepte",
-      description: "Intelligente Analysen und internationales Partnernetzwerk für Strategien, die Ihre Ziele optimal unterstützen."
-    },
-    {
-      title: "Transparenz auf jedem Schritt",
-      description: "Nachvollziehbare Berechnungen, klare Konditionen und vollständige Kostentransparenz. Sie behalten die Kontrolle."
-    },
-    {
-      title: "Internationales Netzwerk",
-      description: "Digitale Systeme und weltweite Kontakte für reibungslose Abläufe bei komplexen oder grenzüberschreitenden Projekten."
-    }
+    { title: t('whyClairmont', 'benefit1Title'), description: t('whyClairmont', 'benefit1Desc') },
+    { title: t('whyClairmont', 'benefit2Title'), description: t('whyClairmont', 'benefit2Desc') },
+    { title: t('whyClairmont', 'benefit3Title'), description: t('whyClairmont', 'benefit3Desc') },
+    { title: t('whyClairmont', 'benefit4Title'), description: t('whyClairmont', 'benefit4Desc') },
+    { title: t('whyClairmont', 'benefit5Title'), description: t('whyClairmont', 'benefit5Desc') },
   ];
 
   return (
@@ -38,10 +26,10 @@ const WhyClairmont = () => {
           className="text-center mb-16"
         >
           <div className="inline-flex items-center justify-center px-4 py-1.5 border border-primary/20 rounded-full mb-6">
-            <span className="text-sm font-medium text-primary">Ihre Vorteile</span>
+            <span className="text-sm font-medium text-primary">{t('whyClairmont', 'badge')}</span>
           </div>
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-light text-primary mb-4">
-            Warum Clairmont Advisory?
+            {t('whyClairmont', 'title')}
           </h2>
         </motion.div>
 
@@ -91,7 +79,7 @@ const WhyClairmont = () => {
               className="pt-4 mt-4 border-t border-primary/10"
             >
               <p className="text-primary/70 leading-relaxed italic">
-                Egal ob Privathaushalt, Familie oder Unternehmen – wir beraten alle Kundengruppen individuell und auf Augenhöhe. Vertrauen Sie unserer Expertise und erreichen Sie Ihr Ziel mit maximaler Planungssicherheit.
+                {t('whyClairmont', 'closing')}
               </p>
             </motion.div>
           </div>
