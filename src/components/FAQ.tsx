@@ -5,33 +5,18 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const FAQ = () => {
+  const { t } = useLanguage();
+
   const faqs = [
-    {
-      question: "Wer kann Ihre Unterstützung bei der Steuererklärung nutzen?",
-      answer: "Privatpersonen mit Wohnsitz in Deutschland, die ihre Steuererklärung optimieren möchten. Besonders hilfreich ist unser Service für alle, die Steuererstattungen maximieren oder komplexe Sachverhalte wie Kapitalerträge, Versicherungen oder Immobilien korrekt deklarieren möchten.",
-    },
-    {
-      question: "Wie lange dauert die Bearbeitung meiner Steuererklärung?",
-      answer: "Die durchschnittliche Bearbeitungszeit durch das Finanzamt beträgt 6-8 Wochen nach Einreichung. Wir erstellen Ihre Steuererklärung in der Regel innerhalb von 14 Tagen nach Erhalt aller benötigten Unterlagen.",
-    },
-    {
-      question: "Welche Dokumente werden für die Steuererklärung benötigt?",
-      answer: "Typischerweise benötigen wir Ihre Lohnsteuerbescheinigung, Belege für Versicherungen, Nachweise über Werbungskosten, Spendenquittungen und weitere relevante Dokumente. Nach der Prognose erhalten Sie eine individuell auf Sie zugeschnittene Checkliste.",
-    },
-    {
-      question: "Wie hoch sind die Kosten für Ihre Dienstleistung?",
-      answer: "Unsere Vergütung beträgt 30% Ihrer tatsächlichen Steuererstattung. Sie erfahren zunächst kostenlos durch unsere Prognose, wie viel Sie voraussichtlich zurückbekommen. Wenn Sie sich entscheiden fortzufahren, zahlen Sie 30% der prognostizierten Summe im Voraus. Sollte die tatsächliche Erstattung niedriger ausfallen, erstatten wir Ihnen die Differenz zurück – Sie zahlen garantiert nur 30% dessen, was Sie wirklich erhalten.",
-    },
-    {
-      question: "Gibt es eine Frist für die Steuererklärung?",
-      answer: "Die reguläre Abgabefrist für die Steuererklärung 2024 endet am 31. Juli 2025. Mit steuerlicher Beratung verlängert sich die Frist bis zum 28. Februar 2026. Wir empfehlen jedoch, frühzeitig zu beginnen, um Ihre Erstattung schneller zu erhalten.",
-    },
-    {
-      question: "Kann ich auch Steuererklärungen für vergangene Jahre nachreichen?",
-      answer: "Ja, Sie können Steuererklärungen für bis zu vier Jahre rückwirkend einreichen (ohne Verpflichtung zur Abgabe). Wir prüfen gerne Ihre individuelle Situation und beraten Sie zu möglichen Erstattungen aus Vorjahren.",
-    },
+    { question: t('faq', 'q1'), answer: t('faq', 'a1') },
+    { question: t('faq', 'q2'), answer: t('faq', 'a2') },
+    { question: t('faq', 'q3'), answer: t('faq', 'a3') },
+    { question: t('faq', 'q4'), answer: t('faq', 'a4') },
+    { question: t('faq', 'q5'), answer: t('faq', 'a5') },
+    { question: t('faq', 'q6'), answer: t('faq', 'a6') },
   ];
 
   return (
@@ -45,13 +30,13 @@ const FAQ = () => {
           className="text-center mb-12"
         >
           <div className="inline-flex items-center justify-center px-4 py-1.5 border border-primary/20 rounded-full mb-6">
-            <span className="text-sm font-medium text-primary">FAQ</span>
+            <span className="text-sm font-medium text-primary">{t('faq', 'badge')}</span>
           </div>
           <h2 className="text-4xl md:text-5xl font-light text-primary mb-4">
-            Häufig gestellte Fragen
+            {t('faq', 'title')}
           </h2>
           <p className="text-lg md:text-xl text-primary/70 max-w-2xl mx-auto font-light">
-            Hier finden Sie Antworten auf die wichtigsten Fragen rund um Ihre Steuererklärung
+            {t('faq', 'subtitle')}
           </p>
         </motion.div>
 
