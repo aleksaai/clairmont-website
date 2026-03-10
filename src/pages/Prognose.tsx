@@ -297,23 +297,31 @@ const Prognose = () => {
         } else if (hasTaxYears || formData.hasCryptoIncome) {
           return <DocumentUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
         } else {
-          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={handleSubmit} onBack={prevStep} />;
+          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
         }
       case 13:
         if (hasTaxYears && formData.hasCryptoIncome) {
           return <DocumentUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
         } else if (hasTaxYears || formData.hasCryptoIncome) {
-          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={handleSubmit} onBack={prevStep} />;
+          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
         } else {
-          return <SuccessStep formData={formData} />;
+          return <VerificationStep data={formData} onSubmit={handleSubmit} onBack={prevStep} onGoToStep={goToStep} />;
         }
       case 14:
         if (hasTaxYears && formData.hasCryptoIncome) {
-          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={handleSubmit} onBack={prevStep} />;
+          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+        } else if (hasTaxYears || formData.hasCryptoIncome) {
+          return <VerificationStep data={formData} onSubmit={handleSubmit} onBack={prevStep} onGoToStep={goToStep} />;
         } else {
           return <SuccessStep formData={formData} />;
         }
       case 15:
+        if (hasTaxYears && formData.hasCryptoIncome) {
+          return <VerificationStep data={formData} onSubmit={handleSubmit} onBack={prevStep} onGoToStep={goToStep} />;
+        } else {
+          return <SuccessStep formData={formData} />;
+        }
+      case 16:
         return <SuccessStep formData={formData} />;
       default:
         return null;
