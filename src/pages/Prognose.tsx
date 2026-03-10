@@ -210,6 +210,11 @@ const Prognose = () => {
     }
   };
 
+  const goToStep = (step: number) => {
+    setCurrentStep(step);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const handleSubmit = () => {
     // Handle final form submission
     console.log("Form submitted:", formData);
