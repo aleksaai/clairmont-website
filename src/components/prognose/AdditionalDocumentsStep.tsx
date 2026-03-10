@@ -97,7 +97,7 @@ const AdditionalDocumentsStep = ({ data, updateData, onNext, onBack }: Additiona
             <input
               type="file"
               multiple
-              accept=".pdf,.jpg,.jpeg,.png"
+              accept=".pdf,.jpg,.jpeg,.png,.heic,.heif,.webp,.gif,.bmp,.tiff,.tif,.doc,.docx,.xls,.xlsx"
               onChange={handleFileInput}
               className="hidden"
               id="additional-docs-upload"
