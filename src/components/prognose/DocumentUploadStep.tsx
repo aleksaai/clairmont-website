@@ -123,7 +123,7 @@ const DocumentUploadStep = ({ data, updateData, onNext, onBack }: DocumentUpload
             multiple
             onChange={(e) => handleFileInput(e, field)}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            accept=".pdf,.jpg,.jpeg,.png"
+            accept=".pdf,.jpg,.jpeg,.png,.heic,.heif,.webp,.gif,.bmp,.tiff,.tif,.doc,.docx,.xls,.xlsx"
           />
           
           <div className="text-center space-y-2">
