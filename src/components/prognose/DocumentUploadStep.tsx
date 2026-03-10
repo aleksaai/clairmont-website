@@ -123,7 +123,7 @@ const DocumentUploadStep = ({ data, updateData, onNext, onBack }: DocumentUpload
             multiple
             onChange={(e) => handleFileInput(e, field)}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            accept=".pdf,.jpg,.jpeg,.png"
+            accept=".pdf,.jpg,.jpeg,.png,.heic,.heif,.webp,.gif,.bmp,.tiff,.tif,.doc,.docx,.xls,.xlsx"
           />
           
           <div className="text-center space-y-2">
@@ -132,7 +132,7 @@ const DocumentUploadStep = ({ data, updateData, onNext, onBack }: DocumentUpload
               Dateien hierher ziehen oder <span className="text-[hsl(var(--primary))] underline">durchsuchen</span>
             </p>
             <p className="text-xs text-[hsl(var(--glass-text))]/60">
-              PDF, JPG oder PNG (max. 10MB pro Datei)
+              PDF, Bilder (JPG, PNG, HEIC, WEBP) oder Office-Dokumente (max. 10MB)
             </p>
           </div>
         </div>

@@ -92,12 +92,12 @@ const AdditionalDocumentsStep = ({ data, updateData, onNext, onBack }: Additiona
               Dateien hierher ziehen oder klicken zum Auswählen
             </p>
             <p className="text-sm text-[hsl(var(--glass-text))]/60 mb-4">
-              PDF, JPG oder PNG (max. 10MB pro Datei)
+              PDF, Bilder (JPG, PNG, HEIC, WEBP) oder Office-Dokumente (max. 10MB)
             </p>
             <input
               type="file"
               multiple
-              accept=".pdf,.jpg,.jpeg,.png"
+              accept=".pdf,.jpg,.jpeg,.png,.heic,.heif,.webp,.gif,.bmp,.tiff,.tif,.doc,.docx,.xls,.xlsx"
               onChange={handleFileInput}
               className="hidden"
               id="additional-docs-upload"

@@ -51,7 +51,7 @@ const CryptoUploadStep = ({ data, updateData, onNext, onBack }: CryptoUploadStep
               type="file"
               id="crypto-file-upload"
               multiple
-              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+              accept=".pdf,.jpg,.jpeg,.png,.heic,.heif,.webp,.gif,.bmp,.tiff,.tif,.doc,.docx,.xls,.xlsx"
               onChange={handleFileChange}
               className="hidden"
             />
@@ -65,7 +65,7 @@ const CryptoUploadStep = ({ data, updateData, onNext, onBack }: CryptoUploadStep
                   Dateien hierher ziehen oder klicken zum Auswählen
                 </p>
                 <p className="text-sm text-[hsl(var(--glass-text))]/60">
-                  PDF, JPG, PNG, DOC, DOCX
+                  PDF, Bilder (JPG, PNG, HEIC, WEBP) oder Office-Dokumente
                 </p>
               </div>
             </label>
