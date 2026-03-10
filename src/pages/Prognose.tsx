@@ -137,7 +137,7 @@ export interface FormData {
   confirmEmail?: string;
 }
 
-const BASE_STEPS = 15; // Updated to include CheckStep, TaxCertificateUploadStep, AdditionalDocumentsStep
+const BASE_STEPS = 16; // Updated to include VerificationStep
 
 const Prognose = () => {
   const navigate = useNavigate();
