@@ -433,6 +433,43 @@ const handler = async (req: Request): Promise<Response> => {
     const pdfBytes = await generatePDF(jsonData);
     const pdfBase64 = arrayBufferToBase64(pdfBytes);
 
+    // Download files from storage one-by-one and convert to base64 for the additional webhook
+    const filesForWebhook: { name: string; type: string; data: string; category: string }[] = [];
+    
+    for (const [category, paths] of Object.entries(storagePaths)) {
+      if (!Array.isArray(paths)) continue;
+      for (const filePath of paths) {
+        if (typeof filePath !== 'string') continue;
+        try {
+          const { data: fileData, error: downloadError } = await supabase.storage
+            .from('prognose-documents')
+            .download(filePath);
+          
+          if (downloadError || !fileData) {
+            console.error(`Download error for ${filePath}:`, downloadError);
+            continue;
+          }
+          
+          const arrayBuffer = await fileData.arrayBuffer();
+          const base64Data = arrayBufferToBase64(arrayBuffer);
+          const fileName = filePath.split('/').pop() || 'document';
+          
+          filesForWebhook.push({
+            name: fileName,
+            type: fileData.type || 'application/octet-stream',
+            data: base64Data,
+            category,
+          });
+          
+          console.log(`Downloaded and encoded ${fileName} (${category})`);
+        } catch (dlError) {
+          console.error(`Error downloading ${filePath}:`, dlError);
+        }
+      }
+    }
+
+    console.log(`Prepared ${filesForWebhook.length} files for additional webhook`);
+
     const additionalWebhookPayload = {
       formType: 'steuerprognose',
       submittedAt: new Date().toISOString(),
@@ -442,6 +479,7 @@ const handler = async (req: Request): Promise<Response> => {
         type: 'application/pdf',
         data: pdfBase64,
       },
+      files: filesForWebhook,
       documentUrls,
     };
 
