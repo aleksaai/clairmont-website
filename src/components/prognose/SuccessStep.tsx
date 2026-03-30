@@ -60,58 +60,63 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
     };
 
     try {
-      // Upload files
-      const uploadedData = { ...formData };
+      // Upload files and collect storage paths
+      const storagePaths: Record<string, string[]> = {};
 
       if (formData.documents) {
-        const uploadedDocs: Record<string, string[]> = {};
-        if (formData.documents.taxCertificate) uploadedDocs.taxCertificate = await uploadFiles(formData.documents.taxCertificate, 'tax-certificates');
-        if (formData.documents.idCard) uploadedDocs.idCard = await uploadFiles(formData.documents.idCard, 'id-cards');
-        if (formData.documents.disabilityCertificate) uploadedDocs.disabilityCertificate = await uploadFiles(formData.documents.disabilityCertificate, 'disability-certificates');
-        if (formData.documents.otherDocuments) uploadedDocs.otherDocuments = await uploadFiles(formData.documents.otherDocuments, 'other-documents');
-        uploadedData.documents = uploadedDocs as any;
+        if (formData.documents.taxCertificate) {
+          storagePaths['taxCertificate'] = await uploadFiles(formData.documents.taxCertificate, 'tax-certificates');
+        }
+        if (formData.documents.idCard) {
+          storagePaths['idCard'] = await uploadFiles(formData.documents.idCard, 'id-cards');
+        }
+        if (formData.documents.disabilityCertificate) {
+          storagePaths['disabilityCertificate'] = await uploadFiles(formData.documents.disabilityCertificate, 'disability-certificates');
+        }
+        if (formData.documents.otherDocuments) {
+          storagePaths['otherDocuments'] = await uploadFiles(formData.documents.otherDocuments, 'other-documents');
+        }
       }
 
       if (formData.taxCertificatesByYear) {
-        const uploadedByYear: Record<string, string[]> = {};
         for (const [year, files] of Object.entries(formData.taxCertificatesByYear)) {
-          uploadedByYear[year] = await uploadFiles(files, `tax-certificates/${year}`);
+          storagePaths[`taxCertificateYear_${year}`] = await uploadFiles(files, `tax-certificates/${year}`);
         }
-        uploadedData.taxCertificatesByYear = uploadedByYear as any;
       }
 
       if (formData.propertyDocuments) {
-        uploadedData.propertyDocuments = await uploadFiles(formData.propertyDocuments, 'property-documents') as any;
+        storagePaths['propertyDocuments'] = await uploadFiles(formData.propertyDocuments, 'property-documents');
       }
       if (formData.additionalDocuments) {
-        uploadedData.additionalDocuments = await uploadFiles(formData.additionalDocuments, 'additional-documents') as any;
+        storagePaths['additionalDocuments'] = await uploadFiles(formData.additionalDocuments, 'additional-documents');
       }
 
       if (failedUploads.length > 0) {
-        (uploadedData as any).failedUploads = failedUploads;
+        toast.warning(`${failedUploads.length} Datei(en) konnten nicht hochgeladen werden.`);
       }
 
-      // Send webhook first so the core submission is registered even if the email step has issues
-      const webhookFormData = new FormData();
-      webhookFormData.append('data', JSON.stringify(formData));
-      if (formData.documents) {
-        formData.documents.taxCertificate?.forEach((file: File) => webhookFormData.append('taxCertificate', file));
-        formData.documents.idCard?.forEach((file: File) => webhookFormData.append('idCard', file));
-        formData.documents.disabilityCertificate?.forEach((file: File) => webhookFormData.append('disabilityCertificate', file));
-        formData.documents.otherDocuments?.forEach((file: File) => webhookFormData.append('otherDocuments', file));
-      }
-      if (formData.taxCertificatesByYear) {
-        for (const [year, files] of Object.entries(formData.taxCertificatesByYear)) {
-          (files as File[] | undefined)?.forEach((file: File) => webhookFormData.append(`taxCertificateYear_${year}`, file));
-        }
-      }
-      formData.additionalDocuments?.forEach((file: File) => webhookFormData.append('additionalDocuments', file));
-      formData.propertyDocuments?.forEach((file: File) => webhookFormData.append('propertyDocuments', file));
-
+      // Send JSON to webhook (no more FormData with raw files)
       const { error: webhookError } = await supabase.functions.invoke('submit-prognose-webhook', {
-        body: webhookFormData,
+        body: {
+          formData: formData,
+          storagePaths,
+        },
       });
       if (webhookError) throw webhookError;
+
+      // Send email notification (non-blocking)
+      const uploadedData = { ...formData };
+      // Replace file objects with storage paths for email
+      if (formData.documents) {
+        uploadedData.documents = storagePaths as any;
+      }
+      if (formData.taxCertificatesByYear) {
+        const byYear: Record<string, string[]> = {};
+        for (const [year] of Object.entries(formData.taxCertificatesByYear)) {
+          byYear[year] = storagePaths[`taxCertificateYear_${year}`] || [];
+        }
+        uploadedData.taxCertificatesByYear = byYear as any;
+      }
 
       const { error: emailError } = await supabase.functions.invoke('send-prognose-email', {
         body: { formData: uploadedData, userEmail: formData.email || 'no-email@example.com' }
@@ -119,17 +124,15 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
 
       if (emailError) {
         console.error('Email delivery warning:', emailError);
-        toast.warning('Ihre Anfrage wurde gespeichert, aber die interne Benachrichtigung musste im Hintergrund erneut verarbeitet werden.');
-      }
-
-      if (failedUploads.length > 0) {
-        toast.warning(`Erfolgreich gesendet, aber ${failedUploads.length} Datei(en) konnten nicht hochgeladen werden.`);
+        toast.warning('Ihre Anfrage wurde gespeichert, aber die E-Mail-Benachrichtigung konnte nicht zugestellt werden.');
       }
 
       setSubmissionState("success");
     } catch (error: any) {
       console.error('Submission error:', error);
-      setErrorMessage(error?.message || "Unbekannter Fehler beim Übermitteln der Daten.");
+      setErrorMessage(
+        "Es gab ein Problem bei der Übermittlung Ihrer Daten. Bitte versuchen Sie es erneut oder kontaktieren Sie uns direkt."
+      );
       setSubmissionState("error");
     }
   }, [formData]);
@@ -151,7 +154,6 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
     toast.success('PDF heruntergeladen');
   };
 
-  // Loading state
   if (submissionState === "submitting") {
     return (
       <div className="space-y-8 text-center">
@@ -175,7 +177,6 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
     );
   }
 
-  // Error state
   if (submissionState === "error") {
     return (
       <div className="space-y-8 text-center">
@@ -189,29 +190,15 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
             Übermittlung fehlgeschlagen
           </h2>
           <p className="text-lg text-[hsl(var(--glass-text))]/80">
-            Leider konnte Ihre Anfrage nicht übermittelt werden. Bitte versuchen Sie es erneut.
+            {errorMessage}
           </p>
-          {errorMessage && (
-            <p className="text-sm text-red-400/80 mt-2">
-              Fehlerdetails: {errorMessage}
-            </p>
-          )}
         </div>
         <div className="space-y-3 pt-4">
-          <Button
-            onClick={submitData}
-            size="lg"
-            className="w-full rounded-full"
-          >
+          <Button onClick={submitData} size="lg" className="w-full rounded-full">
             <RefreshCw className="mr-2 h-5 w-5" />
             Erneut versuchen
           </Button>
-          <Button
-            onClick={() => navigate("/kontakt")}
-            size="lg"
-            variant="outline"
-            className="w-full rounded-full"
-          >
+          <Button onClick={() => navigate("/kontakt")} size="lg" variant="outline" className="w-full rounded-full">
             Kontakt aufnehmen
           </Button>
         </div>
@@ -225,7 +212,6 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
     );
   }
 
-  // Success state
   return (
     <div className="space-y-8 text-center">
       <div className="flex justify-center">
@@ -233,7 +219,6 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
           <CheckCircle2 className="w-16 h-16 text-green-400" />
         </div>
       </div>
-
       <div>
         <h2 className="text-3xl md:text-4xl font-light text-[hsl(var(--glass-text))] mb-4">
           Vielen Dank! 🎉
@@ -248,7 +233,6 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
           </div>
         </div>
       </div>
-
       <div className="bg-white/5 rounded-2xl p-6 space-y-3">
         <h3 className="text-lg font-medium text-[hsl(var(--glass-text))]">
           Was passiert als Nächstes?
@@ -268,27 +252,15 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
           </li>
         </ul>
       </div>
-
       <div className="space-y-3 pt-4">
-        <Button
-          onClick={downloadPDF}
-          disabled={!pdfBlob}
-          size="lg"
-          className="w-full rounded-full"
-        >
+        <Button onClick={downloadPDF} disabled={!pdfBlob} size="lg" className="w-full rounded-full">
           <Download className="mr-2 h-5 w-5" />
           PDF herunterladen
         </Button>
-        <Button
-          onClick={() => navigate("/")}
-          size="lg"
-          variant="outline"
-          className="w-full rounded-full"
-        >
+        <Button onClick={() => navigate("/")} size="lg" variant="outline" className="w-full rounded-full">
           Zurück zur Startseite
         </Button>
       </div>
-
       <p className="text-sm text-[hsl(var(--glass-text))]/60">
         Bei Fragen erreichen Sie uns unter{" "}
         <a href="mailto:info@clairmont-advisory.de" className="underline hover:text-[hsl(var(--glass-text))]/80">
