@@ -1,67 +1,52 @@
 
-Ziel: Den echten Fehler jetzt sauber beheben. Die Ursache ist nicht mehr unklar: Das Absenden scheitert weiterhin im Backend-Webhook, nicht im Formular selbst.
 
-1. Hauptursache beheben: Webhook-Function läuft in Speicherlimit
-- In `submit-prognose-webhook` wird aktuell alles doppelt verarbeitet:
-  - Dateien werden erneut im Backend hochgeladen
-  - jede Datei wird zusätzlich in Base64 umgewandelt
-  - danach wird noch ein PDF generiert
-  - anschließend wird alles zusammen an den zweiten Webhook gesendet
-- Die aktuellen Logs zeigen dafür eindeutig: `Memory limit exceeded`.
-- Fix:
-  - Frontend-Uploads als Quelle verwenden statt Dateien im Webhook erneut komplett zu puffern
-  - an den Webhook nur noch die bereits hochgeladenen Storage-Pfade / signierten Links senden
-  - PDF weiter generieren, aber Anhänge nicht mehr vollständig als Base64 mitsenden
-  - große Dateipuffer vermeiden und Verarbeitung stream-/linkbasiert halten
+## Plan: Webhook-Problem endgültig lösen
 
-2. Frontend und Webhook wieder auf dieselbe Datenstruktur bringen
-- `SuccessStep.tsx` lädt Dateien bereits vorab in den Storage hoch und baut `uploadedData`.
-- Danach sendet es aber zusätzlich nochmals die Originaldateien als `FormData` an `submit-prognose-webhook`.
-- Ich stelle den Flow konsistent um:
-  - `submit-prognose-webhook` bekommt die bereits vorbereiteten Daten mit Dateipfaden
-  - kein doppelter Datei-Upload mehr
-  - keine zweite große Dateiübertragung vom Browser an die Function
-- Ergebnis: deutlich weniger Speicherverbrauch und weniger Fehlerquellen.
+### Ursache (diesmal eindeutig)
 
-3. PDF-Inhalt im Webhook korrekt behalten
-- Die PDF im Webhook ist laut Architektur weiterhin wichtig.
-- Deshalb passe ich die Webhook-Function so an, dass sie:
-  - weiter das PDF erzeugt
-  - alle Formularfelder enthält
-  - aber Dokumente nur als Links/Metadaten referenziert statt als komplette Base64-Dateien
-- So bleibt die Fachlogik erhalten, ohne das Speicherlimit zu sprengen.
+Die Edge Function `submit-prognose-webhook` crasht mit **Memory limit exceeded**, weil sie jede hochgeladene Datei aus dem Storage herunterlädt, in Base64 umwandelt und alles zusammen im Speicher hält, bevor sie es an das andere Lovable-Projekt ([Clairmont Mandate Manager](/projects/1d31e0b1-af9f-451a-8d07-e49afc7c5894)) sendet. Auch mit Streaming wird jede Datei vollständig gepuffert. Bei mehreren Dateien (Ausweis + Lohnsteuerbescheinigung + weitere) reicht der ~150 MB Speicher der Edge Function nicht aus.
 
-4. KI-Prüfung für PDFs wirklich korrekt nachziehen
-- Die Verifikationsfunktion verarbeitet PDFs aktuell noch nicht nach dem robusten nativen PDF-Muster.
-- Im Code werden Base64-Dateien weiterhin pauschal als `image_url` weitergegeben.
-- Das ist wahrscheinlich der Grund, warum echte Lohnsteuerbescheinigungen teils falsch abgelehnt werden.
-- Fix:
-  - PDF-Dateien an die KI nativ als PDF-Inhalt senden
-  - Bilder weiter als Bild senden
-  - dadurch zuverlässigere Erkennung von Lohnsteuerbescheinigungen und Ausweisen
+Die E-Mail funktioniert, weil sie keine Dateien als Base64 versendet, sondern nur signierte Download-Links.
 
-5. Fehlerausgabe für Nutzer verbessern
-- Die aktuelle Meldung `Edge Function returned a non-2xx status code` ist technisch und hilft niemandem.
-- Ich plane:
-  - nutzerfreundliche Fehlermeldung im UI
-  - optional unterscheiden zwischen „Dokumentprüfung fehlgeschlagen“ und „Übermittlung fehlgeschlagen“
-  - Retry bleibt erhalten
+### Lösung: Dateien als URLs statt als Base64 senden
 
-6. Nachkontrolle
-- Danach prüfe ich speziell diese Fälle:
-  - Steuerprognose mit PDF-Lohnsteuerbescheinigung
-  - Steuerprognose mit mehreren Anhängen
-  - Steuerprognose mit Ausweis + Steuerbescheid auf Mobilgerät
-  - erfolgreicher Versand an E-Mail und Webhook ohne Speicherfehler
+Statt die Dateien herunterzuladen und als Base64 zu senden, schicken wir nur die **signierten Download-URLs** an das andere Projekt. Das andere Projekt lädt die Dateien dann selbst herunter.
 
-Betroffene Dateien
-- `supabase/functions/submit-prognose-webhook/index.ts`
-- `src/components/prognose/SuccessStep.tsx`
-- `supabase/functions/verify-prognose-documents/index.ts`
+Das erfordert **Änderungen in beiden Projekten**:
 
-Technische Kurzdiagnose
-- Der Fehler ist nicht mehr „unbekannt“:
-  - `submit-prognose-webhook` crasht laut Logs mit `Memory limit exceeded`
-  - Ursache ist die doppelte und zu schwere Datei-Verarbeitung
-  - zusätzlich ist die PDF-Prüfung in `verify-prognose-documents` noch nicht robust genug umgesetzt
-- Deshalb kommt im Frontend weiterhin die rote Fehlermeldung, obwohl das Formular korrekt ausgefüllt ist.
+### Schritt 1: Dieses Projekt — `submit-prognose-webhook` vereinfachen
+
+- Die gesamte Datei-Download-und-Base64-Logik entfernen
+- Nur noch senden: `formData`, `pdfContent` (generierte PDF, ~50KB), und `documentUrls` (signierte URLs)
+- `files[]` Array wird leer gesendet oder weggelassen
+- Ergebnis: Kein Speicherproblem mehr, weil keine Dateien mehr gepuffert werden
+
+### Schritt 2: Clairmont Mandate Manager — `form-webhook` erweitern
+
+- Wenn `files[]` leer ist aber `documentUrls` vorhanden sind, die Dateien direkt über die URLs herunterladen
+- Für jede URL: Datei herunterladen → in Storage (`documents` Bucket) speichern → Dokument-Eintrag erstellen
+- Das passiert im anderen Projekt, das seinen eigenen Speicher hat
+
+**Wichtig:** Ich kann das andere Projekt von hier aus nur lesen, nicht bearbeiten. Ich werde dir den genauen Code für die Änderung im Clairmont Mandate Manager mitgeben, den du dort einfügen lässt.
+
+### Schritt 3: Frontend — Fehlerbehandlung anpassen
+
+Da du "hart blockieren" gewählt hast: Erfolg wird nur angezeigt, wenn **sowohl** E-Mail **als auch** Webhook erfolgreich waren. Das ist bereits so implementiert (Zeile 105: `if (webhookError) throw webhookError`). Keine Änderung nötig.
+
+### Betroffene Dateien
+
+| Datei | Projekt | Änderung |
+|---|---|---|
+| `supabase/functions/submit-prognose-webhook/index.ts` | Dieses Projekt | Datei-Download entfernen, nur URLs + PDF senden |
+| `supabase/functions/form-webhook/index.ts` | Clairmont Mandate Manager | URL-Download-Logik hinzufügen |
+
+### Ergebnis
+
+```text
+VORHER:
+Frontend → Storage Upload → submit-prognose-webhook → [Download ALLE Dateien → Base64 → 💥 CRASH] → form-webhook
+
+NACHHER:
+Frontend → Storage Upload → submit-prognose-webhook → [nur PDF + URLs senden ✓] → form-webhook → [URLs einzeln herunterladen ✓]
+```
+
