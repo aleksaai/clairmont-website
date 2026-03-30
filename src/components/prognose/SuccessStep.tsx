@@ -91,13 +91,7 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
         (uploadedData as any).failedUploads = failedUploads;
       }
 
-      // Send email
-      const { error: emailError } = await supabase.functions.invoke('send-prognose-email', {
-        body: { formData: uploadedData, userEmail: formData.email || 'no-email@example.com' }
-      });
-      if (emailError) throw emailError;
-
-      // Send webhook
+      // Send webhook first so the core submission is registered even if the email step has issues
       const webhookFormData = new FormData();
       webhookFormData.append('data', JSON.stringify(formData));
       if (formData.documents) {
@@ -118,6 +112,15 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
         body: webhookFormData,
       });
       if (webhookError) throw webhookError;
+
+      const { error: emailError } = await supabase.functions.invoke('send-prognose-email', {
+        body: { formData: uploadedData, userEmail: formData.email || 'no-email@example.com' }
+      });
+
+      if (emailError) {
+        console.error('Email delivery warning:', emailError);
+        toast.warning('Ihre Anfrage wurde gespeichert, aber die interne Benachrichtigung musste im Hintergrund erneut verarbeitet werden.');
+      }
 
       if (failedUploads.length > 0) {
         toast.warning(`Erfolgreich gesendet, aber ${failedUploads.length} Datei(en) konnten nicht hochgeladen werden.`);
