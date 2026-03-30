@@ -1,64 +1,67 @@
 
+Ziel: Den echten Fehler jetzt sauber beheben. Die Ursache ist nicht mehr unklar: Das Absenden scheitert weiterhin im Backend-Webhook, nicht im Formular selbst.
 
-## Analyse: Warum gehen Formulardaten bei einigen Nutzern verloren?
+1. Hauptursache beheben: Webhook-Function läuft in Speicherlimit
+- In `submit-prognose-webhook` wird aktuell alles doppelt verarbeitet:
+  - Dateien werden erneut im Backend hochgeladen
+  - jede Datei wird zusätzlich in Base64 umgewandelt
+  - danach wird noch ein PDF generiert
+  - anschließend wird alles zusammen an den zweiten Webhook gesendet
+- Die aktuellen Logs zeigen dafür eindeutig: `Memory limit exceeded`.
+- Fix:
+  - Frontend-Uploads als Quelle verwenden statt Dateien im Webhook erneut komplett zu puffern
+  - an den Webhook nur noch die bereits hochgeladenen Storage-Pfade / signierten Links senden
+  - PDF weiter generieren, aber Anhänge nicht mehr vollständig als Base64 mitsenden
+  - große Dateipuffer vermeiden und Verarbeitung stream-/linkbasiert halten
 
-### Ursache gefunden: Fehlende CORS-Headers
+2. Frontend und Webhook wieder auf dieselbe Datenstruktur bringen
+- `SuccessStep.tsx` lädt Dateien bereits vorab in den Storage hoch und baut `uploadedData`.
+- Danach sendet es aber zusätzlich nochmals die Originaldateien als `FormData` an `submit-prognose-webhook`.
+- Ich stelle den Flow konsistent um:
+  - `submit-prognose-webhook` bekommt die bereits vorbereiteten Daten mit Dateipfaden
+  - kein doppelter Datei-Upload mehr
+  - keine zweite große Dateiübertragung vom Browser an die Function
+- Ergebnis: deutlich weniger Speicherverbrauch und weniger Fehlerquellen.
 
-Die Edge Functions (`submit-prognose-webhook`, `send-prognose-email`, und alle anderen) haben **unvollständige CORS-Headers**:
+3. PDF-Inhalt im Webhook korrekt behalten
+- Die PDF im Webhook ist laut Architektur weiterhin wichtig.
+- Deshalb passe ich die Webhook-Function so an, dass sie:
+  - weiter das PDF erzeugt
+  - alle Formularfelder enthält
+  - aber Dokumente nur als Links/Metadaten referenziert statt als komplette Base64-Dateien
+- So bleibt die Fachlogik erhalten, ohne das Speicherlimit zu sprengen.
 
-```
-Aktuell: "authorization, x-client-info, apikey, content-type"
-```
+4. KI-Prüfung für PDFs wirklich korrekt nachziehen
+- Die Verifikationsfunktion verarbeitet PDFs aktuell noch nicht nach dem robusten nativen PDF-Muster.
+- Im Code werden Base64-Dateien weiterhin pauschal als `image_url` weitergegeben.
+- Das ist wahrscheinlich der Grund, warum echte Lohnsteuerbescheinigungen teils falsch abgelehnt werden.
+- Fix:
+  - PDF-Dateien an die KI nativ als PDF-Inhalt senden
+  - Bilder weiter als Bild senden
+  - dadurch zuverlässigere Erkennung von Lohnsteuerbescheinigungen und Ausweisen
 
-Die Supabase JS-Bibliothek sendet aber zusätzliche Headers (`x-supabase-client-platform`, `x-supabase-client-platform-version`, etc.). Wenn ein Browser eine sogenannte **Preflight-Anfrage** (OPTIONS) sendet und diese Headers nicht erlaubt sind, **blockiert der Browser die gesamte Anfrage still im Hintergrund**.
+5. Fehlerausgabe für Nutzer verbessern
+- Die aktuelle Meldung `Edge Function returned a non-2xx status code` ist technisch und hilft niemandem.
+- Ich plane:
+  - nutzerfreundliche Fehlermeldung im UI
+  - optional unterscheiden zwischen „Dokumentprüfung fehlgeschlagen“ und „Übermittlung fehlgeschlagen“
+  - Retry bleibt erhalten
 
-Warum es bei dir funktioniert: Safari auf Mac/iPhone cached Preflight-Ergebnisse aggressiver und verhält sich bei CORS teilweise toleranter. Chrome und Firefox auf Windows/Android sind strenger.
+6. Nachkontrolle
+- Danach prüfe ich speziell diese Fälle:
+  - Steuerprognose mit PDF-Lohnsteuerbescheinigung
+  - Steuerprognose mit mehreren Anhängen
+  - Steuerprognose mit Ausweis + Steuerbescheid auf Mobilgerät
+  - erfolgreicher Versand an E-Mail und Webhook ohne Speicherfehler
 
-### Zweites Problem: Falsche Erfolgs-Anzeige
+Betroffene Dateien
+- `supabase/functions/submit-prognose-webhook/index.ts`
+- `src/components/prognose/SuccessStep.tsx`
+- `supabase/functions/verify-prognose-documents/index.ts`
 
-Der SuccessStep zeigt sofort "Vielen Dank! 🎉" an, **bevor** die Daten tatsächlich gesendet wurden. Die Uploads und E-Mails laufen asynchron im Hintergrund. Wenn sie fehlschlagen, sieht der Nutzer zwar kurz einen Toast, aber er denkt, alles hat funktioniert.
-
-### Betroffene Edge Functions (6 Stück)
-
-Alle außer `verify-prognose-documents` haben die falschen CORS-Headers:
-
-1. `submit-prognose-webhook`
-2. `send-prognose-email`
-3. `submit-baufinanzierung-webhook`
-4. `submit-selbstauskunft-webhook`
-5. `send-contact-email`
-6. `send-selbstauskunft-email`
-
-### Plan
-
-#### 1. CORS-Headers in allen 6 Edge Functions korrigieren
-
-Ersetze in jeder Datei den `Access-Control-Allow-Headers` Wert durch:
-```
-authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version
-```
-
-#### 2. SuccessStep anpassen: Erst senden, dann Erfolg zeigen
-
-Den SuccessStep so umbauen, dass:
-- Zunächst ein **Lade-Zustand** ("Daten werden übermittelt...") angezeigt wird
-- Die Uploads, Webhook- und E-Mail-Aufrufe **abgewartet** werden
-- Erst bei Erfolg die Erfolgsmeldung erscheint
-- Bei Fehler eine klare Fehlermeldung mit Retry-Option angezeigt wird
-
-#### 3. Alle Edge Functions neu deployen
-
-Nach den CORS-Änderungen müssen alle 6 Functions redeployed werden.
-
-### Betroffene Dateien
-
-| Datei | Änderung |
-|---|---|
-| `supabase/functions/submit-prognose-webhook/index.ts` | CORS-Header fix |
-| `supabase/functions/send-prognose-email/index.ts` | CORS-Header fix |
-| `supabase/functions/submit-baufinanzierung-webhook/index.ts` | CORS-Header fix |
-| `supabase/functions/submit-selbstauskunft-webhook/index.ts` | CORS-Header fix |
-| `supabase/functions/send-contact-email/index.ts` | CORS-Header fix |
-| `supabase/functions/send-selbstauskunft-email/index.ts` | CORS-Header fix |
-| `src/components/prognose/SuccessStep.tsx` | Lade-Zustand + Fehlerbehandlung |
-
+Technische Kurzdiagnose
+- Der Fehler ist nicht mehr „unbekannt“:
+  - `submit-prognose-webhook` crasht laut Logs mit `Memory limit exceeded`
+  - Ursache ist die doppelte und zu schwere Datei-Verarbeitung
+  - zusätzlich ist die PDF-Prüfung in `verify-prognose-documents` noch nicht robust genug umgesetzt
+- Deshalb kommt im Frontend weiterhin die rote Fehlermeldung, obwohl das Formular korrekt ausgefüllt ist.
