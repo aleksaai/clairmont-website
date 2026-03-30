@@ -435,68 +435,18 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Sending to additional webhook...');
     try {
-      const encoder = new TextEncoder();
-
-      const additionalWebhookStream = new ReadableStream({
-        async start(controller) {
-          const push = (chunk: string) => controller.enqueue(encoder.encode(chunk));
-
-          try {
-            push('{"formType":"steuerprognose",');
-            push(`"submittedAt":${JSON.stringify(new Date().toISOString())},`);
-            push(`"formData":${JSON.stringify(jsonData)},`);
-            push(`"pdfContent":${JSON.stringify({
-              name: `Steuer-Selbstauskunft_${jsonData.firstName || 'Unknown'}_${jsonData.lastName || 'User'}.pdf`,
-              type: 'application/pdf',
-              data: pdfBase64,
-            })},`);
-            push('"files":[');
-
-            let isFirstFile = true;
-
-            for (const [category, paths] of Object.entries(storagePaths)) {
-              if (!Array.isArray(paths)) continue;
-
-              for (const filePath of paths) {
-                if (typeof filePath !== 'string') continue;
-
-                try {
-                  const { data: fileData, error: downloadError } = await supabase.storage
-                    .from('prognose-documents')
-                    .download(filePath);
-
-                  if (downloadError || !fileData) {
-                    console.error(`Download error for ${filePath}:`, downloadError);
-                    continue;
-                  }
-
-                  const arrayBuffer = await fileData.arrayBuffer();
-                  const filePayload = {
-                    name: filePath.split('/').pop() || 'document',
-                    type: fileData.type || 'application/octet-stream',
-                    data: arrayBufferToBase64(arrayBuffer),
-                    category,
-                  };
-
-                  if (!isFirstFile) push(',');
-                  push(JSON.stringify(filePayload));
-                  isFirstFile = false;
-
-                  console.log(`Streamed file ${filePayload.name} (${category}) to additional webhook`);
-                } catch (dlError) {
-                  console.error(`Error downloading ${filePath}:`, dlError);
-                }
-              }
-            }
-
-            push('],');
-            push(`"documentUrls":${JSON.stringify(documentUrls)}}`);
-            controller.close();
-          } catch (streamError) {
-            controller.error(streamError);
-          }
+      const additionalPayload = {
+        formType: 'steuerprognose',
+        submittedAt: new Date().toISOString(),
+        formData: jsonData,
+        pdfContent: {
+          name: `Steuer-Selbstauskunft_${jsonData.firstName || 'Unknown'}_${jsonData.lastName || 'User'}.pdf`,
+          type: 'application/pdf',
+          data: pdfBase64,
         },
-      });
+        files: [],
+        documentUrls,
+      };
 
       const additionalWebhookResponse = await fetch(ADDITIONAL_WEBHOOK_URL, {
         method: 'POST',
@@ -504,7 +454,7 @@ const handler = async (req: Request): Promise<Response> => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${ADDITIONAL_WEBHOOK_TOKEN}`,
         },
-        body: additionalWebhookStream,
+        body: JSON.stringify(additionalPayload),
       });
 
       if (!additionalWebhookResponse.ok) {
