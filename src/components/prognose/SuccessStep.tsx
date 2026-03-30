@@ -104,18 +104,33 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
       });
       if (webhookError) throw webhookError;
 
-      // Send email notification (non-blocking)
+      // Build email data with storage paths instead of File objects
       const uploadedData = { ...formData };
-      // Replace file objects with storage paths for email
+      
+      // Map document storage paths correctly for the email function
       if (formData.documents) {
-        uploadedData.documents = storagePaths as any;
+        uploadedData.documents = {
+          taxCertificate: storagePaths['taxCertificate'] || [],
+          idCard: storagePaths['idCard'] || [],
+          disabilityCertificate: storagePaths['disabilityCertificate'] || [],
+          otherDocuments: storagePaths['otherDocuments'] || [],
+        } as any;
       }
+      
       if (formData.taxCertificatesByYear) {
         const byYear: Record<string, string[]> = {};
         for (const [year] of Object.entries(formData.taxCertificatesByYear)) {
           byYear[year] = storagePaths[`taxCertificateYear_${year}`] || [];
         }
         uploadedData.taxCertificatesByYear = byYear as any;
+      }
+      
+      // Replace File arrays with storage paths for propertyDocuments and additionalDocuments
+      if (formData.propertyDocuments) {
+        uploadedData.propertyDocuments = (storagePaths['propertyDocuments'] || []) as any;
+      }
+      if (formData.additionalDocuments) {
+        uploadedData.additionalDocuments = (storagePaths['additionalDocuments'] || []) as any;
       }
 
       const { error: emailError } = await supabase.functions.invoke('send-prognose-email', {
