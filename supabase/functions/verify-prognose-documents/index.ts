@@ -208,20 +208,12 @@ async function verifyDocumentWithAI(
     // Strip data URL prefix if present
     const cleanBase64 = base64Data.replace(/^data:.*?;base64,/, "");
     
-    // For PDFs, we can't send as image - send as text description
-    if (mimeType === "application/pdf") {
-      content.push({
-        type: "text",
-        text: "[Ein PDF-Dokument wurde hochgeladen. Bitte berücksichtige, dass PDF-Dateien nicht visuell geprüft werden können. Gehe davon aus, dass das Dokument korrekt sein könnte, markiere es aber als 'nicht visuell prüfbar'.]",
-      });
-    } else {
-      content.push({
-        type: "image_url",
-        image_url: {
-          url: `data:${mimeType};base64,${cleanBase64}`,
-        },
-      });
-    }
+    content.push({
+      type: "image_url",
+      image_url: {
+        url: `data:${mimeType};base64,${cleanBase64}`,
+      },
+    });
   }
   
   content.push({
