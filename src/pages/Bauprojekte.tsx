@@ -6,6 +6,7 @@ import { dubaiProjects } from "@/data/dubaiProjects";
 import DubaiProjectsList from "@/components/bauprojekte/DubaiProjectsList";
 import DubaiProjectDetail from "@/components/bauprojekte/DubaiProjectDetail";
 import IstanbulProjectsList from "@/components/bauprojekte/IstanbulProjectsList";
+import AzerbaijanProjectsList from "@/components/bauprojekte/AzerbaijanProjectsList";
 
 const Bauprojekte = () => {
   const { country, projectId } = useParams<{ country: string; projectId?: string }>();
@@ -51,6 +52,17 @@ const Bauprojekte = () => {
       <div className="min-h-screen bg-background">
         <Navigation />
         <IstanbulProjectsList />
+        <Footer />
+      </div>
+    );
+  }
+
+  // Azerbaijan listing
+  if (country === "aserbaidschan") {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <AzerbaijanProjectsList />
         <Footer />
       </div>
     );
