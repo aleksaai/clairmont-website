@@ -1,24 +1,51 @@
-import { useParams, Navigate } from "react-router-dom";
+import { useParams, Navigate, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { useLanguage } from "@/i18n/LanguageContext";
-
-const countryKeys: Record<string, string> = {
-  dubai: "dubai",
-  istanbul: "istanbul",
-  aserbaidschan: "azerbaijan",
-};
+import { dubaiProjects } from "@/data/dubaiProjects";
+import DubaiProjectsList from "@/components/bauprojekte/DubaiProjectsList";
+import DubaiProjectDetail from "@/components/bauprojekte/DubaiProjectDetail";
 
 const Bauprojekte = () => {
-  const { country } = useParams<{ country: string }>();
+  const { country, projectId } = useParams<{ country: string; projectId?: string }>();
   const { t } = useLanguage();
+
+  const countryKeys: Record<string, string> = {
+    dubai: "dubai",
+    istanbul: "istanbul",
+    aserbaidschan: "azerbaijan",
+  };
 
   if (!country || !countryKeys[country]) {
     return <Navigate to="/" replace />;
   }
 
-  const countryName = t("nav", countryKeys[country]);
+  // Dubai with project detail
+  if (country === "dubai" && projectId) {
+    const project = dubaiProjects.find((p) => p.id === projectId);
+    if (!project) return <Navigate to="/bauprojekte/dubai" replace />;
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <DubaiProjectDetail project={project} />
+        <Footer />
+      </div>
+    );
+  }
 
+  // Dubai listing
+  if (country === "dubai") {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <DubaiProjectsList />
+        <Footer />
+      </div>
+    );
+  }
+
+  // Placeholder for other countries
+  const countryName = t("nav", countryKeys[country]);
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -28,7 +55,7 @@ const Bauprojekte = () => {
             {t("nav", "buildingProjects")} – {countryName}
           </h1>
           <p className="text-muted-foreground text-lg">
-            {countryName} — Projekte werden in Kürze hinzugefügt.
+            Projekte werden in Kürze hinzugefügt.
           </p>
         </div>
       </div>
