@@ -157,7 +157,11 @@ const Navigation = () => {
               <div className="flex flex-col gap-6 mt-8">
                 <button onClick={scrollToTop} className="text-[hsl(var(--glass-text))] text-lg text-left">{t('nav', 'home')}</button>
                 <button onClick={() => scrollToSection('why-clairmont')} className="text-[hsl(var(--glass-text))] text-lg text-left">{t('nav', 'about')}</button>
-                <button onClick={() => scrollToSection('services')} className="text-[hsl(var(--glass-text))] text-lg text-left">{t('nav', 'services')}</button>
+                <div className="text-[hsl(var(--glass-text))] text-lg font-semibold mt-2">{t('nav', 'services')}</div>
+                <button onClick={() => { navigate("/steuerberatung"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left pl-4">Steuerberatung</button>
+                <button onClick={() => { navigate("/unternehmensberatung"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left pl-4">Unternehmensberatung</button>
+                <button onClick={() => { navigate("/rechtsberatung"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left pl-4">Rechtsberatung</button>
+                <button onClick={() => { navigate("/karriere"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left pl-4">Karriere & Partnerschaften</button>
                 <button onClick={() => { navigate("/prognose"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left">{t('nav', 'taxPrognosis')}</button>
                 <button onClick={() => { navigate("/selbstauskunft"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left">{t('nav', 'privateLoan')}</button>
                 <button onClick={() => { navigate("/baufinanzierung-selbstauskunft"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left">{t('nav', 'mortgage')}</button>
