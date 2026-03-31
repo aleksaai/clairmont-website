@@ -3,6 +3,7 @@ import { dubaiProjects } from "@/data/dubaiProjects";
 import { MapPin, Building2, ArrowRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
+import ctaBg from "@/assets/projects/dubai/cta-bg.jpg";
 
 const DubaiProjectsList = () => {
   const navigate = useNavigate();
@@ -80,16 +81,22 @@ const DubaiProjectsList = () => {
         </div>
 
         {/* CTA Box */}
-        <div className="mt-20 relative overflow-hidden rounded-[2.5rem] border border-white/20 bg-white/10 backdrop-blur-2xl p-10 md:p-16 text-center">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5 pointer-events-none" />
-          <div className="relative z-10">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 border border-primary/20 mb-6">
-              <Search className="w-7 h-7 text-primary" />
+        <div className="mt-20 relative overflow-hidden rounded-[2.5rem]">
+          <img
+            src={ctaBg}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="relative z-10 p-10 md:p-16 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/10 border border-white/20 backdrop-blur-md mb-6">
+              <Search className="w-7 h-7 text-white" />
             </div>
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
               Nichts Passendes gefunden?
             </h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto mb-8">
+            <p className="text-white/80 text-lg max-w-xl mx-auto mb-8">
               Erstellen Sie einen kostenlosen Suchauftrag und wir finden die perfekte Immobilie für Sie – ganz nach Ihren Wünschen.
             </p>
             <Button
@@ -99,7 +106,7 @@ const DubaiProjectsList = () => {
             >
               Jetzt Suchauftrag anlegen <ArrowRight className="w-5 h-5" />
             </Button>
-            <p className="text-xs text-muted-foreground mt-4">Kostenlos & unverbindlich</p>
+            <p className="text-xs text-white/50 mt-4">Kostenlos & unverbindlich</p>
           </div>
         </div>
       </div>
