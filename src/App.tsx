@@ -14,6 +14,10 @@ import Bauprojekte from "./pages/Bauprojekte";
 import Kontakt from "./pages/Kontakt";
 import Impressum from "./pages/Impressum";
 import Datenschutz from "./pages/Datenschutz";
+import Steuerberatung from "./pages/Steuerberatung";
+import Unternehmensberatung from "./pages/Unternehmensberatung";
+import Rechtsberatung from "./pages/Rechtsberatung";
+import Karriere from "./pages/Karriere";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
