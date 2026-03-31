@@ -3,6 +3,7 @@ import { dubaiProjects } from "@/data/dubaiProjects";
 import { MapPin, Building2, ArrowRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
+import ctaBg from "@/assets/projects/dubai/cta-bg.jpg";
 
 const DubaiProjectsList = () => {
   const navigate = useNavigate();
