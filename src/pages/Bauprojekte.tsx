@@ -45,6 +45,17 @@ const Bauprojekte = () => {
     );
   }
 
+  // Istanbul listing
+  if (country === "istanbul") {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <IstanbulProjectsList />
+        <Footer />
+      </div>
+    );
+  }
+
   // Placeholder for other countries
   const countryName = t("nav", countryKeys[country]);
   return (
