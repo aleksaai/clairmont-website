@@ -101,6 +101,23 @@ const Navigation = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors text-sm flex items-center gap-1">
+              {t('nav', 'buildingProjects')}
+              <ChevronDown className="w-4 h-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-white/10">
+              <DropdownMenuItem onClick={() => navigate("/bauprojekte/dubai")} className="cursor-pointer text-[hsl(var(--glass-text))]">
+                {t('nav', 'dubai')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/bauprojekte/istanbul")} className="cursor-pointer text-[hsl(var(--glass-text))]">
+                {t('nav', 'istanbul')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/bauprojekte/aserbaidschan")} className="cursor-pointer text-[hsl(var(--glass-text))]">
+                {t('nav', 'azerbaijan')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <button onClick={() => scrollToSection('faq')} className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors text-sm">
             {t('nav', 'faq')}
           </button>
