@@ -81,9 +81,26 @@ const Navigation = () => {
           <button onClick={() => scrollToSection('why-clairmont')} className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors text-sm">
             {t('nav', 'about')}
           </button>
-          <button onClick={() => scrollToSection('services')} className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors text-sm">
-            {t('nav', 'services')}
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors text-sm flex items-center gap-1">
+              {t('nav', 'services')}
+              <ChevronDown className="w-4 h-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-white/10">
+              <DropdownMenuItem onClick={() => navigate("/steuerberatung")} className="cursor-pointer text-[hsl(var(--glass-text))]">
+                Steuerberatung
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/unternehmensberatung")} className="cursor-pointer text-[hsl(var(--glass-text))]">
+                Unternehmensberatung
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/rechtsberatung")} className="cursor-pointer text-[hsl(var(--glass-text))]">
+                Rechtsberatung
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/karriere")} className="cursor-pointer text-[hsl(var(--glass-text))]">
+                Karriere & Partnerschaften
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <DropdownMenu>
             <DropdownMenuTrigger className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors text-sm flex items-center gap-1">
               {t('nav', 'forms')}
