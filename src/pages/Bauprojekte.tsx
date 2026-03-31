@@ -57,6 +57,17 @@ const Bauprojekte = () => {
     );
   }
 
+  // Azerbaijan listing
+  if (country === "aserbaidschan") {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <AzerbaijanProjectsList />
+        <Footer />
+      </div>
+    );
+  }
+
   // Placeholder for other countries
   const countryName = t("nav", countryKeys[country]);
   return (
