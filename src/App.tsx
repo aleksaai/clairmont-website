@@ -10,6 +10,7 @@ import Prognose from "./pages/Prognose";
 import CryptoUpload from "./pages/CryptoUpload";
 import Selbstauskunft from "./pages/Selbstauskunft";
 import BaufinanzierungSelbstauskunft from "./pages/BaufinanzierungSelbstauskunft";
+import Bauprojekte from "./pages/Bauprojekte";
 import Kontakt from "./pages/Kontakt";
 import Impressum from "./pages/Impressum";
 import Datenschutz from "./pages/Datenschutz";
