@@ -1,6 +1,6 @@
 import { motion, useInView, useMotionValue, useSpring } from "motion/react";
 import { useEffect, useRef } from "react";
-import { Euro, Users, TrendingUp, Clock, Info } from "lucide-react";
+import { Users, TrendingUp, Layers, Globe, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLanguage } from "@/i18n/LanguageContext";
 
@@ -70,10 +70,10 @@ const Statistics = () => {
   const { t } = useLanguage();
 
   const stats = [
-    { icon: <Euro className="w-8 h-8" />, value: 3800, prefix: "€", label: t('statistics', 'avgRefund'), tooltip: t('statistics', 'avgRefundTooltip'), duration: 2.5 },
     { icon: <Users className="w-8 h-8" />, value: 5000, suffix: "+", label: t('statistics', 'happyClients'), tooltip: t('statistics', 'happyClientsTooltip'), duration: 2 },
     { icon: <TrendingUp className="w-8 h-8" />, value: 98, suffix: "%", label: t('statistics', 'successRate'), tooltip: t('statistics', 'successRateTooltip'), duration: 1.5 },
-    { icon: <Clock className="w-8 h-8" />, value: 14, suffix: t('statistics', 'days'), label: t('statistics', 'processingTime'), tooltip: t('statistics', 'processingTimeTooltip'), duration: 1 },
+    { icon: <Layers className="w-8 h-8" />, value: 9, label: t('statistics', 'serviceAreas'), tooltip: t('statistics', 'serviceAreasTooltip'), duration: 1 },
+    { icon: <Globe className="w-8 h-8" />, value: 4, suffix: "+", label: t('statistics', 'countries'), tooltip: t('statistics', 'countriesTooltip'), duration: 1 },
   ];
 
   return (

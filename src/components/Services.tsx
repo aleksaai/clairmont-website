@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { Calculator, CreditCard, Home, TrendingUp, Sun, Users } from "lucide-react";
+import { Calculator, Home, Briefcase, Globe, Sun, Users } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Link } from "react-router-dom";
@@ -13,40 +13,43 @@ const Services = () => {
       icon: Calculator,
       title: t('services', 'taxService'),
       description: t('services', 'taxServiceDesc'),
-      link: "/prognose",
+      link: "/steuerberatung",
       cta: t('services', 'taxServiceCta'),
     },
     {
-      icon: CreditCard,
-      title: t('services', 'privateLoans'),
-      description: t('services', 'privateLoansDesc'),
-      link: "/selbstauskunft",
-      cta: t('services', 'privateLoansDescCta'),
-    },
-    {
       icon: Home,
-      title: t('services', 'mortgageTitle'),
-      description: t('services', 'mortgageDesc'),
-      link: "/baufinanzierung-selbstauskunft",
-      cta: t('services', 'privateLoansDescCta'),
+      title: t('services', 'realEstate'),
+      description: t('services', 'realEstateDesc'),
+      link: "/immobilien",
+      cta: t('services', 'realEstateCta'),
     },
     {
-      icon: TrendingUp,
-      title: t('services', 'investmentTitle'),
-      description: t('services', 'investmentDesc'),
-      link: "/prognose",
+      icon: Briefcase,
+      title: t('services', 'consulting'),
+      description: t('services', 'consultingDesc'),
+      link: "/unternehmensberatung",
+      cta: t('services', 'consultingCta'),
+    },
+    {
+      icon: Globe,
+      title: t('services', 'globalSourcing'),
+      description: t('services', 'globalSourcingDesc'),
+      link: "/global-sourcing",
+      cta: t('services', 'globalSourcingCta'),
     },
     {
       icon: Sun,
       title: t('services', 'solarTitle'),
       description: t('services', 'solarDesc'),
-      link: "/prognose",
+      link: "/solaranlagen",
+      cta: t('services', 'solarCta'),
     },
     {
       icon: Users,
-      title: t('services', 'portalTitle'),
-      description: t('services', 'portalDesc'),
-      link: "/prognose",
+      title: t('services', 'karriere'),
+      description: t('services', 'karriereDesc'),
+      link: "/karriere",
+      cta: t('services', 'karriereCta'),
     },
   ];
 
