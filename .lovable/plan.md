@@ -1,52 +1,52 @@
 
 
-## Plan: Webhook-Problem endgültig lösen
+## Plan: Hauptseite allgemeiner gestalten
 
-### Ursache (diesmal eindeutig)
+Die Hauptseite ist aktuell stark auf den Steuerservice fokussiert — "Wie funktioniert's?" erklärt nur die Steuerprognose, die Statistiken zeigen nur Steuer-Kennzahlen (€3.800 Erstattung, 14 Tage Bearbeitungszeit), die FAQs drehen sich nur um Steuererklärungen, und die Services-Karten verlinken teilweise auf /prognose. Das passt nicht mehr zum breiten Leistungsspektrum.
 
-Die Edge Function `submit-prognose-webhook` crasht mit **Memory limit exceeded**, weil sie jede hochgeladene Datei aus dem Storage herunterlädt, in Base64 umwandelt und alles zusammen im Speicher hält, bevor sie es an das andere Lovable-Projekt ([Clairmont Mandate Manager](/projects/1d31e0b1-af9f-451a-8d07-e49afc7c5894)) sendet. Auch mit Streaming wird jede Datei vollständig gepuffert. Bei mehreren Dateien (Ausweis + Lohnsteuerbescheinigung + weitere) reicht der ~150 MB Speicher der Edge Function nicht aus.
+### Änderungen
 
-Die E-Mail funktioniert, weil sie keine Dateien als Base64 versendet, sondern nur signierte Download-Links.
+**1. Hero-Bereich** (`Hero.tsx`, `translations.ts`)
+- Tagline von "Steuern. Kredite. Vermögen" erweitern zu etwas wie "Steuern. Investments. Immobilien. Beratung." — breiter gefasst
+- Beschreibungstext allgemeiner formulieren (Finanz- und Unternehmensberatung statt nur Finanzen)
 
-### Lösung: Dateien als URLs statt als Base64 senden
+**2. "Wie funktioniert's?" umbauen** (`HowItWorks.tsx`, `translations.ts`)
+- Nicht mehr "3 Schritte zur Steuererstattung", sondern allgemein: "So arbeiten wir"
+- Schritt 1: "Anfrage stellen" — Kontaktieren Sie uns oder füllen Sie eine Selbstauskunft aus
+- Schritt 2: "Individuelle Beratung" — Wir analysieren Ihre Situation und erstellen ein Konzept
+- Schritt 3: "Umsetzung & Betreuung" — Professionelle Abwicklung mit laufender Begleitung
 
-Statt die Dateien herunterzuladen und als Base64 zu senden, schicken wir nur die **signierten Download-URLs** an das andere Projekt. Das andere Projekt lädt die Dateien dann selbst herunter.
+**3. Services-Karten aktualisieren** (`Services.tsx`, `translations.ts`)
+- Die 6 Karten an die neuen 9 Leistungen anpassen (oder die wichtigsten 6 zeigen)
+- Korrekte Links zu den neuen Unterseiten statt alle auf /prognose
+- Vorschlag: Steueroptimierung, Immobilien, Unternehmensberatung, Global Sourcing, Solaranlagen, Karriere — mit je korrektem Link und CTA
 
-Das erfordert **Änderungen in beiden Projekten**:
+**4. Statistiken verallgemeinern** (`Statistics.tsx`, `translations.ts`)
+- Statt nur Steuer-Kennzahlen → allgemeinere Erfolge:
+  - "5.000+ zufriedene Kunden" (bleibt)
+  - "98% Erfolgsquote" (bleibt)
+  - "9 Leistungsbereiche" (neu)
+  - "3+ Länder" oder "Internationales Netzwerk" (neu, passend zu Immobilien/Global Sourcing)
 
-### Schritt 1: Dieses Projekt — `submit-prognose-webhook` vereinfachen
+**5. FAQ allgemeiner machen** (`FAQ.tsx`, `translations.ts`)
+- Die 6 Fragen sind alle rein steuerlich. Ersetzen durch einen Mix:
+  - 1-2 allgemeine Fragen (Wer ist Clairmont? Wie läuft die Zusammenarbeit?)
+  - 1 Frage zu Steuern (gekürzt)
+  - 1 Frage zu Immobilien/Bauprojekten
+  - 1 Frage zu Kosten/Erstberatung
+  - 1 Frage zu internationalen Leistungen
 
-- Die gesamte Datei-Download-und-Base64-Logik entfernen
-- Nur noch senden: `formData`, `pdfContent` (generierte PDF, ~50KB), und `documentUrls` (signierte URLs)
-- `files[]` Array wird leer gesendet oder weggelassen
-- Ergebnis: Kein Speicherproblem mehr, weil keine Dateien mehr gepuffert werden
+**6. CTA-Sektion** (`translations.ts`)
+- Text ist bereits recht allgemein gehalten — nur minimal anpassen
 
-### Schritt 2: Clairmont Mandate Manager — `form-webhook` erweitern
+### Dateien
 
-- Wenn `files[]` leer ist aber `documentUrls` vorhanden sind, die Dateien direkt über die URLs herunterladen
-- Für jede URL: Datei herunterladen → in Storage (`documents` Bucket) speichern → Dokument-Eintrag erstellen
-- Das passiert im anderen Projekt, das seinen eigenen Speicher hat
-
-**Wichtig:** Ich kann das andere Projekt von hier aus nur lesen, nicht bearbeiten. Ich werde dir den genauen Code für die Änderung im Clairmont Mandate Manager mitgeben, den du dort einfügen lässt.
-
-### Schritt 3: Frontend — Fehlerbehandlung anpassen
-
-Da du "hart blockieren" gewählt hast: Erfolg wird nur angezeigt, wenn **sowohl** E-Mail **als auch** Webhook erfolgreich waren. Das ist bereits so implementiert (Zeile 105: `if (webhookError) throw webhookError`). Keine Änderung nötig.
-
-### Betroffene Dateien
-
-| Datei | Projekt | Änderung |
-|---|---|---|
-| `supabase/functions/submit-prognose-webhook/index.ts` | Dieses Projekt | Datei-Download entfernen, nur URLs + PDF senden |
-| `supabase/functions/form-webhook/index.ts` | Clairmont Mandate Manager | URL-Download-Logik hinzufügen |
-
-### Ergebnis
-
-```text
-VORHER:
-Frontend → Storage Upload → submit-prognose-webhook → [Download ALLE Dateien → Base64 → 💥 CRASH] → form-webhook
-
-NACHHER:
-Frontend → Storage Upload → submit-prognose-webhook → [nur PDF + URLs senden ✓] → form-webhook → [URLs einzeln herunterladen ✓]
-```
+| Datei | Änderung |
+|---|---|
+| `src/i18n/translations.ts` | Alle Texte aktualisieren (DE/EN/TR) |
+| `src/components/HowItWorks.tsx` | Keine Strukturänderung, nur neue Translation-Keys |
+| `src/components/Services.tsx` | Neue Karten mit korrekten Links zu Unterseiten |
+| `src/components/Statistics.tsx` | Neue Kennzahlen-Karten |
+| `src/components/FAQ.tsx` | Neue allgemeinere Fragen |
+| `src/components/Hero.tsx` | Minimal — Tagline-Anpassung über Translations |
 
