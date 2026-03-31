@@ -5,6 +5,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { dubaiProjects } from "@/data/dubaiProjects";
 import DubaiProjectsList from "@/components/bauprojekte/DubaiProjectsList";
 import DubaiProjectDetail from "@/components/bauprojekte/DubaiProjectDetail";
+import IstanbulProjectsList from "@/components/bauprojekte/IstanbulProjectsList";
 
 const Bauprojekte = () => {
   const { country, projectId } = useParams<{ country: string; projectId?: string }>();
