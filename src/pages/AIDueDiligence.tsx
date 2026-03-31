@@ -1,20 +1,20 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "motion/react";
-import { ArrowRight, Target, Lightbulb, Scale, FileText, BarChart3 } from "lucide-react";
+import { ArrowRight, Brain, FileSearch, Shield, Zap, Cpu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import heroImage from "@/assets/services/unternehmensberatung-hero.jpg";
+import heroImage from "@/assets/services/ai-duediligence-hero.jpg";
 
-const Unternehmensberatung = () => {
+const AIDueDiligence = () => {
   const navigate = useNavigate();
 
   const services = [
-    { icon: Target, title: "Strategische Beratung", desc: "Strategische Unternehmensberatung für Wachstum und Skalierung." },
-    { icon: Lightbulb, title: "Gründung & Expansion", desc: "Beratung bei Unternehmensgründung, Umstrukturierung und Expansion." },
-    { icon: Scale, title: "Rechtliche Einschätzung", desc: "Rechtliche Einschätzung bei geschäftskritischen Entscheidungen." },
-    { icon: FileText, title: "Vertragsgestaltung", desc: "Unterstützung bei Vertragsgestaltung und Verhandlungsführung." },
-    { icon: BarChart3, title: "Geschäftsmodell-Analyse", desc: "Analyse von Geschäftsmodellen und Optimierungsvorschläge." },
+    { icon: FileSearch, title: "Dokumentenanalyse", desc: "KI-gestützte Analyse und Prüfung von Dokumenten und Verträgen." },
+    { icon: Shield, title: "Risikobewertung", desc: "Automatisierte Risikobewertung bei Geschäftstransaktionen." },
+    { icon: Zap, title: "Schnelle Due Diligence", desc: "Digitale Due-Diligence-Prozesse für schnellere Entscheidungsfindung." },
+    { icon: Brain, title: "Compliance-Prüfung", desc: "Identifikation von Compliance-Risiken und regulatorischen Anforderungen." },
+    { icon: Cpu, title: "KI-Integration", desc: "Integration modernster KI-Technologie in bestehende Prüfprozesse." },
   ];
 
   return (
@@ -26,13 +26,13 @@ const Unternehmensberatung = () => {
         <div className="relative z-10 max-w-4xl mx-auto px-6 py-32 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <div className="inline-flex items-center justify-center px-4 py-1.5 border border-white/20 rounded-full mb-6">
-              <span className="text-sm font-medium text-[hsl(var(--glass-text))]">Consulting</span>
+              <span className="text-sm font-medium text-[hsl(var(--glass-text))]">AI & Technology</span>
             </div>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-light text-[hsl(var(--glass-text))] mb-6 leading-tight">
-              Unternehmensberatung<br />mit rechtlichen Bezügen
+              AI &<br />Due Diligence
             </h1>
             <p className="text-lg md:text-xl text-[hsl(var(--glass-text))]/80 font-light max-w-2xl mx-auto mb-10">
-              Ganzheitliche Beratung zur Optimierung und Skalierung Ihres Unternehmens — mit fundiertem rechtlichem Hintergrund.
+              Risikobewertung und Dokumentenprüfung durch intelligente Lösungen — schneller, präziser, zuverlässiger.
             </p>
             <Button size="lg" className="rounded-full px-10 h-14 text-lg" onClick={() => navigate("/kontakt")}>
               Jetzt Kontakt aufnehmen <ArrowRight className="ml-2 h-5 w-5" />
@@ -67,7 +67,7 @@ const Unternehmensberatung = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }} className="bg-primary/5 rounded-3xl p-10 border border-primary/10">
             <h3 className="text-2xl font-light text-primary mb-4">Für wen</h3>
             <p className="text-muted-foreground font-light leading-relaxed">
-              Unternehmer, Gründer und Geschäftsführer, die ihre Unternehmensstrategie professionell weiterentwickeln möchten und dabei auch rechtliche Aspekte berücksichtigt wissen wollen.
+              Unternehmen, Investoren und Kanzleien, die ihre Prüf- und Analyseprozesse durch KI-Technologie effizienter und genauer gestalten möchten.
             </p>
           </motion.div>
         </div>
@@ -76,12 +76,11 @@ const Unternehmensberatung = () => {
       <section className="py-24 bg-primary/[0.03]">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }}>
-            <h2 className="text-3xl md:text-4xl font-light text-primary mb-6">Lassen Sie uns gemeinsam wachsen</h2>
+            <h2 className="text-3xl md:text-4xl font-light text-primary mb-6">Bereit für intelligente Analyse?</h2>
             <p className="text-lg text-muted-foreground font-light mb-10 max-w-2xl mx-auto">Kontaktieren Sie uns für ein unverbindliches Erstgespräch.</p>
             <Button size="lg" className="rounded-full px-10 h-14 text-lg" onClick={() => navigate("/kontakt")}>
               Jetzt Kontakt aufnehmen <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <p className="text-muted-foreground/60 text-sm font-light mt-8">* Die rechtliche Beratung erfolgt über unsere exklusiven Partner.</p>
           </motion.div>
         </div>
       </section>
@@ -90,4 +89,4 @@ const Unternehmensberatung = () => {
   );
 };
 
-export default Unternehmensberatung;
+export default AIDueDiligence;

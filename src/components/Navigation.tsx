@@ -19,6 +19,18 @@ const languageLabels: Record<Language, string> = {
   tr: '🇹🇷 TR',
 };
 
+const leistungenItems = [
+  { label: "Steueroptimierung Unternehmen", path: "/steuerberatung" },
+  { label: "Steueroptimierung Arbeitnehmer", path: "/steueroptimierung-arbeitnehmer" },
+  { label: "Global Sourcing & Deals", path: "/global-sourcing" },
+  { label: "Unternehmensberatung", path: "/unternehmensberatung" },
+  { label: "AI & Due Diligence", path: "/ai-due-diligence" },
+  { label: "Payment Solutions", path: "/payment-solutions" },
+  { label: "Solaranlagen & Wärmepumpen", path: "/solaranlagen" },
+  { label: "Immobilien", path: "/immobilien" },
+  { label: "Karriere & Partnerschaften", path: "/karriere" },
+];
+
 const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -86,19 +98,16 @@ const Navigation = () => {
               {t('nav', 'services')}
               <ChevronDown className="w-4 h-4" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-white/10">
-              <DropdownMenuItem onClick={() => navigate("/steuerberatung")} className="cursor-pointer text-[hsl(var(--glass-text))]">
-                Steuerberatung
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/unternehmensberatung")} className="cursor-pointer text-[hsl(var(--glass-text))]">
-                Unternehmensberatung
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/rechtsberatung")} className="cursor-pointer text-[hsl(var(--glass-text))]">
-                Rechtsberatung
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/karriere")} className="cursor-pointer text-[hsl(var(--glass-text))]">
-                Karriere & Partnerschaften
-              </DropdownMenuItem>
+            <DropdownMenuContent className="bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-white/10 w-64">
+              {leistungenItems.map((item) => (
+                <DropdownMenuItem
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  className="cursor-pointer text-[hsl(var(--glass-text))]"
+                >
+                  {item.label}
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
           <DropdownMenu>
@@ -115,23 +124,6 @@ const Navigation = () => {
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/baufinanzierung-selbstauskunft")} className="cursor-pointer text-[hsl(var(--glass-text))]">
                 {t('nav', 'mortgage')}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors text-sm flex items-center gap-1">
-              {t('nav', 'buildingProjects')}
-              <ChevronDown className="w-4 h-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-white/10">
-              <DropdownMenuItem onClick={() => navigate("/bauprojekte/dubai")} className="cursor-pointer text-[hsl(var(--glass-text))]">
-                {t('nav', 'dubai')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/bauprojekte/istanbul")} className="cursor-pointer text-[hsl(var(--glass-text))]">
-                {t('nav', 'istanbul')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/bauprojekte/aserbaidschan")} className="cursor-pointer text-[hsl(var(--glass-text))]">
-                {t('nav', 'azerbaijan')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -153,24 +145,29 @@ const Navigation = () => {
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="bg-[hsl(var(--glass-bg))] backdrop-blur-xl border-white/10">
-              <div className="flex flex-col gap-6 mt-8">
+            <SheetContent side="right" className="bg-[hsl(var(--glass-bg))] backdrop-blur-xl border-white/10 overflow-y-auto">
+              <div className="flex flex-col gap-4 mt-8">
                 <button onClick={scrollToTop} className="text-[hsl(var(--glass-text))] text-lg text-left">{t('nav', 'home')}</button>
                 <button onClick={() => scrollToSection('why-clairmont')} className="text-[hsl(var(--glass-text))] text-lg text-left">{t('nav', 'about')}</button>
+                
                 <div className="text-[hsl(var(--glass-text))] text-lg font-semibold mt-2">{t('nav', 'services')}</div>
-                <button onClick={() => { navigate("/steuerberatung"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left pl-4">Steuerberatung</button>
-                <button onClick={() => { navigate("/unternehmensberatung"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left pl-4">Unternehmensberatung</button>
-                <button onClick={() => { navigate("/rechtsberatung"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left pl-4">Rechtsberatung</button>
-                <button onClick={() => { navigate("/karriere"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left pl-4">Karriere & Partnerschaften</button>
-                <button onClick={() => { navigate("/prognose"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left">{t('nav', 'taxPrognosis')}</button>
-                <button onClick={() => { navigate("/selbstauskunft"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left">{t('nav', 'privateLoan')}</button>
-                <button onClick={() => { navigate("/baufinanzierung-selbstauskunft"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left">{t('nav', 'mortgage')}</button>
-                <div className="text-[hsl(var(--glass-text))] text-lg font-semibold mt-2">{t('nav', 'buildingProjects')}</div>
-                <button onClick={() => { navigate("/bauprojekte/dubai"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left pl-4">{t('nav', 'dubai')}</button>
-                <button onClick={() => { navigate("/bauprojekte/istanbul"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left pl-4">{t('nav', 'istanbul')}</button>
-                <button onClick={() => { navigate("/bauprojekte/aserbaidschan"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left pl-4">{t('nav', 'azerbaijan')}</button>
-                <button onClick={() => scrollToSection('faq')} className="text-[hsl(var(--glass-text))] text-lg text-left">{t('nav', 'faq')}</button>
-                <Button className="rounded-full" onClick={() => { navigate("/kontakt"); setMobileOpen(false); }}>{t('nav', 'contact')}</Button>
+                {leistungenItems.map((item) => (
+                  <button
+                    key={item.path}
+                    onClick={() => { navigate(item.path); setMobileOpen(false); }}
+                    className="text-[hsl(var(--glass-text))] text-base text-left pl-4"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+
+                <div className="text-[hsl(var(--glass-text))] text-lg font-semibold mt-2">{t('nav', 'forms')}</div>
+                <button onClick={() => { navigate("/prognose"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-base text-left pl-4">{t('nav', 'taxPrognosis')}</button>
+                <button onClick={() => { navigate("/selbstauskunft"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-base text-left pl-4">{t('nav', 'privateLoan')}</button>
+                <button onClick={() => { navigate("/baufinanzierung-selbstauskunft"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-base text-left pl-4">{t('nav', 'mortgage')}</button>
+
+                <button onClick={() => scrollToSection('faq')} className="text-[hsl(var(--glass-text))] text-lg text-left mt-2">{t('nav', 'faq')}</button>
+                <Button className="rounded-full mt-4" onClick={() => { navigate("/kontakt"); setMobileOpen(false); }}>{t('nav', 'contact')}</Button>
               </div>
             </SheetContent>
           </Sheet>
