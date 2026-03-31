@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { dubaiProjects } from "@/data/dubaiProjects";
-import { MapPin, Building2, ArrowRight } from "lucide-react";
+import { MapPin, Building2, ArrowRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 
