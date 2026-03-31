@@ -15,9 +15,15 @@ import Kontakt from "./pages/Kontakt";
 import Impressum from "./pages/Impressum";
 import Datenschutz from "./pages/Datenschutz";
 import Steuerberatung from "./pages/Steuerberatung";
+import SteueroptimierungArbeitnehmer from "./pages/SteueroptimierungArbeitnehmer";
+import GlobalSourcing from "./pages/GlobalSourcing";
 import Unternehmensberatung from "./pages/Unternehmensberatung";
-import Rechtsberatung from "./pages/Rechtsberatung";
+import AIDueDiligence from "./pages/AIDueDiligence";
+import PaymentSolutions from "./pages/PaymentSolutions";
+import Solaranlagen from "./pages/Solaranlagen";
+import Immobilien from "./pages/Immobilien";
 import Karriere from "./pages/Karriere";
+import Rechtsberatung from "./pages/Rechtsberatung";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,7 +58,13 @@ const App = () => (
             <Route path="/impressum" element={<Impressum />} />
             <Route path="/datenschutz" element={<Datenschutz />} />
             <Route path="/steuerberatung" element={<Steuerberatung />} />
+            <Route path="/steueroptimierung-arbeitnehmer" element={<SteueroptimierungArbeitnehmer />} />
+            <Route path="/global-sourcing" element={<GlobalSourcing />} />
             <Route path="/unternehmensberatung" element={<Unternehmensberatung />} />
+            <Route path="/ai-due-diligence" element={<AIDueDiligence />} />
+            <Route path="/payment-solutions" element={<PaymentSolutions />} />
+            <Route path="/solaranlagen" element={<Solaranlagen />} />
+            <Route path="/immobilien" element={<Immobilien />} />
             <Route path="/rechtsberatung" element={<Rechtsberatung />} />
             <Route path="/karriere" element={<Karriere />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
