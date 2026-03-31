@@ -8,6 +8,13 @@ import oneCrescentPalm from "@/assets/projects/dubai/one-crescent-palm.jpg";
 import livelResidenza from "@/assets/projects/dubai/livel-residenza.jpg";
 import tresora from "@/assets/projects/dubai/tresora.jpg";
 import theBrooks from "@/assets/projects/dubai/the-brooks.jpg";
+import bugattiResidences from "@/assets/projects/dubai/bugatti-residences.jpg";
+import theEditD3 from "@/assets/projects/dubai/the-edit-d3.jpg";
+import damacBelair from "@/assets/projects/dubai/damac-belair.jpg";
+import nexara from "@/assets/projects/dubai/nexara.jpg";
+import terraGolf from "@/assets/projects/dubai/terra-golf.jpg";
+import manchesterCityYas from "@/assets/projects/dubai/manchester-city-yas.jpg";
+import sobhaSeahaven from "@/assets/projects/dubai/sobha-seahaven.jpg";
 
 export interface UnitType {
   type: string;
