@@ -21,13 +21,13 @@ export const translations = {
   // Hero
   hero: {
     welcome: { de: 'Willkommen bei', en: 'Welcome to', tr: 'Hoş Geldiniz' },
-    subtitle: { de: 'Die Zukunft der Finanzberatung.', en: 'The Future of Financial Advisory.', tr: 'Finansal Danışmanlığın Geleceği.' },
+    subtitle: { de: 'Ihr Partner für Finanzen, Investments & Beratung.', en: 'Your Partner for Finance, Investments & Advisory.', tr: 'Finans, Yatırım ve Danışmanlık Ortağınız.' },
     description: {
-      de: 'Erfahrung trifft auf moderne Technologie – für klare, effiziente und zukunftssichere Finanzen. Persönlich. Präzise. Intelligent.',
-      en: 'Experience meets modern technology – for clear, efficient, and future-proof finances. Personal. Precise. Intelligent.',
-      tr: 'Deneyim modern teknolojiyle buluşuyor – net, verimli ve geleceğe yönelik finanslar için. Kişisel. Hassas. Akıllı.',
+      de: 'Erfahrung trifft auf moderne Technologie – für maßgeschneiderte Lösungen in Steuern, Immobilien, Unternehmensberatung und mehr. Persönlich. Präzise. International.',
+      en: 'Experience meets modern technology – for tailored solutions in taxes, real estate, business consulting and more. Personal. Precise. International.',
+      tr: 'Deneyim modern teknolojiyle buluşuyor – vergiler, gayrimenkul, iş danışmanlığı ve daha fazlası için özel çözümler. Kişisel. Hassas. Uluslararası.',
     },
-    tagline: { de: 'Steuern. Kredite. Vermögen', en: 'Taxes. Loans. Assets', tr: 'Vergiler. Krediler. Varlıklar' },
+    tagline: { de: 'Steuern. Investments. Immobilien. Beratung.', en: 'Taxes. Investments. Real Estate. Advisory.', tr: 'Vergiler. Yatırımlar. Gayrimenkul. Danışmanlık.' },
     viewServices: { de: 'Leistungen ansehen', en: 'View Services', tr: 'Hizmetleri Görüntüle' },
     learnMore: { de: 'Mehr erfahren', en: 'Learn More', tr: 'Daha Fazla Bilgi' },
   },
