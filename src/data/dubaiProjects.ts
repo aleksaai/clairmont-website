@@ -1,23 +1,13 @@
 import tivanno from "@/assets/projects/dubai/tivanno.jpg";
-import tivanno2 from "@/assets/projects/dubai/tivanno-2.jpg";
 import dubaisHills from "@/assets/projects/dubai/dubais-hills.jpg";
-import dubaisHills2 from "@/assets/projects/dubai/dubais-hills-2.jpg";
 import selora from "@/assets/projects/dubai/selora.jpg";
-import selora2 from "@/assets/projects/dubai/selora-2.jpg";
 import khalidBinSultan from "@/assets/projects/dubai/khalid-bin-sultan.jpg";
-import khalidBinSultan2 from "@/assets/projects/dubai/khalid-bin-sultan-2.jpg";
 import cdsWave from "@/assets/projects/dubai/cds-wave.jpg";
-import cdsWave2 from "@/assets/projects/dubai/cds-wave-2.jpg";
 import knightsbridge from "@/assets/projects/dubai/knightsbridge.jpg";
-import knightsbridge2 from "@/assets/projects/dubai/knightsbridge-2.jpg";
 import oneCrescentPalm from "@/assets/projects/dubai/one-crescent-palm.jpg";
-import oneCrescentPalm2 from "@/assets/projects/dubai/one-crescent-palm-2.jpg";
 import livelResidenza from "@/assets/projects/dubai/livel-residenza.jpg";
-import livelResidenza2 from "@/assets/projects/dubai/livel-residenza-2.jpg";
 import tresora from "@/assets/projects/dubai/tresora.jpg";
-import tresora2 from "@/assets/projects/dubai/tresora-2.jpg";
 import theBrooks from "@/assets/projects/dubai/the-brooks.jpg";
-import theBrooks2 from "@/assets/projects/dubai/the-brooks-2.jpg";
 
 export interface UnitType {
   type: string;
@@ -52,7 +42,7 @@ export const dubaiProjects: DubaiProject[] = [
       { type: "Apartments", bedrooms: "2 Bedrooms", area: "1,377 – 1,440 sqft", priceFrom: "2,231,834 AED" },
       { type: "Duplex", bedrooms: "3 Bedrooms", area: "3,063 sqft", priceFrom: "44,963,812 AED" },
     ],
-    images: [tivanno, tivanno2],
+    images: [tivanno],
     finishing: "Modern finishing with high-quality materials. Full smart home Alexa system.",
     kitchen: "Bertolotto, Scavolini, Ceracasa, Villeroy & Boch, Schindler",
   },
@@ -66,7 +56,7 @@ export const dubaiProjects: DubaiProject[] = [
     units: [
       { type: "Villa", bedrooms: "7 Bedrooms", area: "16,286 sqft", priceFrom: "17,699,115 USD" },
     ],
-    images: [dubaisHills, dubaisHills2],
+    images: [dubaisHills],
     finishing: "Modern finishing with high-quality materials and smart home system.",
     kitchen: "Fully equipped kitchen",
   },
@@ -82,7 +72,7 @@ export const dubaiProjects: DubaiProject[] = [
       { type: "Villa", bedrooms: "5 Bedrooms", area: "5,543 sqft", priceFrom: "3,403,675 USD" },
       { type: "Villa", bedrooms: "6 Bedrooms", area: "8,800 sqft", priceFrom: "5,137,281 USD" },
     ],
-    images: [selora, selora2],
+    images: [selora],
     finishing: "Modern finishing with high-quality materials.",
     kitchen: "Equipped kitchens with appliances",
   },
@@ -100,7 +90,7 @@ export const dubaiProjects: DubaiProject[] = [
       { type: "Villa", bedrooms: "4 Bedrooms", area: "3,855 sqft", priceFrom: "4,450,000 AED" },
       { type: "Villa", bedrooms: "5 Bedrooms", area: "5,476 – 5,480 sqft", priceFrom: "5,531,000 AED" },
     ],
-    images: [khalidBinSultan, khalidBinSultan2],
+    images: [khalidBinSultan],
     finishing: "Modern finishing with high-quality materials.",
     kitchen: "Equipped kitchens",
   },
@@ -118,7 +108,7 @@ export const dubaiProjects: DubaiProject[] = [
       { type: "Duplex", bedrooms: "3 Bedrooms", area: "3,561 sqft", priceFrom: "On request" },
       { type: "Penthouse", bedrooms: "3 Bedrooms", area: "2,735 sqft", priceFrom: "On request" },
     ],
-    images: [cdsWave, cdsWave2],
+    images: [cdsWave],
     finishing: "High-end finishes with contemporary design.",
     kitchen: "Fully equipped kitchen",
   },
@@ -134,7 +124,7 @@ export const dubaiProjects: DubaiProject[] = [
       { type: "Villa", bedrooms: "5 Bedrooms", area: "6,004 sqft", priceFrom: "3,760,703 USD" },
       { type: "Villa", bedrooms: "6 Bedrooms", area: "9,006 – 9,007 sqft", priceFrom: "5,886,002 USD" },
     ],
-    images: [knightsbridge, knightsbridge2],
+    images: [knightsbridge],
     finishing: "Modern finishing with high-quality materials.",
     kitchen: "Fully equipped kitchen with Miele appliances",
   },
@@ -148,7 +138,7 @@ export const dubaiProjects: DubaiProject[] = [
     units: [
       { type: "Penthouse", bedrooms: "6 Bedrooms", area: "22,600 sqft", priceFrom: "50,374,404 USD" },
     ],
-    images: [oneCrescentPalm, oneCrescentPalm2],
+    images: [oneCrescentPalm],
     finishing: "High quality materials with two kinds of kitchens, outdoor dining, teppanyaki station, private elevator.",
     kitchen: "Fully-equipped kitchen",
   },
@@ -164,7 +154,7 @@ export const dubaiProjects: DubaiProject[] = [
       { type: "Apartments", bedrooms: "1 Bedroom", area: "757 – 768 sqft", priceFrom: "312,292 USD" },
       { type: "Apartments", bedrooms: "2 Bedrooms", area: "902 – 1,246 sqft", priceFrom: "379,152 USD" },
     ],
-    images: [livelResidenza, livelResidenza2],
+    images: [livelResidenza],
     finishing: "Subtle design and elegant finishes with premium, contemporary homes.",
     kitchen: "Equipped kitchen",
   },
@@ -180,7 +170,7 @@ export const dubaiProjects: DubaiProject[] = [
       { type: "Apartments", bedrooms: "1 Bedroom", area: "670 sqft", priceFrom: "258,679 USD" },
       { type: "Apartments", bedrooms: "2 Bedrooms", area: "1,350 sqft", priceFrom: "476,514 USD" },
     ],
-    images: [tresora, tresora2],
+    images: [tresora],
     finishing: "Modern finishing with contemporary design.",
     kitchen: "Equipped kitchen",
   },
@@ -195,7 +185,7 @@ export const dubaiProjects: DubaiProject[] = [
       { type: "Villa", bedrooms: "4 Bedrooms", area: "1,731 – 2,837 sqft", priceFrom: "942,298 EUR" },
       { type: "Villa", bedrooms: "5 Bedrooms", area: "3,133 – 3,239 sqft", priceFrom: "1,718,975 EUR" },
     ],
-    images: [theBrooks, theBrooks2],
+    images: [theBrooks],
     finishing: "Modern finishing with premium materials.",
     kitchen: "Fully equipped kitchen",
   },
