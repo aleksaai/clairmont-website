@@ -144,6 +144,10 @@ const Navigation = () => {
                 <button onClick={() => { navigate("/prognose"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left">{t('nav', 'taxPrognosis')}</button>
                 <button onClick={() => { navigate("/selbstauskunft"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left">{t('nav', 'privateLoan')}</button>
                 <button onClick={() => { navigate("/baufinanzierung-selbstauskunft"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left">{t('nav', 'mortgage')}</button>
+                <div className="text-[hsl(var(--glass-text))] text-lg font-semibold mt-2">{t('nav', 'buildingProjects')}</div>
+                <button onClick={() => { navigate("/bauprojekte/dubai"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left pl-4">{t('nav', 'dubai')}</button>
+                <button onClick={() => { navigate("/bauprojekte/istanbul"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left pl-4">{t('nav', 'istanbul')}</button>
+                <button onClick={() => { navigate("/bauprojekte/aserbaidschan"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left pl-4">{t('nav', 'azerbaijan')}</button>
                 <button onClick={() => scrollToSection('faq')} className="text-[hsl(var(--glass-text))] text-lg text-left">{t('nav', 'faq')}</button>
                 <Button className="rounded-full" onClick={() => { navigate("/kontakt"); setMobileOpen(false); }}>{t('nav', 'contact')}</Button>
               </div>

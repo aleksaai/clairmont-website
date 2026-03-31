@@ -43,6 +43,7 @@ const App = () => (
             <Route path="/kontakt" element={<Kontakt />} />
             <Route path="/selbstauskunft" element={<Selbstauskunft />} />
             <Route path="/baufinanzierung-selbstauskunft" element={<BaufinanzierungSelbstauskunft />} />
+            <Route path="/bauprojekte/:country" element={<Bauprojekte />} />
             <Route path="/impressum" element={<Impressum />} />
             <Route path="/datenschutz" element={<Datenschutz />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
