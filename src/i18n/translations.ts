@@ -34,29 +34,29 @@ export const translations = {
 
   // How It Works
   howItWorks: {
-    title: { de: "Wie funktioniert's?", en: 'How Does It Work?', tr: 'Nasıl Çalışır?' },
+    title: { de: 'So arbeiten wir', en: 'How We Work', tr: 'Nasıl Çalışıyoruz' },
     subtitle: {
-      de: 'In nur drei einfachen Schritten zu Ihrer Steuererstattung',
-      en: 'Your tax refund in just three simple steps',
-      tr: 'Sadece üç basit adımda vergi iadeniz',
+      de: 'In drei Schritten zu Ihrer individuellen Lösung',
+      en: 'Your individual solution in three steps',
+      tr: 'Üç adımda bireysel çözümünüz',
     },
-    step1Title: { de: 'Daten eingeben', en: 'Enter Your Data', tr: 'Verilerinizi Girin' },
+    step1Title: { de: 'Anfrage stellen', en: 'Submit Your Request', tr: 'Talebinizi Gönderin' },
     step1Desc: {
-      de: 'Beantworten Sie ein paar einfache Fragen zu Ihrer beruflichen Situation. Dauert nur 2 Minuten.',
-      en: 'Answer a few simple questions about your professional situation. Takes only 2 minutes.',
-      tr: 'Mesleki durumunuz hakkında birkaç basit soruyu yanıtlayın. Sadece 2 dakika sürer.',
+      de: 'Kontaktieren Sie uns oder füllen Sie eine unserer Selbstauskünfte aus. Wir melden uns innerhalb von 24 Stunden.',
+      en: 'Contact us or fill out one of our self-disclosure forms. We will get back to you within 24 hours.',
+      tr: 'Bizimle iletişime geçin veya beyan formlarımızdan birini doldurun. 24 saat içinde size geri döneceğiz.',
     },
-    step2Title: { de: 'Kostenlose Prognose', en: 'Free Forecast', tr: 'Ücretsiz Tahmin' },
+    step2Title: { de: 'Individuelle Beratung', en: 'Individual Consultation', tr: 'Bireysel Danışmanlık' },
     step2Desc: {
-      de: 'Erfahren Sie sofort, wie viel Steuern Sie zurückbekommen können – komplett kostenlos und unverbindlich.',
-      en: 'Find out immediately how much tax you can get back – completely free and non-binding.',
-      tr: 'Ne kadar vergi iadesi alabileceğinizi hemen öğrenin – tamamen ücretsiz ve bağlayıcı değil.',
+      de: 'Wir analysieren Ihre Situation und erstellen ein maßgeschneidertes Konzept — ob Steuern, Immobilien oder Unternehmensberatung.',
+      en: 'We analyze your situation and create a tailored concept — whether taxes, real estate or business consulting.',
+      tr: 'Durumunuzu analiz ediyor ve size özel bir konsept oluşturuyoruz — vergiler, gayrimenkul veya iş danışmanlığı olsun.',
     },
-    step3Title: { de: 'Steuererklärung einreichen', en: 'Submit Tax Return', tr: 'Vergi Beyannamesi Gönderin' },
+    step3Title: { de: 'Umsetzung & Betreuung', en: 'Implementation & Support', tr: 'Uygulama ve Destek' },
     step3Desc: {
-      de: 'Optional: Lassen Sie uns Ihre Steuererklärung einreichen. Sie zahlen nur bei Erfolg – 30% der Erstattung.',
-      en: 'Optional: Let us submit your tax return. You only pay on success – 30% of the refund.',
-      tr: 'İsteğe bağlı: Vergi beyannamenizi biz gönderlim. Sadece başarı durumunda ödeme yaparsınız – iadenin %30\'u.',
+      de: 'Professionelle Abwicklung durch unser Expertenteam mit laufender Begleitung und transparenter Kommunikation.',
+      en: 'Professional execution by our expert team with ongoing support and transparent communication.',
+      tr: 'Uzman ekibimiz tarafından sürekli destek ve şeffaf iletişimle profesyonel uygulama.',
     },
   },
 
