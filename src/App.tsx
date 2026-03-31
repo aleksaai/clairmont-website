@@ -10,6 +10,7 @@ import Prognose from "./pages/Prognose";
 import CryptoUpload from "./pages/CryptoUpload";
 import Selbstauskunft from "./pages/Selbstauskunft";
 import BaufinanzierungSelbstauskunft from "./pages/BaufinanzierungSelbstauskunft";
+import Bauprojekte from "./pages/Bauprojekte";
 import Kontakt from "./pages/Kontakt";
 import Impressum from "./pages/Impressum";
 import Datenschutz from "./pages/Datenschutz";
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/kontakt" element={<Kontakt />} />
             <Route path="/selbstauskunft" element={<Selbstauskunft />} />
             <Route path="/baufinanzierung-selbstauskunft" element={<BaufinanzierungSelbstauskunft />} />
+            <Route path="/bauprojekte/:country" element={<Bauprojekte />} />
             <Route path="/impressum" element={<Impressum />} />
             <Route path="/datenschutz" element={<Datenschutz />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

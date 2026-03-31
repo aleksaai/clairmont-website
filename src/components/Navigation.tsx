@@ -101,6 +101,23 @@ const Navigation = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors text-sm flex items-center gap-1">
+              {t('nav', 'buildingProjects')}
+              <ChevronDown className="w-4 h-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-white/10">
+              <DropdownMenuItem onClick={() => navigate("/bauprojekte/dubai")} className="cursor-pointer text-[hsl(var(--glass-text))]">
+                {t('nav', 'dubai')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/bauprojekte/istanbul")} className="cursor-pointer text-[hsl(var(--glass-text))]">
+                {t('nav', 'istanbul')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/bauprojekte/aserbaidschan")} className="cursor-pointer text-[hsl(var(--glass-text))]">
+                {t('nav', 'azerbaijan')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <button onClick={() => scrollToSection('faq')} className="text-[hsl(var(--glass-text))] hover:text-[hsl(var(--glass-text))]/80 transition-colors text-sm">
             {t('nav', 'faq')}
           </button>
@@ -127,6 +144,10 @@ const Navigation = () => {
                 <button onClick={() => { navigate("/prognose"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left">{t('nav', 'taxPrognosis')}</button>
                 <button onClick={() => { navigate("/selbstauskunft"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left">{t('nav', 'privateLoan')}</button>
                 <button onClick={() => { navigate("/baufinanzierung-selbstauskunft"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left">{t('nav', 'mortgage')}</button>
+                <div className="text-[hsl(var(--glass-text))] text-lg font-semibold mt-2">{t('nav', 'buildingProjects')}</div>
+                <button onClick={() => { navigate("/bauprojekte/dubai"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left pl-4">{t('nav', 'dubai')}</button>
+                <button onClick={() => { navigate("/bauprojekte/istanbul"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left pl-4">{t('nav', 'istanbul')}</button>
+                <button onClick={() => { navigate("/bauprojekte/aserbaidschan"); setMobileOpen(false); }} className="text-[hsl(var(--glass-text))] text-lg text-left pl-4">{t('nav', 'azerbaijan')}</button>
                 <button onClick={() => scrollToSection('faq')} className="text-[hsl(var(--glass-text))] text-lg text-left">{t('nav', 'faq')}</button>
                 <Button className="rounded-full" onClick={() => { navigate("/kontakt"); setMobileOpen(false); }}>{t('nav', 'contact')}</Button>
               </div>

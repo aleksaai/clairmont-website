@@ -12,6 +12,10 @@ export const translations = {
     taxPrognosis: { de: 'Kostenlose Steuerprognose', en: 'Free Tax Forecast', tr: 'Ücretsiz Vergi Tahmini' },
     privateLoan: { de: 'Privatkredit Selbstauskunft', en: 'Personal Loan Self-Disclosure', tr: 'Bireysel Kredi Beyanı' },
     mortgage: { de: 'Baufinanzierung Selbstauskunft', en: 'Mortgage Self-Disclosure', tr: 'Konut Kredisi Beyanı' },
+    buildingProjects: { de: 'Bauprojekte', en: 'Building Projects', tr: 'İnşaat Projeleri' },
+    dubai: { de: 'Dubai', en: 'Dubai', tr: 'Dubai' },
+    istanbul: { de: 'Istanbul / Türkei', en: 'Istanbul / Turkey', tr: 'İstanbul / Türkiye' },
+    azerbaijan: { de: 'Aserbaidschan', en: 'Azerbaijan', tr: 'Azerbaycan' },
   },
 
   // Hero
