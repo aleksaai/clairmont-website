@@ -49,7 +49,7 @@ serve(async (req) => {
       try {
         const idCheckResult = await verifyDocumentWithAI(
           LOVABLE_API_KEY, body.idCardFiles,
-          "Prüfe ob dieses Dokument ein deutscher Personalausweis (Vorder- und/oder Rückseite) oder Reisepass ist. Antworte mit einem JSON-Objekt: {\"isValid\": true/false, \"reason\": \"kurze Begründung auf Deutsch\"}. Wenn es kein Ausweis ist, beschreibe was du stattdessen siehst."
+          "Prüfe ob dieses Dokument ein gültiges Ausweisdokument ist. Akzeptiert werden: Personalausweise, Reisepässe und Aufenthaltstitel aus allen Ländern weltweit. Antworte mit einem JSON-Objekt: {\"isValid\": true/false, \"reason\": \"kurze Begründung auf Deutsch\"}. Wenn es kein Ausweisdokument ist, beschreibe was du stattdessen siehst."
         );
         results.push({
           id: "idCard", label: "Personalausweis",
