@@ -1,23 +1,13 @@
 import tivanno from "@/assets/projects/dubai/tivanno.jpg";
-import tivanno2 from "@/assets/projects/dubai/tivanno-2.jpg";
 import dubaisHills from "@/assets/projects/dubai/dubais-hills.jpg";
-import dubaisHills2 from "@/assets/projects/dubai/dubais-hills-2.jpg";
 import selora from "@/assets/projects/dubai/selora.jpg";
-import selora2 from "@/assets/projects/dubai/selora-2.jpg";
 import khalidBinSultan from "@/assets/projects/dubai/khalid-bin-sultan.jpg";
-import khalidBinSultan2 from "@/assets/projects/dubai/khalid-bin-sultan-2.jpg";
 import cdsWave from "@/assets/projects/dubai/cds-wave.jpg";
-import cdsWave2 from "@/assets/projects/dubai/cds-wave-2.jpg";
 import knightsbridge from "@/assets/projects/dubai/knightsbridge.jpg";
-import knightsbridge2 from "@/assets/projects/dubai/knightsbridge-2.jpg";
 import oneCrescentPalm from "@/assets/projects/dubai/one-crescent-palm.jpg";
-import oneCrescentPalm2 from "@/assets/projects/dubai/one-crescent-palm-2.jpg";
 import livelResidenza from "@/assets/projects/dubai/livel-residenza.jpg";
-import livelResidenza2 from "@/assets/projects/dubai/livel-residenza-2.jpg";
 import tresora from "@/assets/projects/dubai/tresora.jpg";
-import tresora2 from "@/assets/projects/dubai/tresora-2.jpg";
 import theBrooks from "@/assets/projects/dubai/the-brooks.jpg";
-import theBrooks2 from "@/assets/projects/dubai/the-brooks-2.jpg";
 
 export interface UnitType {
   type: string;
