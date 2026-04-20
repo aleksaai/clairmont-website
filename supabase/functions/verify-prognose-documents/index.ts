@@ -1,3 +1,6 @@
+// POST-LOVABLE-MIGRATION: Uses Google's Gemini API directly (OpenAI-compatible endpoint)
+// instead of Lovable AI Gateway. Requires GEMINI_API_KEY secret on the Supabase project.
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -26,8 +29,8 @@ serve(async (req) => {
   }
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
 
     const body: VerificationRequest = await req.json();
     const results: DocumentCheckResult[] = [];
@@ -48,7 +51,7 @@ serve(async (req) => {
     } else {
       try {
         const idCheckResult = await verifyDocumentWithAI(
-          LOVABLE_API_KEY, body.idCardFiles,
+          GEMINI_API_KEY, body.idCardFiles,
           "Prüfe ob dieses Dokument ein gültiges Ausweisdokument ist. Akzeptiert werden: Personalausweise, Reisepässe und Aufenthaltstitel aus allen Ländern weltweit. Antworte mit einem JSON-Objekt: {\"isValid\": true/false, \"reason\": \"kurze Begründung auf Deutsch\"}. Wenn es kein Ausweisdokument ist, beschreibe was du stattdessen siehst."
         );
         results.push({
@@ -75,7 +78,7 @@ serve(async (req) => {
         } else {
           try {
             const taxCheckResult = await verifyDocumentWithAI(
-              LOVABLE_API_KEY, yearFiles,
+              GEMINI_API_KEY, yearFiles,
               `Prüfe ob dieses Dokument eine deutsche Lohnsteuerbescheinigung (Elektronische Lohnsteuerbescheinigung / Ausdruck der elektronischen Lohnsteuerbescheinigung) für das Jahr ${year} ist. Antworte mit einem JSON-Objekt: {"isValid": true/false, "reason": "kurze Begründung auf Deutsch"}.`
             );
             results.push({
@@ -112,46 +115,35 @@ serve(async (req) => {
 async function verifyDocumentWithAI(
   apiKey: string, base64Files: string[], prompt: string
 ): Promise<{ isValid: boolean; reason: string }> {
-  const content: any[] = [];
-  
+  const content: unknown[] = [];
+
   for (const base64Data of base64Files.slice(0, 3)) {
     let mimeType = "image/jpeg";
     let cleanBase64 = base64Data;
-    
+
     if (base64Data.startsWith("data:")) {
       const match = base64Data.match(/^data:(.*?);base64,/);
       if (match) mimeType = match[1];
       cleanBase64 = base64Data.replace(/^data:.*?;base64,/, "");
     }
 
-    // For PDFs, use inline_data format for native processing
-    if (mimeType === "application/pdf") {
-      content.push({
-        type: "image_url",
-        image_url: {
-          url: `data:application/pdf;base64,${cleanBase64}`,
-        },
-      });
-    } else {
-      content.push({
-        type: "image_url",
-        image_url: {
-          url: `data:${mimeType};base64,${cleanBase64}`,
-        },
-      });
-    }
+    content.push({
+      type: "image_url",
+      image_url: { url: `data:${mimeType};base64,${cleanBase64}` },
+    });
   }
-  
+
   content.push({ type: "text", text: prompt });
 
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  // POST-MIGRATION: Google's OpenAI-compatible Gemini endpoint
+  const response = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: "gemini-2.5-flash",
       messages: [
         {
           role: "system",
@@ -164,18 +156,17 @@ async function verifyDocumentWithAI(
 
   if (!response.ok) {
     if (response.status === 429) throw new Error("Rate limit exceeded");
-    if (response.status === 402) throw new Error("Payment required");
     const errorText = await response.text();
-    throw new Error(`AI gateway error: ${response.status} ${errorText}`);
+    throw new Error(`Gemini API error: ${response.status} ${errorText}`);
   }
 
   const data = await response.json();
   const responseText = data.choices?.[0]?.message?.content || "";
-  
+
   const jsonMatch = responseText.match(/\{[\s\S]*?\}/);
   if (jsonMatch) {
     try { return JSON.parse(jsonMatch[0]); } catch { /* fallback */ }
   }
-  
+
   return { isValid: true, reason: "Automatische Prüfung nicht eindeutig." };
 }

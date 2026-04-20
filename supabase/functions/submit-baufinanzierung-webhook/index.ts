@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const WEBHOOK_URL = "https://ixefmjnjjwntwibkytis.supabase.co/functions/v1/insurance-webhook";
+const WEBHOOK_URL = "https://ufnxliieaejdvxcanqux.supabase.co/functions/v1/insurance-webhook";
 const WEBHOOK_TOKEN = "Clairmont_2025";
 
 // Helper function to convert Uint8Array or ArrayBuffer to base64

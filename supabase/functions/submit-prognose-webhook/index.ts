@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 const WEBHOOK_URL = "https://hook.eu2.make.com/ibv42wex7bd1vjqf87lju4iadipsht57";
-const ADDITIONAL_WEBHOOK_URL = "https://ixefmjnjjwntwibkytis.supabase.co/functions/v1/form-webhook";
+const ADDITIONAL_WEBHOOK_URL = "https://ufnxliieaejdvxcanqux.supabase.co/functions/v1/form-webhook";
 const ADDITIONAL_WEBHOOK_TOKEN = "Clairmont_2025";
 
 type StoragePaths = Record<string, string[]>;
