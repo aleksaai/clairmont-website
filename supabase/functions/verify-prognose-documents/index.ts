@@ -1,5 +1,5 @@
-// POST-LOVABLE-MIGRATION: Uses Google's Gemini API directly (OpenAI-compatible endpoint)
-// instead of Lovable AI Gateway. Requires GEMINI_API_KEY secret on the Supabase project.
+// POST-LOVABLE-MIGRATION: Uses OpenAI GPT-4o-mini for document verification
+// (replaces the Lovable AI Gateway). Requires OPENAI_API_KEY secret on the Supabase project.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -29,8 +29,8 @@ serve(async (req) => {
   }
 
   try {
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured");
 
     const body: VerificationRequest = await req.json();
     const results: DocumentCheckResult[] = [];
@@ -51,7 +51,7 @@ serve(async (req) => {
     } else {
       try {
         const idCheckResult = await verifyDocumentWithAI(
-          GEMINI_API_KEY, body.idCardFiles,
+          OPENAI_API_KEY, body.idCardFiles,
           "Prüfe ob dieses Dokument ein gültiges Ausweisdokument ist. Akzeptiert werden: Personalausweise, Reisepässe und Aufenthaltstitel aus allen Ländern weltweit. Antworte mit einem JSON-Objekt: {\"isValid\": true/false, \"reason\": \"kurze Begründung auf Deutsch\"}. Wenn es kein Ausweisdokument ist, beschreibe was du stattdessen siehst."
         );
         results.push({
@@ -78,7 +78,7 @@ serve(async (req) => {
         } else {
           try {
             const taxCheckResult = await verifyDocumentWithAI(
-              GEMINI_API_KEY, yearFiles,
+              OPENAI_API_KEY, yearFiles,
               `Prüfe ob dieses Dokument eine deutsche Lohnsteuerbescheinigung (Elektronische Lohnsteuerbescheinigung / Ausdruck der elektronischen Lohnsteuerbescheinigung) für das Jahr ${year} ist. Antworte mit einem JSON-Objekt: {"isValid": true/false, "reason": "kurze Begründung auf Deutsch"}.`
             );
             results.push({
@@ -135,15 +135,15 @@ async function verifyDocumentWithAI(
 
   content.push({ type: "text", text: prompt });
 
-  // POST-MIGRATION: Google's OpenAI-compatible Gemini endpoint
-  const response = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+  // POST-MIGRATION: OpenAI API (native /v1/chat/completions)
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gemini-2.5-flash",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
@@ -157,7 +157,7 @@ async function verifyDocumentWithAI(
   if (!response.ok) {
     if (response.status === 429) throw new Error("Rate limit exceeded");
     const errorText = await response.text();
-    throw new Error(`Gemini API error: ${response.status} ${errorText}`);
+    throw new Error(`OpenAI API error: ${response.status} ${errorText}`);
   }
 
   const data = await response.json();
