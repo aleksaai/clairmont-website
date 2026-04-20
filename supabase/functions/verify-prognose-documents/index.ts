@@ -127,10 +127,22 @@ async function verifyDocumentWithAI(
       cleanBase64 = base64Data.replace(/^data:.*?;base64,/, "");
     }
 
-    content.push({
-      type: "image_url",
-      image_url: { url: `data:${mimeType};base64,${cleanBase64}` },
-    });
+    // OpenAI supports PDFs via the "file" content type (chat-completions API);
+    // images still go via "image_url". Detect based on mime type.
+    if (mimeType === "application/pdf") {
+      content.push({
+        type: "file",
+        file: {
+          filename: "document.pdf",
+          file_data: `data:application/pdf;base64,${cleanBase64}`,
+        },
+      });
+    } else {
+      content.push({
+        type: "image_url",
+        image_url: { url: `data:${mimeType};base64,${cleanBase64}` },
+      });
+    }
   }
 
   content.push({ type: "text", text: prompt });
