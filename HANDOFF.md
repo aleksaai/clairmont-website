@@ -1,60 +1,66 @@
 # HANDOFF — clairmont-website
 
-**Letzte Aktualisierung:** 2026-04-20 (Marcus)
+**Letzte Aktualisierung:** 2026-04-20 (Marcus, Migration abgeschlossen)
+**Status:** 🟢 **LIVE**
 
-## Wo wir aktuell stehen
+## Wo das Projekt steht
 
-**Phase 1 von 7** (Prep & Access) — Marcus wartet auf Aleksa.
+Öffentliche Multi-Service-Consulting-Website für Clairmont Advisory. Kern-Service: Steuererklärungen für Privatpersonen DE. Funnel über "Kostenlose Steuerprognose" mit AI-Dokument-Verifikation. Migration von Lovable an einem Tag durchgezogen (2026-04-20):
 
-## Was schon passiert ist
+- **Deploy:** Netlify (auto-deploy auf Push zu `main`), verbunden mit Custom-Domain
+- **Supabase:** `ufnxliieaejdvxcanqux` (Clairmont Advisory, geteilt mit Dashboard)
+- **AI:** OpenAI GPT-4o-mini (`verify-prognose-documents`) — unterstützt PDF + Bilder
+- **Emails:** Resend (`noreply@tax.clairmont-advisory.com` + `onboarding@resend.dev` für Contact-Form)
+- **Webhooks:** alle 3 submit-Webhooks pushen an Clairmont Advisory's Dashboard-Endpoints (`form-webhook`, `credit-webhook`, `insurance-webhook` mit Bearer `Clairmont_2025`)
+- **Validierung:** End-to-End getestet 2026-04-20, Formular-Submit + AI-Verifikation + Dashboard-Folder-Anlage funktioniert
 
-- Repo von Lovable-synced GitHub gepullt nach `~/Desktop/Projects/clairmont-website/`
-- Vollständige Code-Analyse durchgeführt (Marcus, 2026-04-20): Stack, Edge Functions, Datenbanken, Dependencies, Lovable-Abhängigkeiten dokumentiert
-- `CLAUDE.md` + `SPEC.md` + `HANDOFF.md` (diese Datei) angelegt
-- Supabase-Projekt "Clairmont Advisory" von Aleksa frisch angelegt (2026-04-20)
-- Ziel-Strategie entschieden: **ein Supabase-Projekt für beide Lovable-Apps** (Website + Dashboard)
-- Migration-Plan in 7 Phasen definiert (siehe SPEC.md)
+## Stack
 
-## Was gerade blockiert
+- Vite + React 18 + TS + Tailwind + shadcn/ui + Radix
+- Motion 12.23 (Animations)
+- React-Hook-Form + Zod für alle Formulare
+- jspdf für Client-Side-PDF-Generation
+- Supabase JS Client (Storage + Edge Functions)
 
-**Aleksa muss liefern:**
-- Lovable-Dashboard-Supabase Service-Role-Key + DB-Password (für `pg_dump` der Live-Daten im Dashboard-Projekt)
-- Stripe-Dashboard-Zugang bestätigen
-- DNS-Zugang für `clairmontadvisory.com` (bzw. aktuelle Domain) bestätigen
+## Lokal starten
 
-Ohne die ersten beiden läuft Phase 2-3 nicht.
-
-## Was als nächstes kommt (sobald Phase 1 durch)
-
-Phase 2: Supabase CLI link an Clairmont Advisory, Migrations pushen, alle 7 Edge Functions deployen, Secrets setzen.
-
-**Konkreter erster Befehl (Marcus plant):**
 ```bash
-cd ~/Desktop/Projects/clairmont-website/
-supabase link --project-ref <CLAIRMONT-ADVISORY-REF>
-supabase db push
-supabase functions deploy --project-ref <CLAIRMONT-ADVISORY-REF>
+cd ~/Desktop/Projects/clairmont-website
+npm install   # wenn node_modules fehlt
+npm run dev   # Vite (Port je nach Belegung, meist 8080 oder 8081)
 ```
 
-## Kontext-Switch-Notizen
+`.env` ist aktuell noch committed ins Repo (Lovable-Pattern). Enthält nur Anon-Key (public, unkritisch). Cleanup später.
 
-Wenn du in einer frischen Claude-Code-Session landest:
+## Pages (20 total)
 
-1. Lies `CLAUDE.md` (sollte auto-geladen sein)
-2. Lies `SPEC.md` für den Migrations-Plan
-3. Lies diesen HANDOFF für den aktuellen Stand
-4. Wenn Marcus-Modus gebraucht: zurück nach `~/Desktop/claude-team/` und `/marcus` tippen — Marcus hat hier alle seine Workflows + Tools
-5. Für dieses Projekt gehört Marcus `~/Desktop/claude-team/ai-team/projects/clairmont/SUMMARY.md` als Master-Projekt-Karte
+- **Home + Navigation:** `Index`, `Kontakt`, `Impressum`, `Datenschutz`, `Karriere`
+- **Steuer-Flow:** `Steuerberatung`, `SteueroptimierungArbeitnehmer`, `Prognose` (Hauptformular!), `Selbstauskunft`
+- **Immobilien-/Finanz-Flow:** `BaufinanzierungSelbstauskunft`, `Bauprojekte`, `Immobilien`, `Solaranlagen`, `PaymentSolutions`, `CryptoUpload`
+- **Consulting-Flow:** `Unternehmensberatung`, `Rechtsberatung`, `AIDueDiligence`, `GlobalSourcing`
 
-## Bekannte Gotchas
+## Edge Functions (alle live auf Clairmont Advisory)
 
-- `.env` ist aktuell ins Repo committed. NICHT pushen bevor Phase 6 durch ist (`.env` muss raus, `.env.example` rein)
-- `lovable-tagger` in `package.json` → erzeugt `data-lov-id` Attribute auf allen Komponenten → muss in Phase 6 raus
-- `verify-prognose-documents` hat harte Abhängigkeit zu `ai.gateway.lovable.dev` → in Phase 5 ersetzen oder Feature entfernen
-- Supabase-Anon-Key im `.env` ist öffentlich (by design OK), aber keine Service-Role-Keys ins Repo
+| Function | Purpose | Secrets |
+|---|---|---|
+| `submit-prognose-webhook` | Steuer-Formular → PDF + Make.com + Dashboard-Push | — (service-role implicit) |
+| `submit-selbstauskunft-webhook` | Privatkredit-Formular → PDF + Dashboard-Push | — |
+| `submit-baufinanzierung-webhook` | Baufi-Formular → PDF + Dashboard-Push | — |
+| `send-prognose-email` | Email an service@ mit Prognose-Daten | `RESEND_API_KEY` |
+| `send-selbstauskunft-email` | Email an service@ mit Kredit-Daten | `RESEND_API_KEY` |
+| `send-contact-email` | Kontaktformular-Email an info@ + Bestätigung an User | `RESEND_API_KEY` |
+| `verify-prognose-documents` | AI-Check: ist's ein Ausweis/Lohnsteuerbescheid? (unterstützt PDF + Image via OpenAI `type:"file"` + `type:"image_url"`) | `OPENAI_API_KEY` |
 
-## Kommunikations-Kanal
+## Optional noch offen
 
-- Slash-Command `/marcus` im claude-team Repo für Migration-Arbeit
-- Direkt bei Aleksa für Credentials + Entscheidungen
-- Kein Slack/Discord aktuell
+1. **Lovable-Projekt archivieren** — Lovable-Supabase `hvwovrurvleityqyshqv` kann offline, Abo künigen
+2. **`.env`-Cleanup** — committed File raus, `.env.example` als Template
+3. **`lovable-tagger`** aus `package.json` devDeps + `.lovable/` Folder raus
+4. **Make.com-Webhook review** — der alte Hook (`hook.eu2.make.com/ibv42wex7bd1vjqf87lju4iadipsht57`) läuft noch im `submit-prognose-webhook`. Ist der in deinem Make-Account oder bei Clairmont? Falls ungenutzt, entfernen.
+
+## Kontext-Switch für frische Claude-Code-Session
+
+1. Lies `CLAUDE.md` (auto-geladen)
+2. Lies `SPEC.md` für historischen Migrations-Kontext
+3. Lies diesen HANDOFF für aktuellen Live-State
+4. Für Marcus-Mode: `~/Desktop/claude-team/` + `/marcus`. Master-Karte: `ai-team/projects/clairmont/SUMMARY.md`. Live-Status: `ai-team/status/STATUS.md`.
