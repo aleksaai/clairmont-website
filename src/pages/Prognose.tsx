@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowRight, ArrowLeft, Home } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import officeBackground from "@/assets/office-background.png";
 
 // Import step components
@@ -141,7 +141,9 @@ const BASE_STEPS = 16; // Updated to include VerificationStep
 
 const Prognose = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [currentStep, setCurrentStep] = useState(0);
+  const hasRefParam = !!searchParams.get("ref");
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
@@ -186,6 +188,14 @@ const Prognose = () => {
       setCurrentStep(parseInt(savedStep));
     }
   }, []);
+
+  // Auto-fill partner code from URL parameter (?ref=CODE)
+  useEffect(() => {
+    const refCode = searchParams.get("ref");
+    if (refCode) {
+      setFormData((prev) => ({ ...prev, partnerCode: refCode }));
+    }
+  }, [searchParams]);
 
   // Save form data to localStorage
   const saveProgress = () => {
@@ -297,19 +307,19 @@ const Prognose = () => {
         } else if (hasTaxYears || formData.hasCryptoIncome) {
           return <DocumentUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
         } else {
-          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} hidePartnerCode={hasRefParam} />;
         }
       case 13:
         if (hasTaxYears && formData.hasCryptoIncome) {
           return <DocumentUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
         } else if (hasTaxYears || formData.hasCryptoIncome) {
-          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} hidePartnerCode={hasRefParam} />;
         } else {
           return <VerificationStep data={formData} onSubmit={handleSubmit} onBack={prevStep} onGoToStep={goToStep} />;
         }
       case 14:
         if (hasTaxYears && formData.hasCryptoIncome) {
-          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
+          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} hidePartnerCode={hasRefParam} />;
         } else if (hasTaxYears || formData.hasCryptoIncome) {
           return <VerificationStep data={formData} onSubmit={handleSubmit} onBack={prevStep} onGoToStep={goToStep} />;
         } else {

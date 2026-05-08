@@ -10,9 +10,10 @@ interface BankDetailsStepProps {
   updateData: (data: Partial<FormData>) => void;
   onNext: () => void;
   onBack: () => void;
+  hidePartnerCode?: boolean;
 }
 
-const BankDetailsStep = ({ data, updateData, onNext, onBack }: BankDetailsStepProps) => {
+const BankDetailsStep = ({ data, updateData, onNext, onBack, hidePartnerCode }: BankDetailsStepProps) => {
   const handleSubmit = () => {
     if (!data.iban) {
       alert("Bitte geben Sie Ihre IBAN ein.");
@@ -134,21 +135,23 @@ const BankDetailsStep = ({ data, updateData, onNext, onBack }: BankDetailsStepPr
           </div>
         </div>
 
-        <div className="space-y-2 pt-2">
-          <Label htmlFor="partnerCode" className="text-[hsl(var(--glass-text))]">
-            Partner-Code (optional)
-          </Label>
-          <Input
-            id="partnerCode"
-            value={data.partnerCode || ""}
-            onChange={(e) => updateData({ partnerCode: e.target.value })}
-            className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
-            placeholder="Falls vorhanden"
-          />
-          <p className="text-xs text-[hsl(var(--glass-text))]/60">
-            Nur für Vertriebspartner
-          </p>
-        </div>
+        {!hidePartnerCode && (
+          <div className="space-y-2 pt-2">
+            <Label htmlFor="partnerCode" className="text-[hsl(var(--glass-text))]">
+              Partner-Code (optional)
+            </Label>
+            <Input
+              id="partnerCode"
+              value={data.partnerCode || ""}
+              onChange={(e) => updateData({ partnerCode: e.target.value })}
+              className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
+              placeholder="Falls vorhanden"
+            />
+            <p className="text-xs text-[hsl(var(--glass-text))]/60">
+              Nur für Vertriebspartner
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="flex gap-4 pt-4">
