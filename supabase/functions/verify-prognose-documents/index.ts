@@ -52,7 +52,7 @@ serve(async (req) => {
       try {
         const idCheckResult = await verifyDocumentWithAI(
           OPENAI_API_KEY, body.idCardFiles,
-          "Prüfe ob dieses Dokument ein gültiges Ausweisdokument ist. Akzeptiert werden: Personalausweise, Reisepässe und Aufenthaltstitel aus allen Ländern weltweit. Antworte mit einem JSON-Objekt: {\"isValid\": true/false, \"reason\": \"kurze Begründung auf Deutsch\"}. Wenn es kein Ausweisdokument ist, beschreibe was du stattdessen siehst."
+          "Prüfe ob dieses Dokument ein gültiges Ausweisdokument ist. Akzeptiert werden: Personalausweise, Reisepässe und Aufenthaltstitel aus allen Ländern weltweit. Das Dokument kann als Scan, Foto oder PDF vorliegen — auch wenn die Qualität nicht perfekt ist, akzeptiere es solange erkennbar ist dass es sich um ein Ausweisdokument handelt. Im Zweifelsfall: akzeptiere das Dokument (isValid: true). Antworte mit einem JSON-Objekt: {\"isValid\": true/false, \"reason\": \"kurze Begründung auf Deutsch\"}. Wenn es offensichtlich kein Ausweisdokument ist (z.B. eine Rechnung, ein leeres Blatt, oder ein komplett anderes Dokument), beschreibe was du stattdessen siehst."
         );
         results.push({
           id: "idCard", label: "Personalausweis",
@@ -79,7 +79,7 @@ serve(async (req) => {
           try {
             const taxCheckResult = await verifyDocumentWithAI(
               OPENAI_API_KEY, yearFiles,
-              `Prüfe ob dieses Dokument eine deutsche Lohnsteuerbescheinigung (Elektronische Lohnsteuerbescheinigung / Ausdruck der elektronischen Lohnsteuerbescheinigung) für das Jahr ${year} ist. Antworte mit einem JSON-Objekt: {"isValid": true/false, "reason": "kurze Begründung auf Deutsch"}.`
+              `Prüfe ob dieses Dokument eine deutsche Lohnsteuerbescheinigung (Elektronische Lohnsteuerbescheinigung / Ausdruck der elektronischen Lohnsteuerbescheinigung) für das Jahr ${year} ist. Das Dokument kann als Scan, Foto oder PDF vorliegen. Auch bei mäßiger Qualität: wenn erkennbar ist dass es eine Lohnsteuerbescheinigung ist, akzeptiere es (isValid: true). Im Zweifelsfall: akzeptiere das Dokument. Antworte mit einem JSON-Objekt: {"isValid": true/false, "reason": "kurze Begründung auf Deutsch"}.`
             );
             results.push({
               id: `taxCert_${year}`, label: `Lohnsteuerbescheinigung ${year}`,
@@ -155,7 +155,7 @@ async function verifyDocumentWithAI(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
