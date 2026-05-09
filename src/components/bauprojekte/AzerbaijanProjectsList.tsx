@@ -159,7 +159,7 @@ const AzerbaijanProjectsList = () => {
               <p className="text-sm text-muted-foreground">
                 Kontaktieren Sie uns für detaillierte Grundrisse, genaue Preise und eine persönliche Beratung.
               </p>
-              <Button className="w-full rounded-full gap-2" onClick={() => navigate("/kontakt")}>
+              <Button className="w-full rounded-full gap-2" onClick={() => navigate("/kontakt?service=immobilien")}>
                 Kontakt aufnehmen <ChevronRight className="w-4 h-4" />
               </Button>
               <p className="text-xs text-muted-foreground text-center">Kostenlos & unverbindlich</p>
@@ -179,7 +179,7 @@ const AzerbaijanProjectsList = () => {
             <p className="text-white/80 text-lg max-w-xl mx-auto mb-8">
               Erstellen Sie einen kostenlosen Suchauftrag und wir finden die perfekte Immobilie für Sie.
             </p>
-            <Button size="lg" className="rounded-full px-10 py-6 text-base gap-2" onClick={() => navigate("/kontakt")}>
+            <Button size="lg" className="rounded-full px-10 py-6 text-base gap-2" onClick={() => navigate("/kontakt?service=immobilien")}>
               Jetzt Suchauftrag anlegen <ArrowRight className="w-5 h-5" />
             </Button>
             <p className="text-xs text-white/50 mt-4">Kostenlos & unverbindlich</p>

@@ -77,7 +77,7 @@ const IstanbulProjectsList = () => {
 
               <Button
                 className="rounded-full gap-2 w-fit"
-                onClick={() => navigate("/kontakt")}
+                onClick={() => navigate("/kontakt?service=immobilien")}
               >
                 Interesse bekunden <ArrowRight className="w-4 h-4" />
               </Button>
@@ -110,7 +110,7 @@ const IstanbulProjectsList = () => {
             <p className="text-white/80 text-lg max-w-xl mx-auto mb-8">
               Erstellen Sie einen kostenlosen Suchauftrag und wir finden die perfekte Immobilie für Sie – ganz nach Ihren Wünschen.
             </p>
-            <Button size="lg" className="rounded-full px-10 py-6 text-base gap-2" onClick={() => navigate("/kontakt")}>
+            <Button size="lg" className="rounded-full px-10 py-6 text-base gap-2" onClick={() => navigate("/kontakt?service=immobilien")}>
               Jetzt Suchauftrag anlegen <ArrowRight className="w-5 h-5" />
             </Button>
             <p className="text-xs text-white/50 mt-4">Kostenlos & unverbindlich</p>

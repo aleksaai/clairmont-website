@@ -40,7 +40,7 @@ const Immobilien = () => {
             <p className="text-lg md:text-xl text-[hsl(var(--glass-text))]/80 font-light max-w-2xl mx-auto mb-10">
               Beratung für Investitionen in Immobilien und Gewerbeobjekte — international, exklusiv, renditeorientiert.
             </p>
-            <Button size="lg" className="rounded-full px-10 h-14 text-lg" onClick={() => navigate("/kontakt")}>
+            <Button size="lg" className="rounded-full px-10 h-14 text-lg" onClick={() => navigate("/kontakt?service=immobilien")}>
               Projekte ansehen <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </motion.div>
@@ -105,7 +105,7 @@ const Immobilien = () => {
             <p className="text-lg text-muted-foreground font-light mb-10 max-w-2xl mx-auto">
               Erstellen Sie einen Suchauftrag und wir finden die perfekte Immobilie für Sie — individuell und exklusiv.
             </p>
-            <Button size="lg" className="rounded-full px-10 h-14 text-lg" onClick={() => navigate("/kontakt")}>
+            <Button size="lg" className="rounded-full px-10 h-14 text-lg" onClick={() => navigate("/kontakt?service=immobilien")}>
               Suchauftrag erstellen <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </motion.div>

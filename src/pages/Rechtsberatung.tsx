@@ -28,7 +28,7 @@ const Rechtsberatung = () => {
               Kompetente rechtliche Beratung durch unser exklusives Partnernetzwerk – 
               für jede Herausforderung die richtige Lösung.
             </p>
-            <Button size="lg" className="rounded-full px-10 h-14 text-lg" onClick={() => navigate("/kontakt")}>
+            <Button size="lg" className="rounded-full px-10 h-14 text-lg" onClick={() => navigate("/kontakt?service=rechtsberatung")}>
               Jetzt Beratung anfragen <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </motion.div>
@@ -104,7 +104,7 @@ const Rechtsberatung = () => {
             <p className="text-lg text-muted-foreground font-light mb-10 max-w-2xl mx-auto">
               Kontaktieren Sie uns für ein unverbindliches Erstgespräch.
             </p>
-            <Button size="lg" className="rounded-full px-10 h-14 text-lg" onClick={() => navigate("/kontakt")}>
+            <Button size="lg" className="rounded-full px-10 h-14 text-lg" onClick={() => navigate("/kontakt?service=rechtsberatung")}>
               Kontakt aufnehmen <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
             <p className="text-muted-foreground/60 text-sm font-light mt-8">

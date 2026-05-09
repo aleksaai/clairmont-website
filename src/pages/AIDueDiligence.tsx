@@ -34,7 +34,7 @@ const AIDueDiligence = () => {
             <p className="text-lg md:text-xl text-[hsl(var(--glass-text))]/80 font-light max-w-2xl mx-auto mb-10">
               Risikobewertung und Dokumentenprüfung durch intelligente Lösungen — schneller, präziser, zuverlässiger.
             </p>
-            <Button size="lg" className="rounded-full px-10 h-14 text-lg" onClick={() => navigate("/kontakt")}>
+            <Button size="lg" className="rounded-full px-10 h-14 text-lg" onClick={() => navigate("/kontakt?service=ai-due-diligence")}>
               Jetzt Kontakt aufnehmen <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </motion.div>
@@ -78,7 +78,7 @@ const AIDueDiligence = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }}>
             <h2 className="text-3xl md:text-4xl font-light text-primary mb-6">Bereit für intelligente Analyse?</h2>
             <p className="text-lg text-muted-foreground font-light mb-10 max-w-2xl mx-auto">Kontaktieren Sie uns für ein unverbindliches Erstgespräch.</p>
-            <Button size="lg" className="rounded-full px-10 h-14 text-lg" onClick={() => navigate("/kontakt")}>
+            <Button size="lg" className="rounded-full px-10 h-14 text-lg" onClick={() => navigate("/kontakt?service=ai-due-diligence")}>
               Jetzt Kontakt aufnehmen <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </motion.div>

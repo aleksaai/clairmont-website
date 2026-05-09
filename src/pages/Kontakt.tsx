@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion } from "motion/react";
 import { Home, Send, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
@@ -14,11 +15,25 @@ import { supabase } from "@/integrations/supabase/client";
 import officeBackground from "@/assets/office-background.png";
 import { useLanguage } from "@/i18n/LanguageContext";
 
+const serviceOptions = [
+  { value: "steuerberatung", label: "Steueroptimierung Unternehmen" },
+  { value: "steueroptimierung-arbeitnehmer", label: "Steueroptimierung Arbeitnehmer" },
+  { value: "global-sourcing", label: "Global Sourcing & Deals" },
+  { value: "unternehmensberatung", label: "Unternehmensberatung" },
+  { value: "ai-due-diligence", label: "AI & Due Diligence" },
+  { value: "payment-solutions", label: "Payment Solutions" },
+  { value: "solaranlagen", label: "Solaranlagen & Wärmepumpen" },
+  { value: "immobilien", label: "Immobilien" },
+  { value: "rechtsberatung", label: "Rechtsberatung" },
+  { value: "sonstiges", label: "Sonstiges" },
+] as const;
+
 const contactSchema = z.object({
   firstName: z.string().trim().min(2).max(50),
   lastName: z.string().trim().min(2).max(50),
   email: z.string().trim().email().max(255),
   phone: z.string().trim().min(6).max(20),
+  service: z.string().min(1, "Bitte wählen Sie eine Leistung aus."),
   subject: z.string().trim().min(5).max(100),
   message: z.string().trim().max(1000).optional(),
 });
@@ -27,17 +42,23 @@ type ContactFormData = z.infer<typeof contactSchema>;
 
 const Kontakt = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { t } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const preselectedService = searchParams.get("service") || "";
 
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
     reset,
   } = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
+    defaultValues: {
+      service: preselectedService,
+    },
   });
 
   const onSubmit = async (data: ContactFormData) => {
@@ -49,6 +70,7 @@ const Kontakt = () => {
           lastName: data.lastName,
           email: data.email,
           phone: data.phone,
+          service: data.service,
           subject: data.subject,
           message: data.message || "",
         },
@@ -124,6 +146,27 @@ const Kontakt = () => {
                   <Input id="phone" type="tel" {...register("phone")} className="mt-2 bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50 focus:bg-white/20 focus:border-white/40" disabled={isSubmitting} />
                   {errors.phone && <p className="text-red-300 text-sm mt-1">{errors.phone.message}</p>}
                 </div>
+              </div>
+
+              <div>
+                <Label className="text-[hsl(var(--glass-text))] font-light">{t('kontakt', 'service') || 'Leistung'} *</Label>
+                <Controller
+                  name="service"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange} disabled={isSubmitting}>
+                      <SelectTrigger className="mt-2 bg-white/10 border-white/20 text-[hsl(var(--glass-text))] focus:bg-white/20 focus:border-white/40">
+                        <SelectValue placeholder={t('kontakt', 'servicePlaceholder') || 'Bitte wählen'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {serviceOptions.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.service && <p className="text-red-300 text-sm mt-1">{errors.service.message}</p>}
               </div>
 
               <div>

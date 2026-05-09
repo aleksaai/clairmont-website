@@ -124,7 +124,7 @@ const DubaiProjectDetail = ({ project }: Props) => {
               </p>
               <Button
                 className="w-full rounded-full gap-2"
-                onClick={() => navigate("/kontakt")}
+                onClick={() => navigate("/kontakt?service=immobilien")}
               >
                 Kontakt aufnehmen <ChevronRight className="w-4 h-4" />
               </Button>

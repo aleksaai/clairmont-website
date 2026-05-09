@@ -8,11 +8,25 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const serviceLabels: Record<string, string> = {
+  "steuerberatung": "Steueroptimierung Unternehmen",
+  "steueroptimierung-arbeitnehmer": "Steueroptimierung Arbeitnehmer",
+  "global-sourcing": "Global Sourcing & Deals",
+  "unternehmensberatung": "Unternehmensberatung",
+  "ai-due-diligence": "AI & Due Diligence",
+  "payment-solutions": "Payment Solutions",
+  "solaranlagen": "Solaranlagen & Wärmepumpen",
+  "immobilien": "Immobilien",
+  "rechtsberatung": "Rechtsberatung",
+  "sonstiges": "Sonstiges",
+};
+
 interface ContactEmailRequest {
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
+  service?: string;
   subject: string;
   message: string;
 }
@@ -47,7 +61,8 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { firstName, lastName, email, phone, subject, message }: ContactEmailRequest = await req.json();
+    const { firstName, lastName, email, phone, service, subject, message }: ContactEmailRequest = await req.json();
+    const serviceLabel = service ? (serviceLabels[service] || service) : "";
 
     // Send notification email to Clairmont Advisory
     const notificationEmail = await sendEmail(
@@ -58,6 +73,7 @@ const handler = async (req: Request): Promise<Response> => {
         <p><strong>Von:</strong> ${firstName} ${lastName}</p>
         <p><strong>E-Mail:</strong> ${email}</p>
         <p><strong>Telefon:</strong> ${phone}</p>
+        ${serviceLabel ? `<p><strong>Leistung:</strong> ${serviceLabel}</p>` : ''}
         <p><strong>Betreff:</strong> ${subject}</p>
         ${message ? `<p><strong>Nachricht:</strong></p><p>${message.replace(/\n/g, '<br>')}</p>` : ''}
         <hr>
@@ -73,6 +89,7 @@ const handler = async (req: Request): Promise<Response> => {
         <h2>Vielen Dank für Ihre Kontaktaufnahme, ${firstName}!</h2>
         <p>Wir haben Ihre Nachricht erhalten und werden uns schnellstmöglich bei Ihnen melden.</p>
         <h3>Ihre Anfrage:</h3>
+        ${serviceLabel ? `<p><strong>Leistung:</strong> ${serviceLabel}</p>` : ''}
         <p><strong>Betreff:</strong> ${subject}</p>
         ${message ? `<p><strong>Nachricht:</strong></p><p>${message.replace(/\n/g, '<br>')}</p>` : ''}
         <hr>

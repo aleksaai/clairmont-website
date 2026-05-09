@@ -102,7 +102,7 @@ const DubaiProjectsList = () => {
             <Button
               size="lg"
               className="rounded-full px-10 py-6 text-base gap-2"
-              onClick={() => navigate("/kontakt")}
+              onClick={() => navigate("/kontakt?service=immobilien")}
             >
               Jetzt Suchauftrag anlegen <ArrowRight className="w-5 h-5" />
             </Button>
