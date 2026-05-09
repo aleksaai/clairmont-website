@@ -87,6 +87,7 @@ async function generatePDF(data: any): Promise<Uint8Array> {
   addText(`Geschlecht: ${data.gender || '-'}`);
   addText(`Nationalitaet: ${data.nationality || '-'}`);
   addText(`E-Mail: ${data.email || '-'}`);
+  addText(`Telefon: ${data.phone || '-'}`);
   addText(`Adresse: ${data.address || '-'}`);
   if (data.differentAddress) {
     addText('Abweichende Adresse: Ja');
@@ -308,6 +309,7 @@ function buildWebhookPayload(jsonData: any, documentUrls: Record<string, string[
     gender: jsonData.gender || '',
     nationality: jsonData.nationality || '',
     email: jsonData.email || '',
+    phone: jsonData.phone || '',
     address: jsonData.address || '',
     differentAddress: jsonData.differentAddress || false,
     alternativeAddress: jsonData.alternativeAddress || '',
@@ -440,7 +442,7 @@ const handler = async (req: Request): Promise<Response> => {
         submittedAt: new Date().toISOString(),
         formData: jsonData,
         pdfContent: {
-          name: `Steuer-Selbstauskunft_${jsonData.firstName || 'Unknown'}_${jsonData.lastName || 'User'}.pdf`,
+          name: sanitizeFileName(`Steuer-Selbstauskunft_${jsonData.firstName || 'Unknown'}_${jsonData.lastName || 'User'}.pdf`),
           type: 'application/pdf',
           data: pdfBase64,
         },

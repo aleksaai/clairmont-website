@@ -19,16 +19,23 @@ const PersonalInfoStep = ({ data, updateData, onNext, onBack }: PersonalInfoStep
 
   const handleNext = () => {
     // Validate required fields
-    if (!data.firstName || !data.lastName || !data.birthDate || !data.gender || !data.nationality || 
-        !data.email || !data.personalInfo?.street || !data.personalInfo?.zipCode || !data.personalInfo?.city) {
+    if (!data.firstName || !data.lastName || !data.birthDate || !data.gender || !data.nationality ||
+        !data.email || !data.phone || !data.personalInfo?.street || !data.personalInfo?.zipCode || !data.personalInfo?.city) {
       alert("Bitte füllen Sie alle Pflichtfelder aus.");
       return;
     }
-    
+
     // Simple email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(data.email)) {
       alert("Bitte geben Sie eine gültige E-Mail-Adresse ein.");
+      return;
+    }
+
+    // Simple phone validation (at least 6 digits)
+    const phoneDigits = data.phone.replace(/\D/g, "");
+    if (phoneDigits.length < 6) {
+      alert("Bitte geben Sie eine gültige Telefonnummer ein.");
       return;
     }
     
@@ -128,6 +135,20 @@ const PersonalInfoStep = ({ data, updateData, onNext, onBack }: PersonalInfoStep
             onChange={(e) => updateData({ email: e.target.value })}
             className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
             placeholder="ihre.email@beispiel.de"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="phone" className="text-[hsl(var(--glass-text))]">
+            Telefonnummer *
+          </Label>
+          <Input
+            id="phone"
+            type="tel"
+            value={data.phone}
+            onChange={(e) => updateData({ phone: e.target.value })}
+            className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
+            placeholder="+49 123 4567890"
           />
         </div>
 
