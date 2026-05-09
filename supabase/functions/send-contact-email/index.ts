@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const CONTACT_WEBHOOK_URL = "https://ufnxliieaejdvxcanqux.supabase.co/functions/v1/contact-webhook";
+const CONTACT_WEBHOOK_SECRET = Deno.env.get("CONTACT_WEBHOOK_SECRET");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -106,6 +108,24 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     console.log("Emails sent successfully:", { notificationEmail, confirmationEmail });
+
+    // Create folder in dashboard via contact-webhook
+    if (service && CONTACT_WEBHOOK_SECRET) {
+      try {
+        const webhookRes = await fetch(CONTACT_WEBHOOK_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${CONTACT_WEBHOOK_SECRET}`,
+          },
+          body: JSON.stringify({ firstName, lastName, email, phone, service, subject, message }),
+        });
+        const webhookResult = await webhookRes.json();
+        console.log("Dashboard folder created:", webhookResult);
+      } catch (webhookError) {
+        console.error("Failed to create dashboard folder (non-blocking):", webhookError);
+      }
+    }
 
     return new Response(
       JSON.stringify({ 
