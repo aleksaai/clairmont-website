@@ -1,18 +1,9 @@
 [build]
   command = "npm run build"
   publish = "dist"
+  functions = "netlify/functions"
 
-# Customer-facing payment portal: proxied to the Supabase Edge Function.
-# Must come BEFORE the SPA fallback. `force = true` overrides any matching file
-# in `dist/`. Both GET (render) and POST (create Stripe session) go through here.
-[[redirects]]
-  from = "/pay"
-  to = "https://ufnxliieaejdvxcanqux.supabase.co/functions/v1/payment-portal"
-  status = 200
-  force = true
-
-# SPA fallback: let React Router handle all client-side routes
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+# /pay is handled by a Netlify Function (see public/_redirects). The function
+# proxies through to the Supabase payment-portal edge function, preserving the
+# upstream Content-Type and body — a direct external `200!` redirect gets
+# Netlify's sandbox CSP applied, which breaks rendering.
