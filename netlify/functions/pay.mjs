@@ -20,13 +20,17 @@ export const handler = async (event) => {
   });
 
   const body = await upstream.text();
-  const contentType = upstream.headers.get("content-type") ?? "text/html; charset=utf-8";
+  const upstreamType = upstream.headers.get("content-type") ?? "";
+  // Force the rendered MIME for HTML responses. POST returns JSON.
+  const isJson = upstreamType.includes("application/json");
+  const contentType = isJson ? "application/json; charset=utf-8" : "text/html; charset=utf-8";
 
   return {
     statusCode: upstream.status,
     headers: {
-      "Content-Type": contentType,
-      "Cache-Control": "no-store",
+      "content-type": contentType,
+      "cache-control": "no-store",
+      "x-debug-upstream-type": upstreamType,
     },
     body,
   };
