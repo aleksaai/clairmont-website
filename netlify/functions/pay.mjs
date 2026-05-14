@@ -20,17 +20,18 @@ export const handler = async (event) => {
   });
 
   const body = await upstream.text();
-  const upstreamType = upstream.headers.get("content-type") ?? "";
-  // Force the rendered MIME for HTML responses. POST returns JSON.
-  const isJson = upstreamType.includes("application/json");
-  const contentType = isJson ? "application/json; charset=utf-8" : "text/html; charset=utf-8";
+  // Server-to-server fetches to Supabase Edge Functions return `text/plain`
+  // (no Accept header negotiation). For our portal that's wrong — the GET
+  // path is HTML, the POST path is JSON. We force the right MIME based on
+  // body content rather than trusting upstream.
+  const looksLikeJson = body.trimStart().startsWith("{") || body.trimStart().startsWith("[");
+  const contentType = looksLikeJson ? "application/json; charset=utf-8" : "text/html; charset=utf-8";
 
   return {
     statusCode: upstream.status,
     headers: {
       "content-type": contentType,
       "cache-control": "no-store",
-      "x-debug-upstream-type": upstreamType,
     },
     body,
   };
