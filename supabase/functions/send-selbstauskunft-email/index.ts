@@ -206,13 +206,18 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log("Sending email with attachments:", attachments.length);
 
-    await resend.emails.send({
+    const { error: emailError } = await resend.emails.send({
       from: "Clairmont Advisory <noreply@tax.clairmont-advisory.com>",
       to: ["service@clairmont-advisory.com"],
       subject: `Neue Privatkredit-Selbstauskunft von ${formData.firstName} ${formData.lastName}`,
       html: emailHtml,
       attachments: attachments,
     });
+
+    if (emailError) {
+      console.error("Resend error:", emailError);
+      throw new Error(emailError.message || "Failed to send Selbstauskunft email");
+    }
     
     console.log("Email sent successfully");
 

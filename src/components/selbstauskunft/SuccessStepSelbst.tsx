@@ -94,37 +94,40 @@ const SuccessStepSelbst = ({ formData }: SuccessStepSelbstProps) => {
           failedUploads: failedUploads.length > 0 ? failedUploads : undefined,
         };
 
-        const { error } = await supabase.functions.invoke('send-selbstauskunft-email', {
+        const webhookFormData = new FormData();
+        webhookFormData.append('data', JSON.stringify(emailData));
+
+        const webhookResponse = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-selbstauskunft-webhook`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            },
+            body: webhookFormData,
+          }
+        );
+
+        if (!webhookResponse.ok) {
+          const errorText = await webhookResponse.text();
+          console.error('Webhook submission failed:', errorText);
+          throw new Error('Dashboard submission failed');
+        }
+
+        console.log('Webhook submission successful');
+
+        const { error: emailError } = await supabase.functions.invoke('send-selbstauskunft-email', {
           body: emailData
         });
 
-        if (error) throw error;
-
-        // Also send to credit-webhook
-        try {
-          const webhookFormData = new FormData();
-          webhookFormData.append('data', JSON.stringify(emailData));
-          
-          const webhookResponse = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-selbstauskunft-webhook`,
-            {
-              method: 'POST',
-              body: webhookFormData,
-            }
-          );
-          
-          if (!webhookResponse.ok) {
-            console.error('Webhook submission failed:', await webhookResponse.text());
-          } else {
-            console.log('Webhook submission successful');
-          }
-        } catch (webhookError) {
-          console.error('Error sending to webhook:', webhookError);
-          // Don't fail the whole submission if webhook fails
+        if (emailError) {
+          console.error('Email submission failed:', emailError);
+          toast.warning('Ihre Daten wurden erfolgreich übermittelt, aber die E-Mail-Benachrichtigung konnte nicht gesendet werden.');
         }
 
         if (failedUploads.length > 0) {
-          toast.warning(`E-Mail erfolgreich gesendet, aber ${failedUploads.length} Datei(en) konnten nicht hochgeladen werden.`);
+          toast.warning(`Ihre Daten wurden erfolgreich übermittelt, aber ${failedUploads.length} Datei(en) konnten nicht hochgeladen werden.`);
         }
         
         setIsSubmitting(false);

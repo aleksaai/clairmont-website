@@ -143,6 +143,19 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Processing Privatkredit Selbstauskunft submission...');
     console.log('Form data received:', JSON.stringify(jsonData, null, 2));
 
+    if (!jsonData?.firstName || !jsonData?.lastName) {
+      return new Response(
+        JSON.stringify({ error: 'Missing required fields: firstName and lastName are required' }),
+        {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders
+          }
+        }
+      );
+    }
+
     // Initialize Supabase client for file downloads
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -233,12 +246,30 @@ const handler = async (req: Request): Promise<Response> => {
     if (!webhookResponse.ok) {
       const errorText = await webhookResponse.text();
       console.error(`Webhook failed: ${webhookResponse.status}`, errorText);
-    } else {
-      console.log('Webhook sent successfully');
+      return new Response(
+        JSON.stringify({
+          error: 'Failed to create dashboard folder',
+          details: errorText
+        }),
+        {
+          status: 502,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders
+          }
+        }
+      );
     }
 
+    const webhookResult = await webhookResponse.json().catch(() => null);
+    console.log('Webhook sent successfully');
+
     return new Response(
-      JSON.stringify({ success: true, message: 'Data sent to webhook successfully' }),
+      JSON.stringify({
+        success: true,
+        message: 'Data sent to webhook successfully',
+        dashboard: webhookResult
+      }),
       { 
         status: 200, 
         headers: { 
