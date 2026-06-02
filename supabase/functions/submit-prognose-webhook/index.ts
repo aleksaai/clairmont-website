@@ -301,6 +301,58 @@ async function buildSignedDocumentUrls(supabase: ReturnType<typeof createClient>
   return documentUrls;
 }
 
+function buildEmailFormData(jsonData: any, storagePaths: StoragePaths) {
+  const emailData = { ...jsonData };
+
+  emailData.documents = {
+    ...(jsonData.documents ?? {}),
+    taxCertificate: storagePaths.taxCertificate ?? [],
+    idCard: storagePaths.idCard ?? [],
+    disabilityCertificate: storagePaths.disabilityCertificate ?? [],
+    otherDocuments: storagePaths.otherDocuments ?? [],
+  };
+
+  const taxCertificatesByYear: Record<string, string[]> = {};
+  for (const [key, paths] of Object.entries(storagePaths)) {
+    if (!key.startsWith('taxCertificateYear_')) continue;
+    taxCertificatesByYear[key.replace('taxCertificateYear_', '')] = paths;
+  }
+  emailData.taxCertificatesByYear = taxCertificatesByYear;
+  emailData.propertyDocuments = storagePaths.propertyDocuments ?? [];
+  emailData.additionalDocuments = storagePaths.additionalDocuments ?? [];
+
+  return emailData;
+}
+
+async function sendInternalEmail(jsonData: any, storagePaths: StoragePaths) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error('Cannot send internal email: missing Supabase URL or service role key');
+    return;
+  }
+
+  const emailResponse = await fetch(`${supabaseUrl}/functions/v1/send-prognose-email`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${serviceRoleKey}`,
+    },
+    body: JSON.stringify({
+      formData: buildEmailFormData(jsonData, storagePaths),
+      userEmail: jsonData.email || 'no-email@example.com',
+    }),
+  });
+
+  if (!emailResponse.ok) {
+    console.error(`Internal email failed: ${emailResponse.status}`, await emailResponse.text());
+    return;
+  }
+
+  console.log('Internal email sent successfully');
+}
+
 function buildWebhookPayload(jsonData: any, documentUrls: Record<string, string[]>) {
   const webhookPayload: Record<string, any> = {
     firstName: jsonData.firstName || '',
@@ -467,6 +519,12 @@ const handler = async (req: Request): Promise<Response> => {
       }
     } catch (additionalError) {
       console.error('Error sending to additional webhook:', additionalError);
+    }
+
+    try {
+      await sendInternalEmail(jsonData, storagePaths);
+    } catch (emailError) {
+      console.error('Error sending internal email:', emailError);
     }
 
     return new Response(JSON.stringify({ success: true, message: 'Data sent to webhooks successfully' }), {

@@ -3,7 +3,6 @@ import { CheckCircle2, Mail, Download, Loader2, AlertCircle, RefreshCw } from "l
 import { useNavigate } from "react-router-dom";
 import type { FormData } from "@/pages/Prognose";
 import { useEffect, useState, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { generatePrognosePDF } from "@/utils/pdfGenerator";
 
@@ -31,115 +30,48 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
       console.error('PDF generation error:', error);
     }
 
-    const failedUploads: string[] = [];
-
-    const sanitizeFileName = (name: string): string => {
-      return name
-        .normalize('NFKD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/\s+/g, '_')
-        .replace(/[^a-zA-Z0-9._-]/g, '_');
-    };
-
-    const uploadFiles = async (files: any, folder: string): Promise<string[]> => {
-      if (!files || files.length === 0) return [];
-      const paths: string[] = [];
-      for (const file of files) {
-        if (typeof file === 'string') { paths.push(file); continue; }
-        if (file instanceof File) {
-          try {
-            const safeName = sanitizeFileName(file.name || 'upload');
-            const filePath = `${folder}/${Date.now()}_${safeName}`;
-            const { error } = await supabase.storage.from('prognose-documents').upload(filePath, file);
-            if (error) { failedUploads.push(file.name); continue; }
-            paths.push(filePath);
-          } catch { failedUploads.push(file.name || 'unknown'); }
-        }
-      }
-      return paths;
-    };
-
     try {
-      // Upload files and collect storage paths
-      const storagePaths: Record<string, string[]> = {};
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-      if (formData.documents) {
-        if (formData.documents.taxCertificate) {
-          storagePaths['taxCertificate'] = await uploadFiles(formData.documents.taxCertificate, 'tax-certificates');
-        }
-        if (formData.documents.idCard) {
-          storagePaths['idCard'] = await uploadFiles(formData.documents.idCard, 'id-cards');
-        }
-        if (formData.documents.disabilityCertificate) {
-          storagePaths['disabilityCertificate'] = await uploadFiles(formData.documents.disabilityCertificate, 'disability-certificates');
-        }
-        if (formData.documents.otherDocuments) {
-          storagePaths['otherDocuments'] = await uploadFiles(formData.documents.otherDocuments, 'other-documents');
-        }
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error("Supabase configuration is missing");
       }
+
+      const payload = new window.FormData();
+      payload.append("data", JSON.stringify(formData));
+
+      const appendFiles = (key: string, files?: File[]) => {
+        if (!files?.length) return;
+        for (const file of files) {
+          if (file instanceof File) payload.append(key, file, file.name);
+        }
+      };
+
+      appendFiles("taxCertificate", formData.documents?.taxCertificate);
+      appendFiles("idCard", formData.documents?.idCard);
+      appendFiles("disabilityCertificate", formData.documents?.disabilityCertificate);
+      appendFiles("otherDocuments", formData.documents?.otherDocuments);
+      appendFiles("propertyDocuments", formData.propertyDocuments);
+      appendFiles("additionalDocuments", formData.additionalDocuments);
 
       if (formData.taxCertificatesByYear) {
         for (const [year, files] of Object.entries(formData.taxCertificatesByYear)) {
-          storagePaths[`taxCertificateYear_${year}`] = await uploadFiles(files, `tax-certificates/${year}`);
+          appendFiles(`taxCertificateYear_${year}`, files);
         }
       }
 
-      if (formData.propertyDocuments) {
-        storagePaths['propertyDocuments'] = await uploadFiles(formData.propertyDocuments, 'property-documents');
-      }
-      if (formData.additionalDocuments) {
-        storagePaths['additionalDocuments'] = await uploadFiles(formData.additionalDocuments, 'additional-documents');
-      }
-
-      if (failedUploads.length > 0) {
-        toast.warning(`${failedUploads.length} Datei(en) konnten nicht hochgeladen werden.`);
-      }
-
-      // Send JSON to webhook (no more FormData with raw files)
-      const { error: webhookError } = await supabase.functions.invoke('submit-prognose-webhook', {
-        body: {
-          formData: formData,
-          storagePaths,
+      const response = await fetch(`${supabaseUrl}/functions/v1/submit-prognose-webhook`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${supabaseKey}`,
+          apikey: supabaseKey,
         },
-      });
-      if (webhookError) throw webhookError;
-
-      // Build email data with storage paths instead of File objects
-      const uploadedData = { ...formData };
-      
-      // Map document storage paths correctly for the email function
-      if (formData.documents) {
-        uploadedData.documents = {
-          taxCertificate: storagePaths['taxCertificate'] || [],
-          idCard: storagePaths['idCard'] || [],
-          disabilityCertificate: storagePaths['disabilityCertificate'] || [],
-          otherDocuments: storagePaths['otherDocuments'] || [],
-        } as any;
-      }
-      
-      if (formData.taxCertificatesByYear) {
-        const byYear: Record<string, string[]> = {};
-        for (const [year] of Object.entries(formData.taxCertificatesByYear)) {
-          byYear[year] = storagePaths[`taxCertificateYear_${year}`] || [];
-        }
-        uploadedData.taxCertificatesByYear = byYear as any;
-      }
-      
-      // Replace File arrays with storage paths for propertyDocuments and additionalDocuments
-      if (formData.propertyDocuments) {
-        uploadedData.propertyDocuments = (storagePaths['propertyDocuments'] || []) as any;
-      }
-      if (formData.additionalDocuments) {
-        uploadedData.additionalDocuments = (storagePaths['additionalDocuments'] || []) as any;
-      }
-
-      const { error: emailError } = await supabase.functions.invoke('send-prognose-email', {
-        body: { formData: uploadedData, userEmail: formData.email || 'no-email@example.com' }
+        body: payload,
       });
 
-      if (emailError) {
-        console.error('Email delivery warning:', emailError);
-        toast.warning('Ihre Anfrage wurde gespeichert, aber die E-Mail-Benachrichtigung konnte nicht zugestellt werden.');
+      if (!response.ok) {
+        throw new Error(await response.text());
       }
 
       setSubmissionState("success");
