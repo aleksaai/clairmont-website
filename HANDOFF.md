@@ -1,7 +1,18 @@
 # HANDOFF — clairmont-website
 
-**Letzte Aktualisierung:** 2026-04-20 (Marcus, Migration abgeschlossen)
+**Letzte Aktualisierung:** 2026-06-02 (Marcus, Steuerprognose-Submit serverseitig gehärtet)
 **Status:** 🟢 **LIVE**
+
+## Was wurde in dieser Session gemacht (2026-06-02)
+
+**Steuerprognose-Submit-Härtung nach Jörg-H.-Incident** (`2136700`, Edge Function `submit-prognose-webhook` deployed)
+
+- Diagnose: Für den gemeldeten Jörg-H.-Versuch gab es keinen finalen `submit-prognose-webhook`-Request, keinen `form-webhook`-Request und keine neuen `prognose-documents` im relevanten Zeitfenster. Der Submit ist also nicht als fehlgeschlagene Edge-Function hängen geblieben, sondern hat Supabase gar nicht erreicht.
+- Schwache Architekturstelle entfernt: Der Browser lud Dateien vorher clientseitig vorab in `prognose-documents` hoch und rief danach weitere Schritte auf. Wenn diese Sequenz vor dem finalen Submit abbrach, konnte kein Dashboard-Folder entstehen.
+- Fix Frontend: `SuccessStep.tsx` sendet jetzt einen einzigen multipart Request an `submit-prognose-webhook` inklusive JSON-Daten und aller Dateien.
+- Fix Edge Function: `submit-prognose-webhook` übernimmt Uploads, Dashboard-Forwarding an `form-webhook` und internen Email-Versand an `send-prognose-email` serverseitig.
+- Verhalten jetzt: Wenn der finale Request Supabase erreicht, hängen Dashboard-Folder und interne Email nicht mehr von browserseitigen Vorab-Uploads ab. Wenn der User die Seite schließt oder keine Verbindung hat, bevor der Request Supabase erreicht, kann technisch kein Serverprozess starten; dann bleibt nur der sichtbare Error-/Retry-State im Formular.
+- Verifikation: `npm run build` erfolgreich; `submit-prognose-webhook` live auf Clairmont Supabase `ufnxliieaejdvxcanqux` deployed.
 
 ## Wo das Projekt steht
 
