@@ -1,7 +1,17 @@
 # HANDOFF — clairmont-website
 
-**Letzte Aktualisierung:** 2026-06-02 (Marcus, Steuerprognose-Submit serverseitig gehärtet)
+**Letzte Aktualisierung:** 2026-06-30 (Marcus, Steuerprognose-Formular erweitert + API-getestet)
 **Status:** 🟢 **LIVE**
+
+## Was wurde in dieser Session gemacht (2026-06-30)
+
+**Steuerprognose-Formular nach Erols WhatsApp-Spec erweitert** (`2a5d24d`, `355309c`, Edge Functions `submit-prognose-webhook` + `send-prognose-email` deployed)
+
+- Neues Vorab-Check-Step: mind. 2.500 EUR Brutto/Monat und mind. 2.000 EUR eingezahlte Lohnsteuer. Wenn beide Antworten "Nein" sind, stoppt das Formular mit Kapazitaets-Hinweis.
+- Direkt danach werden jetzt **Bundesland** und **Stadt** erfasst (`federalState`, `qualificationCity`). Die Werte landen in Client-PDF, Server-PDF, Make.com/Webhook-Payload, Dashboard-`customer_register.raw_data` und der internen Email an `service@clairmont-advisory.com`.
+- Lohnsteuerbescheid-Upload ist jetzt je Steuerjahr organisiert. Pro Jahr werden Arbeitszeitraum `from/to` und bei Luecken eine Erklaerung gespeichert (`workPeriodsByYear`).
+- Neue bedingte Nachweis-Uploads: Crypto/Trading, Fortbildungskosten, Arbeitsmittel, Selbststaendigkeit/EUER/Bilanz, KFZ, Ausbildung/Studium/Fortbildung, Ehepartner-Einkommen und Ehepartner-Elterngeld. Diese Upload-Gruppen werden serverseitig in `prognose-documents` gespeichert und per Signed URL an das Dashboard weitergereicht.
+- API-Verifikation live: `API-20260630090919` pruefte alle neuen Upload-Gruppen und erzeugte im Dashboard 13 Dokumente plus PDF. `API-BUNDESLAND-20260630100509` pruefte Bundesland/Stadt. Supabase Function-Logs zeigten jeweils erfolgreichen internen Email-Versand via Resend.
 
 ## Was wurde in dieser Session gemacht (2026-06-02)
 
