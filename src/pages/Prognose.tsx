@@ -8,6 +8,7 @@ import officeBackground from "@/assets/office-background.png";
 
 // Import step components
 import WelcomeStep from "@/components/prognose/WelcomeStep";
+import QualificationStep from "@/components/prognose/QualificationStep";
 import PersonalInfoStep from "@/components/prognose/PersonalInfoStep";
 import FamilyStep from "@/components/prognose/FamilyStep";
 import ChildrenStep from "@/components/prognose/ChildrenStep";
@@ -19,6 +20,7 @@ import CryptoUploadStep from "@/components/prognose/CryptoUploadStep";
 import InsuranceStep from "@/components/prognose/InsuranceStep";
 import PropertyStep from "@/components/prognose/PropertyStep";
 import SpecialCircumstancesStep from "@/components/prognose/SpecialCircumstancesStep";
+import SupportingDocumentsStep from "@/components/prognose/SupportingDocumentsStep";
 import AdditionalDocumentsStep from "@/components/prognose/AdditionalDocumentsStep";
 import BankDetailsStep from "@/components/prognose/BankDetailsStep";
 import DocumentUploadStep from "@/components/prognose/DocumentUploadStep";
@@ -26,6 +28,10 @@ import VerificationStep from "@/components/prognose/VerificationStep";
 import SuccessStep from "@/components/prognose/SuccessStep";
 
 export interface FormData {
+  // Qualification
+  grossSalaryOver2500: boolean | null;
+  wageTaxOver2000: boolean | null;
+
   // Personal Info
   firstName: string;
   lastName: string;
@@ -51,6 +57,9 @@ export interface FormData {
   spouseOccupation?: string;
   spouseEmployed?: boolean;
   spouseTaxDocument?: File;
+  spouseIncomeDocuments?: File[];
+  spouseReceivedParentalBenefit: boolean | null;
+  spouseParentalBenefitDocuments?: File[];
   divorceDate?: string;
   
   // Children
@@ -71,10 +80,18 @@ export interface FormData {
   };
   trainingCosts: string;
   businessEquipment: string;
+  trainingCostDocuments?: File[];
+  businessEquipmentDocuments?: File[];
+  workPeriodsByYear?: Record<string, {
+    from: string;
+    to: string;
+    gapExplanation: string;
+  }>;
   
   // Income
   hasBusiness: boolean;
   businessType?: string;
+  businessDocuments?: File[];
   hasCryptoIncome: boolean;
   cryptoDocuments?: File[];
   hasSocialBenefits: boolean;
@@ -98,6 +115,7 @@ export interface FormData {
   hasProperty: boolean;
   properties: Array<{
     address: string;
+    usageType?: string;
     purchasePrice: string;
     purchaseDate: string;
     completionDate: string;
@@ -111,6 +129,13 @@ export interface FormData {
     otherCostsDescription?: string;
     otherCostsAmount?: string;
   }>;
+  propertyDocuments?: File[];
+
+  // Additional tax topics
+  hasVehicle: boolean | null;
+  vehicleDocuments?: File[];
+  educationCompleted: boolean | null;
+  educationDocuments?: File[];
   
   // Special Circumstances
   hasDisability: boolean;
@@ -126,7 +151,6 @@ export interface FormData {
     otherDocuments?: File[];
   };
   taxCertificatesByYear?: Record<string, File[]>;
-  propertyDocuments?: File[];
   additionalDocuments?: File[];
   
   // Bank Details
@@ -138,14 +162,14 @@ export interface FormData {
   confirmEmail?: string;
 }
 
-const BASE_STEPS = 16; // Updated to include VerificationStep
-
 const Prognose = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [currentStep, setCurrentStep] = useState(0);
   const hasRefParam = !!searchParams.get("ref");
   const [formData, setFormData] = useState<FormData>({
+    grossSalaryOver2500: null,
+    wageTaxOver2000: null,
     firstName: "",
     lastName: "",
     birthDate: "",
@@ -156,6 +180,8 @@ const Prognose = () => {
     address: "",
     differentAddress: false,
     maritalStatus: "",
+    spouseEmployed: false,
+    spouseReceivedParentalBenefit: null,
     hasChildren: false,
     children: [],
     occupation: "",
@@ -171,6 +197,8 @@ const Prognose = () => {
     insurances: [],
     hasProperty: false,
     properties: [],
+    hasVehicle: null,
+    educationCompleted: null,
     hasDisability: false,
     paysAlimony: false,
     iban: "",
@@ -236,109 +264,37 @@ const Prognose = () => {
     nextStep();
   };
 
-  // Calculate total steps dynamically based on form data
   const hasTaxYears = formData.taxYears && formData.taxYears.length > 0;
-  const totalSteps = BASE_STEPS + (formData.hasCryptoIncome ? 1 : 0) + (hasTaxYears ? 1 : 0);
-  const progress = (currentStep / totalSteps) * 100;
-
-  const renderStep = () => {
-    const hasTaxYears = formData.taxYears && formData.taxYears.length > 0;
-    
-    switch (currentStep) {
-      case 0:
-        return <WelcomeStep onNext={nextStep} />;
-      case 1:
-        return <PersonalInfoStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-      case 2:
-        return <FamilyStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-      case 3:
-        return <ChildrenStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-      case 4:
-        return <WorkStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-      case 5:
-        return <CheckStep data={formData} onNext={nextStep} onBack={prevStep} />;
-      case 6:
-        return <IncomeStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-      case 7:
-        // Show TaxCertificateUploadStep only if taxYears are selected
-        if (hasTaxYears) {
-          return <TaxCertificateUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-        } else if (formData.hasCryptoIncome) {
-          return <CryptoUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-        } else {
-          return <InsuranceStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-        }
-      case 8:
-        // Adjust based on whether tax certificate step was shown
-        if (hasTaxYears && formData.hasCryptoIncome) {
-          return <CryptoUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-        } else if (hasTaxYears) {
-          return <InsuranceStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-        } else if (formData.hasCryptoIncome) {
-          return <InsuranceStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-        } else {
-          return <PropertyStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-        }
-      case 9:
-        if (hasTaxYears && formData.hasCryptoIncome) {
-          return <InsuranceStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-        } else if (hasTaxYears || formData.hasCryptoIncome) {
-          return <PropertyStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-        } else {
-          return <SpecialCircumstancesStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-        }
-      case 10:
-        if (hasTaxYears && formData.hasCryptoIncome) {
-          return <PropertyStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-        } else if (hasTaxYears || formData.hasCryptoIncome) {
-          return <SpecialCircumstancesStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-        } else {
-          return <AdditionalDocumentsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-        }
-      case 11:
-        if (hasTaxYears && formData.hasCryptoIncome) {
-          return <SpecialCircumstancesStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-        } else if (hasTaxYears || formData.hasCryptoIncome) {
-          return <AdditionalDocumentsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-        } else {
-          return <DocumentUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-        }
-      case 12:
-        if (hasTaxYears && formData.hasCryptoIncome) {
-          return <AdditionalDocumentsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-        } else if (hasTaxYears || formData.hasCryptoIncome) {
-          return <DocumentUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-        } else {
-          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} hidePartnerCode={hasRefParam} />;
-        }
-      case 13:
-        if (hasTaxYears && formData.hasCryptoIncome) {
-          return <DocumentUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />;
-        } else if (hasTaxYears || formData.hasCryptoIncome) {
-          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} hidePartnerCode={hasRefParam} />;
-        } else {
-          return <VerificationStep data={formData} onSubmit={handleSubmit} onBack={prevStep} onGoToStep={goToStep} />;
-        }
-      case 14:
-        if (hasTaxYears && formData.hasCryptoIncome) {
-          return <BankDetailsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} hidePartnerCode={hasRefParam} />;
-        } else if (hasTaxYears || formData.hasCryptoIncome) {
-          return <VerificationStep data={formData} onSubmit={handleSubmit} onBack={prevStep} onGoToStep={goToStep} />;
-        } else {
-          return <SuccessStep formData={formData} />;
-        }
-      case 15:
-        if (hasTaxYears && formData.hasCryptoIncome) {
-          return <VerificationStep data={formData} onSubmit={handleSubmit} onBack={prevStep} onGoToStep={goToStep} />;
-        } else {
-          return <SuccessStep formData={formData} />;
-        }
-      case 16:
-        return <SuccessStep formData={formData} />;
-      default:
-        return null;
-    }
+  const goToStepById = (stepId: string) => {
+    const targetIndex = steps.findIndex((step) => step.id === stepId);
+    if (targetIndex >= 0) goToStep(targetIndex);
   };
+
+  const steps = [
+    { id: "welcome", node: <WelcomeStep onNext={nextStep} /> },
+    { id: "qualification", node: <QualificationStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} /> },
+    { id: "personal", node: <PersonalInfoStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} /> },
+    { id: "family", node: <FamilyStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} /> },
+    { id: "children", node: <ChildrenStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} /> },
+    { id: "work", node: <WorkStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} /> },
+    { id: "check", node: <CheckStep data={formData} onNext={nextStep} onBack={prevStep} /> },
+    { id: "income", node: <IncomeStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} /> },
+    ...(hasTaxYears ? [{ id: "tax-certificates", node: <TaxCertificateUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} /> }] : []),
+    ...(formData.hasCryptoIncome ? [{ id: "crypto", node: <CryptoUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} /> }] : []),
+    { id: "insurance", node: <InsuranceStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} /> },
+    { id: "property", node: <PropertyStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} /> },
+    { id: "special", node: <SpecialCircumstancesStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} /> },
+    { id: "supporting-documents", node: <SupportingDocumentsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} /> },
+    { id: "additional-documents", node: <AdditionalDocumentsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} /> },
+    { id: "documents", node: <DocumentUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} /> },
+    { id: "bank", node: <BankDetailsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} hidePartnerCode={hasRefParam} /> },
+    { id: "verification", node: <VerificationStep data={formData} onSubmit={handleSubmit} onBack={prevStep} onGoToStep={goToStepById} /> },
+    { id: "success", node: <SuccessStep formData={formData} /> },
+  ];
+
+  const totalSteps = steps.length - 1;
+  const progress = (currentStep / totalSteps) * 100;
+  const activeStep = steps[currentStep] ?? steps[steps.length - 1];
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -407,7 +363,7 @@ const Prognose = () => {
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                {renderStep()}
+                {activeStep.node}
               </motion.div>
             </AnimatePresence>
           </div>

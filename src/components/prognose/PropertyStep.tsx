@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowRight, ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { FormData } from "@/pages/Prognose";
 import { useState } from "react";
@@ -21,7 +22,7 @@ const PropertyStep = ({ data, updateData, onNext, onBack }: PropertyStepProps) =
       // Validate all properties have required fields filled
       for (let i = 0; i < data.properties.length; i++) {
         const property = data.properties[i];
-        if (!property.address || !property.purchasePrice || !property.purchaseDate || 
+        if (!property.address || !property.usageType || !property.purchasePrice || !property.purchaseDate ||
             !property.completionDate || !property.numberOfUnits || !property.rentedArea || 
             !property.rent || !property.interestExpense || !property.notaryCosts || !property.propertyTax) {
           alert(`Bitte füllen Sie alle Pflichtfelder für Immobilie ${i + 1} aus.`);
@@ -37,6 +38,7 @@ const PropertyStep = ({ data, updateData, onNext, onBack }: PropertyStepProps) =
       ...data.properties,
       {
         address: "",
+        usageType: "",
         purchasePrice: "",
         purchaseDate: "",
         completionDate: "",
@@ -137,6 +139,20 @@ const PropertyStep = ({ data, updateData, onNext, onBack }: PropertyStepProps) =
                       className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
                       placeholder="Straße, Hausnummer, PLZ, Ort"
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[hsl(var(--glass-text))] text-sm">Nutzung der Immobilie *</Label>
+                    <Select value={property.usageType || ""} onValueChange={(value) => updateProperty(index, "usageType", value)}>
+                      <SelectTrigger className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))]">
+                        <SelectValue placeholder="Bitte wählen" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="eigennutzung">Eigennutzung</SelectItem>
+                        <SelectItem value="vermietung">Vermietung</SelectItem>
+                        <SelectItem value="gemischt">Teilweise Eigennutzung / teilweise Vermietung</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">

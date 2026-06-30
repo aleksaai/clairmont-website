@@ -54,6 +54,17 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
       appendFiles("otherDocuments", formData.documents?.otherDocuments);
       appendFiles("propertyDocuments", formData.propertyDocuments);
       appendFiles("additionalDocuments", formData.additionalDocuments);
+      appendFiles("cryptoDocuments", formData.cryptoDocuments);
+      appendFiles("trainingCostDocuments", formData.trainingCostDocuments);
+      appendFiles("businessEquipmentDocuments", formData.businessEquipmentDocuments);
+      appendFiles("businessDocuments", formData.businessDocuments);
+      appendFiles("vehicleDocuments", formData.vehicleDocuments);
+      appendFiles("educationDocuments", formData.educationDocuments);
+      appendFiles("spouseIncomeDocuments", formData.spouseIncomeDocuments);
+      appendFiles("spouseParentalBenefitDocuments", formData.spouseParentalBenefitDocuments);
+      if (formData.spouseTaxDocument instanceof File) {
+        payload.append("spouseIncomeDocuments", formData.spouseTaxDocument, formData.spouseTaxDocument.name);
+      }
 
       if (formData.taxCertificatesByYear) {
         for (const [year, files] of Object.entries(formData.taxCertificatesByYear)) {

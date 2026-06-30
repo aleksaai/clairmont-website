@@ -80,6 +80,10 @@ async function generatePDF(data: any): Promise<Uint8Array> {
   addText(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, false, 9);
   yPosition -= 20;
 
+  addSection('VORAB-CHECK');
+  addText(`Mind. 2.500 EUR Brutto/Monat: ${formatBoolean(data.grossSalaryOver2500)}`);
+  addText(`Mind. 2.000 EUR eingezahlte Lohnsteuer: ${formatBoolean(data.wageTaxOver2000)}`);
+
   addSection('PERSOENLICHE INFORMATIONEN');
   addText(`Vorname: ${data.firstName || '-'}`);
   addText(`Nachname: ${data.lastName || '-'}`);
@@ -136,11 +140,20 @@ async function generatePDF(data: any): Promise<Uint8Array> {
   }
   addText(`Fortbildungskosten: ${data.trainingCosts || '-'}`);
   addText(`Arbeitsmittel: ${data.businessEquipment || '-'}`);
+  if (data.workPeriodsByYear) {
+    addText('Arbeitszeitraeume je Steuerjahr:', true);
+    Object.entries(data.workPeriodsByYear).forEach(([year, period]: [string, any]) => {
+      addText(`  ${year}: ${period?.from || '-'} bis ${period?.to || '-'}`);
+      if (period?.gapExplanation) addText(`  Luecke/Erklaerung: ${period.gapExplanation}`);
+    });
+  }
 
   addSection('EINKOMMEN');
   addText(`Gewerbliche Einkuenfte: ${formatBoolean(data.hasBusiness)}`);
   if (data.hasBusiness) addText(`Art des Gewerbes: ${data.businessType || '-'}`);
   addText(`Krypto-Einkuenfte: ${formatBoolean(data.hasCryptoIncome)}`);
+  addText(`KFZ steuerlich relevant: ${formatBoolean(data.hasVehicle)}`);
+  addText(`Ausbildung/Studium/Fortbildung: ${formatBoolean(data.educationCompleted)}`);
   addText(`Sozialleistungen: ${formatBoolean(data.hasSocialBenefits)}`);
   if (data.hasSocialBenefits) {
     addText(`Art der Sozialleistung: ${data.socialBenefitDetails || '-'}`);
@@ -175,6 +188,7 @@ async function generatePDF(data: any): Promise<Uint8Array> {
     data.properties.forEach((property: any, index: number) => {
       addText(`Immobilie ${index + 1}:`, true);
       addText(`  Adresse: ${property.address || '-'}`);
+      addText(`  Nutzung: ${property.usageType || '-'}`);
       addText(`  Kaufpreis: ${property.purchasePrice || '-'} EUR`);
       addText(`  Kaufdatum: ${formatDate(property.purchaseDate)}`);
       addText(`  Fertigstellungsdatum: ${formatDate(property.completionDate)}`);
@@ -260,6 +274,14 @@ async function parseIncomingSubmission(req: Request, supabase: ReturnType<typeof
   await uploadFileGroup('otherDocuments', 'other-documents', formData.getAll('otherDocuments').filter((value): value is File => value instanceof File));
   await uploadFileGroup('additionalDocuments', 'additional-documents', formData.getAll('additionalDocuments').filter((value): value is File => value instanceof File));
   await uploadFileGroup('propertyDocuments', 'property-documents', formData.getAll('propertyDocuments').filter((value): value is File => value instanceof File));
+  await uploadFileGroup('cryptoDocuments', 'crypto-documents', formData.getAll('cryptoDocuments').filter((value): value is File => value instanceof File));
+  await uploadFileGroup('trainingCostDocuments', 'training-cost-documents', formData.getAll('trainingCostDocuments').filter((value): value is File => value instanceof File));
+  await uploadFileGroup('businessEquipmentDocuments', 'business-equipment-documents', formData.getAll('businessEquipmentDocuments').filter((value): value is File => value instanceof File));
+  await uploadFileGroup('businessDocuments', 'business-documents', formData.getAll('businessDocuments').filter((value): value is File => value instanceof File));
+  await uploadFileGroup('vehicleDocuments', 'vehicle-documents', formData.getAll('vehicleDocuments').filter((value): value is File => value instanceof File));
+  await uploadFileGroup('educationDocuments', 'education-documents', formData.getAll('educationDocuments').filter((value): value is File => value instanceof File));
+  await uploadFileGroup('spouseIncomeDocuments', 'spouse-income-documents', formData.getAll('spouseIncomeDocuments').filter((value): value is File => value instanceof File));
+  await uploadFileGroup('spouseParentalBenefitDocuments', 'spouse-parental-benefit-documents', formData.getAll('spouseParentalBenefitDocuments').filter((value): value is File => value instanceof File));
 
   for (const [key, value] of formData.entries()) {
     if (!key.startsWith('taxCertificateYear_') || !(value instanceof File)) continue;
@@ -320,6 +342,14 @@ function buildEmailFormData(jsonData: any, storagePaths: StoragePaths) {
   emailData.taxCertificatesByYear = taxCertificatesByYear;
   emailData.propertyDocuments = storagePaths.propertyDocuments ?? [];
   emailData.additionalDocuments = storagePaths.additionalDocuments ?? [];
+  emailData.cryptoDocuments = storagePaths.cryptoDocuments ?? [];
+  emailData.trainingCostDocuments = storagePaths.trainingCostDocuments ?? [];
+  emailData.businessEquipmentDocuments = storagePaths.businessEquipmentDocuments ?? [];
+  emailData.businessDocuments = storagePaths.businessDocuments ?? [];
+  emailData.vehicleDocuments = storagePaths.vehicleDocuments ?? [];
+  emailData.educationDocuments = storagePaths.educationDocuments ?? [];
+  emailData.spouseIncomeDocuments = storagePaths.spouseIncomeDocuments ?? [];
+  emailData.spouseParentalBenefitDocuments = storagePaths.spouseParentalBenefitDocuments ?? [];
 
   return emailData;
 }
@@ -362,6 +392,8 @@ function buildWebhookPayload(jsonData: any, documentUrls: Record<string, string[
     nationality: jsonData.nationality || '',
     email: jsonData.email || '',
     phone: jsonData.phone || '',
+    grossSalaryOver2500: jsonData.grossSalaryOver2500 ?? null,
+    wageTaxOver2000: jsonData.wageTaxOver2000 ?? null,
     address: jsonData.address || '',
     differentAddress: jsonData.differentAddress || false,
     alternativeAddress: jsonData.alternativeAddress || '',
@@ -374,6 +406,7 @@ function buildWebhookPayload(jsonData: any, documentUrls: Record<string, string[
     spouseBirthDate: jsonData.spouseBirthDate || '',
     spouseOccupation: jsonData.spouseOccupation || '',
     spouseEmployed: jsonData.spouseEmployed || false,
+    spouseReceivedParentalBenefit: jsonData.spouseReceivedParentalBenefit ?? null,
     divorceDate: jsonData.divorceDate || '',
     hasChildren: jsonData.hasChildren || false,
     childrenCount: jsonData.children?.length || 0,
@@ -382,11 +415,14 @@ function buildWebhookPayload(jsonData: any, documentUrls: Record<string, string[
     workplaceStreet: jsonData.workplace?.street || '',
     workplaceZipCode: jsonData.workplace?.zipCode || '',
     workplaceCity: jsonData.workplace?.city || '',
+    workPeriodsByYear: jsonData.workPeriodsByYear || {},
     trainingCosts: jsonData.trainingCosts || '',
     businessEquipment: jsonData.businessEquipment || '',
     hasBusiness: jsonData.hasBusiness || false,
     businessType: jsonData.businessType || '',
     hasCryptoIncome: jsonData.hasCryptoIncome || false,
+    hasVehicle: jsonData.hasVehicle ?? null,
+    educationCompleted: jsonData.educationCompleted ?? null,
     hasSocialBenefits: jsonData.hasSocialBenefits || false,
     socialBenefitDetails: jsonData.socialBenefitDetails || '',
     socialBenefitAmount: jsonData.socialBenefitAmount || '',
@@ -429,6 +465,7 @@ function buildWebhookPayload(jsonData: any, documentUrls: Record<string, string[
   if (jsonData.properties?.length > 0) {
     jsonData.properties.forEach((property: any, index: number) => {
       webhookPayload[`property_${index + 1}_address`] = property.address || '';
+      webhookPayload[`property_${index + 1}_usageType`] = property.usageType || '';
       webhookPayload[`property_${index + 1}_purchasePrice`] = property.purchasePrice || '';
       webhookPayload[`property_${index + 1}_purchaseDate`] = property.purchaseDate || '';
       webhookPayload[`property_${index + 1}_completionDate`] = property.completionDate || '';

@@ -98,6 +98,14 @@ const createSignedFileLinks = async (formData: any): Promise<FileLink[]> => {
 
   extractPaths(formData.propertyDocuments, filePaths);
   extractPaths(formData.additionalDocuments, filePaths);
+  extractPaths(formData.cryptoDocuments, filePaths);
+  extractPaths(formData.trainingCostDocuments, filePaths);
+  extractPaths(formData.businessEquipmentDocuments, filePaths);
+  extractPaths(formData.businessDocuments, filePaths);
+  extractPaths(formData.vehicleDocuments, filePaths);
+  extractPaths(formData.educationDocuments, filePaths);
+  extractPaths(formData.spouseIncomeDocuments, filePaths);
+  extractPaths(formData.spouseParentalBenefitDocuments, filePaths);
 
   const links: FileLink[] = [];
 
@@ -195,6 +203,7 @@ const renderPropertiesTable = (properties: any[] = []) => {
         <tr>
           <th>Nr.</th>
           <th>Adresse</th>
+          <th>Nutzung</th>
           <th>Kaufpreis</th>
           <th>Kaufdatum</th>
           <th>Fertigstellung</th>
@@ -215,6 +224,7 @@ const renderPropertiesTable = (properties: any[] = []) => {
               <tr>
                 <td>${index + 1}</td>
                 <td>${escapeHtml(formatValue(property?.address))}</td>
+                <td>${escapeHtml(formatValue(property?.usageType))}</td>
                 <td>${escapeHtml(formatCurrency(property?.purchasePrice))}</td>
                 <td>${escapeHtml(formatValue(property?.purchaseDate))}</td>
                 <td>${escapeHtml(formatValue(property?.completionDate))}</td>
@@ -284,6 +294,12 @@ const handler = async (req: Request): Promise<Response> => {
       html: `
         <h1>Neue Steuerprognose</h1>
 
+        <h2>Vorab-Check</h2>
+        ${renderKeyValueTable([
+          ["Mind. 2.500 € Brutto/Monat", formData.grossSalaryOver2500],
+          ["Mind. 2.000 € eingezahlte Lohnsteuer", formData.wageTaxOver2000],
+        ])}
+
         <h2>Persönliche Informationen</h2>
         ${renderKeyValueTable([
           ["Vorname", formData.firstName],
@@ -314,6 +330,7 @@ const handler = async (req: Request): Promise<Response> => {
           ["Home-Office Tage", formData.homeOfficeDays],
           ["Fortbildungskosten", formData.trainingCosts],
           ["Arbeitsmittel", formData.businessEquipment],
+          ["Arbeitszeiträume / Lücken", formData.workPeriodsByYear ? JSON.stringify(formData.workPeriodsByYear) : "N/A"],
         ])}
 
         <h2>Familiensituation</h2>
@@ -324,6 +341,7 @@ const handler = async (req: Request): Promise<Response> => {
           ["Ehepartner Geburtsdatum", formData.spouseBirthDate],
           ["Ehepartner Beruf", formData.spouseOccupation],
           ["Ehepartner berufstätig", formData.spouseEmployed],
+          ["Ehepartner Elterngeld", formData.spouseReceivedParentalBenefit],
           ["Scheidungsdatum", formData.divorceDate],
         ])}
 
@@ -336,6 +354,8 @@ const handler = async (req: Request): Promise<Response> => {
           ["Gewerbe", formData.hasBusiness],
           ["Art des Gewerbes", formData.businessType],
           ["Crypto/Trading Einkünfte", formData.hasCryptoIncome],
+          ["KFZ steuerlich relevant", formData.hasVehicle],
+          ["Ausbildung/Studium/Fortbildung", formData.educationCompleted],
           ["Staatliche Leistungen", formData.hasSocialBenefits],
           ["Staatliche Leistungen Details", formData.socialBenefitDetails],
           ["Staatliche Leistungen Summe", formatCurrency(formData.socialBenefitAmount)],
@@ -370,6 +390,14 @@ const handler = async (req: Request): Promise<Response> => {
           ["Personalausweis", getArrayLength(formData.documents?.idCard)],
           ["Behindertenausweis", getArrayLength(formData.documents?.disabilityCertificate)],
           ["Immobilien-Unterlagen", getArrayLength(formData.propertyDocuments)],
+          ["Crypto-/Trading-Unterlagen", getArrayLength(formData.cryptoDocuments)],
+          ["Fortbildungskosten-Nachweise", getArrayLength(formData.trainingCostDocuments)],
+          ["Arbeitsmittel-Nachweise", getArrayLength(formData.businessEquipmentDocuments)],
+          ["Selbstständigkeit-Unterlagen", getArrayLength(formData.businessDocuments)],
+          ["KFZ-Unterlagen", getArrayLength(formData.vehicleDocuments)],
+          ["Ausbildungs-/Studiumsunterlagen", getArrayLength(formData.educationDocuments)],
+          ["Ehepartner Einkommensunterlagen", getArrayLength(formData.spouseIncomeDocuments)],
+          ["Ehepartner Elterngeldnachweise", getArrayLength(formData.spouseParentalBenefitDocuments)],
           ["Weitere Unterlagen", getArrayLength(formData.additionalDocuments)],
           ["Sonstige Belege", getArrayLength(formData.documents?.otherDocuments)],
           ["Verfügbare Dokumentlinks", fileLinks.length],

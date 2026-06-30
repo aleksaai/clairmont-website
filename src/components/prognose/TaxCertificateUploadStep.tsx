@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { ArrowRight, ArrowLeft, Upload, X } from "lucide-react";
 import { FormData } from "@/pages/Prognose";
 import { useState } from "react";
@@ -13,6 +15,26 @@ interface TaxCertificateUploadStepProps {
 
 const TaxCertificateUploadStep = ({ data, updateData, onNext, onBack }: TaxCertificateUploadStepProps) => {
   const [dragActiveYear, setDragActiveYear] = useState<string | null>(null);
+
+  const updateWorkPeriod = (year: string, field: "from" | "to" | "gapExplanation", value: string) => {
+    const currentPeriods = data.workPeriodsByYear || {};
+    updateData({
+      workPeriodsByYear: {
+        ...currentPeriods,
+        [year]: {
+          from: currentPeriods[year]?.from || "",
+          to: currentPeriods[year]?.to || "",
+          gapExplanation: currentPeriods[year]?.gapExplanation || "",
+          [field]: value,
+        },
+      },
+    });
+  };
+
+  const hasYearGap = (year: string) => {
+    const period = data.workPeriodsByYear?.[year];
+    return !!period?.from && !!period?.to && (period.from !== `${year}-01-01` || period.to !== `${year}-12-31`);
+  };
 
   const handleDrag = (e: React.DragEvent, year: string) => {
     e.preventDefault();
@@ -87,6 +109,18 @@ const TaxCertificateUploadStep = ({ data, updateData, onNext, onBack }: TaxCerti
       alert(`Bitte laden Sie mindestens einen Lohnsteuerbescheid für folgende Jahre hoch: ${missingYears.join(', ')}`);
       return;
     }
+
+    for (const year of data.taxYears) {
+      const period = data.workPeriodsByYear?.[year];
+      if (!period?.from || !period?.to) {
+        alert(`Bitte geben Sie den Arbeitszeitraum für ${year} an.`);
+        return;
+      }
+      if (hasYearGap(year) && !period.gapExplanation.trim()) {
+        alert(`Bitte erklären Sie die Lücke im Jahr ${year}.`);
+        return;
+      }
+    }
     onNext();
   };
 
@@ -111,6 +145,48 @@ const TaxCertificateUploadStep = ({ data, updateData, onNext, onBack }: TaxCerti
               <Label className="text-[hsl(var(--glass-text))] text-lg font-medium">
                 Lohnsteuerbescheid {year} *
               </Label>
+
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
+                <Label className="text-[hsl(var(--glass-text))]">
+                  Von wann bis wann haben Sie im Jahr {year} gearbeitet? *
+                </Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor={`work-from-${year}`} className="text-xs text-[hsl(var(--glass-text))]/70">Von</Label>
+                    <Input
+                      id={`work-from-${year}`}
+                      type="date"
+                      value={data.workPeriodsByYear?.[year]?.from || ""}
+                      onChange={(event) => updateWorkPeriod(year, "from", event.target.value)}
+                      className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))]"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor={`work-to-${year}`} className="text-xs text-[hsl(var(--glass-text))]/70">Bis</Label>
+                    <Input
+                      id={`work-to-${year}`}
+                      type="date"
+                      value={data.workPeriodsByYear?.[year]?.to || ""}
+                      onChange={(event) => updateWorkPeriod(year, "to", event.target.value)}
+                      className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))]"
+                    />
+                  </div>
+                </div>
+                {hasYearGap(year) && (
+                  <div className="space-y-2">
+                    <Label htmlFor={`gap-${year}`} className="text-[hsl(var(--glass-text))]">
+                      Bitte erklären Sie die Lücke im Jahr {year} *
+                    </Label>
+                    <Textarea
+                      id={`gap-${year}`}
+                      value={data.workPeriodsByYear?.[year]?.gapExplanation || ""}
+                      onChange={(event) => updateWorkPeriod(year, "gapExplanation", event.target.value)}
+                      className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
+                      placeholder="z.B. arbeitslos, Elternzeit, Studium, Krankheit, Arbeitgeberwechsel..."
+                    />
+                  </div>
+                )}
+              </div>
               
               <div
                 onDragEnter={(e) => handleDrag(e, year)}

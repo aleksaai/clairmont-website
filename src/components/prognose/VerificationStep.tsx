@@ -9,7 +9,7 @@ interface VerificationStepProps {
   data: FormData;
   onSubmit: () => void;
   onBack: () => void;
-  onGoToStep: (step: number) => void;
+  onGoToStep: (step: string) => void;
 }
 
 interface CheckResult {
@@ -142,12 +142,12 @@ const VerificationStep = ({ data, onSubmit, onBack, onGoToStep }: VerificationSt
     }
   };
 
-  const getStepForResult = (resultId: string): number | null => {
+  const getStepForResult = (resultId: string): string | null => {
     // Map result IDs to form steps
-    if (resultId === "idCard") return 12; // DocumentUploadStep approximate
+    if (resultId === "idCard") return "documents";
     if (resultId === "iban") return null; // Already on BankDetailsStep, just go back
-    if (resultId === "taxYears") return 6; // IncomeStep
-    if (resultId.startsWith("taxCert_")) return 7; // TaxCertificateUploadStep
+    if (resultId === "taxYears") return "income";
+    if (resultId.startsWith("taxCert_")) return "tax-certificates";
     return null;
   };
 

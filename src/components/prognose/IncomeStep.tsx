@@ -43,7 +43,7 @@ const IncomeStep = ({ data, updateData, onNext, onBack }: IncomeStepProps) => {
       <div className="space-y-6">
         <div className="space-y-3">
           <Label className="text-[hsl(var(--glass-text))]">
-            Haben Sie ein Gewerbe?
+            Sind Sie selbstständig oder haben Sie gewerbliche Einkünfte?
           </Label>
           <RadioGroup
             value={showBusinessType ? "ja" : "nein"}
@@ -70,7 +70,7 @@ const IncomeStep = ({ data, updateData, onNext, onBack }: IncomeStepProps) => {
 
         {showBusinessType && (
           <div className="space-y-2">
-            <Label className="text-[hsl(var(--glass-text))]">Art des Gewerbes</Label>
+            <Label className="text-[hsl(var(--glass-text))]">Art der Selbstständigkeit</Label>
             <Select value={data.businessType} onValueChange={(value) => updateData({ businessType: value })}>
               <SelectTrigger className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))]">
                 <SelectValue placeholder="Bitte wählen" />
@@ -84,7 +84,7 @@ const IncomeStep = ({ data, updateData, onNext, onBack }: IncomeStepProps) => {
               <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 mt-2">
                 <AlertCircle className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
                 <p className="text-sm text-[hsl(var(--glass-text))]/80">
-                  Bei Kleingewerbe kontaktieren wir Sie telefonisch für weitere Details.
+                  Im Nachweis-Schritt laden Sie bitte EÜR, Bilanz oder relevante Unterlagen hoch.
                 </p>
               </div>
             )}
@@ -101,7 +101,7 @@ const IncomeStep = ({ data, updateData, onNext, onBack }: IncomeStepProps) => {
 
         <div className="space-y-3">
           <Label className="text-[hsl(var(--glass-text))]">
-            Haben Sie weitere Einkünfte? (z.B. Kryptowährungen, Aktien, Trading, Vermietung, etc.)
+            Haben Sie Crypto-, Aktien-, Trading- oder sonstige Kapitalerträge?
           </Label>
           <RadioGroup
             value={showCryptoInfo ? "ja" : "nein"}

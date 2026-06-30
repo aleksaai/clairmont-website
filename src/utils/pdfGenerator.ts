@@ -35,6 +35,10 @@ export const generatePrognosePDF = (formData: FormData): Blob => {
   doc.setFontSize(11);
   addText(`Erstellt am: ${new Date().toLocaleDateString("de-DE")}`, false);
   yPos += 5;
+
+  addSection("Vorab-Check");
+  addText(`Mind. 2.500 Euro Brutto/Monat: ${formData.grossSalaryOver2500 ? "Ja" : "Nein"}`);
+  addText(`Mind. 2.000 Euro eingezahlte Lohnsteuer: ${formData.wageTaxOver2000 ? "Ja" : "Nein"}`);
   
   // Personal Information
   addSection("Persönliche Informationen");
@@ -77,6 +81,13 @@ export const generatePrognosePDF = (formData: FormData): Blob => {
   addText(`Home-Office Tage: ${formData.homeOfficeDays || "Nicht angegeben"}`);
   addText(`Fortbildungskosten: ${formData.trainingCosts || "Nicht angegeben"}`);
   addText(`Arbeitsmittel: ${formData.businessEquipment || "Nicht angegeben"}`);
+  if (formData.workPeriodsByYear) {
+    addText("Arbeitszeiträume:", true);
+    Object.entries(formData.workPeriodsByYear).forEach(([year, period]) => {
+      addText(`${year}: ${period.from || "?"} bis ${period.to || "?"}`);
+      if (period.gapExplanation) addText(`  Lücke: ${period.gapExplanation}`);
+    });
+  }
   
   // Income
   addSection("Einkommen & Einkünfte");
@@ -85,6 +96,8 @@ export const generatePrognosePDF = (formData: FormData): Blob => {
     addText(`Art des Gewerbes: ${formData.businessType || "Nicht angegeben"}`);
   }
   addText(`Crypto/Trading Einkünfte: ${formData.hasCryptoIncome ? "Ja" : "Nein"}`);
+  addText(`KFZ steuerlich relevant: ${formData.hasVehicle ? "Ja" : "Nein"}`);
+  addText(`Ausbildung/Studium/Fortbildung: ${formData.educationCompleted ? "Ja" : "Nein"}`);
   addText(`Staatliche Leistungen: ${formData.hasSocialBenefits ? "Ja" : "Nein"}`);
   if (formData.hasSocialBenefits) {
     addText(`Details: ${formData.socialBenefitDetails || "Nicht angegeben"}`);
@@ -118,6 +131,7 @@ export const generatePrognosePDF = (formData: FormData): Blob => {
     formData.properties.forEach((prop, index) => {
       addText(`Immobilie ${index + 1}:`, true);
       addText(`  Adresse: ${prop.address || "Nicht angegeben"}`);
+      addText(`  Nutzung: ${prop.usageType || "Nicht angegeben"}`);
       addText(`  Kaufpreis: ${prop.purchasePrice || "0"} €`);
       addText(`  Kaufdatum: ${prop.purchaseDate || "Nicht angegeben"}`);
       addText(`  Mieteinnahmen: ${prop.rent || "0"} €`);

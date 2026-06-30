@@ -29,6 +29,14 @@ const CryptoUploadStep = ({ data, updateData, onNext, onBack }: CryptoUploadStep
     updateData({ cryptoDocuments: updatedFiles });
   };
 
+  const handleNext = () => {
+    if (files.length === 0) {
+      alert("Bitte laden Sie Ihre Unterlagen zu Krypto-/Trading-Einkünften hoch.");
+      return;
+    }
+    onNext();
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -107,8 +115,8 @@ const CryptoUploadStep = ({ data, updateData, onNext, onBack }: CryptoUploadStep
           )}
 
           {files.length === 0 && (
-            <p className="text-sm text-[hsl(var(--glass-text))]/60 text-center">
-              Sie können diesen Schritt auch überspringen und die Dokumente später nachreichen.
+            <p className="text-sm text-yellow-200 text-center">
+              Bei angegebenen Krypto- oder Trading-Einkünften sind die Unterlagen erforderlich.
             </p>
           )}
         </div>
@@ -125,11 +133,11 @@ const CryptoUploadStep = ({ data, updateData, onNext, onBack }: CryptoUploadStep
           Zurück
         </Button>
         <Button 
-          onClick={onNext}
+          onClick={handleNext}
           size="lg" 
           className="flex-1 rounded-full group"
         >
-          {files.length > 0 ? "Weiter" : "Überspringen"}
+          Weiter
           <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
         </Button>
       </div>
