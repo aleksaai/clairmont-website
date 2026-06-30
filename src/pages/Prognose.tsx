@@ -31,6 +31,8 @@ export interface FormData {
   // Qualification
   grossSalaryOver2500: boolean | null;
   wageTaxOver2000: boolean | null;
+  federalState: string;
+  qualificationCity: string;
 
   // Personal Info
   firstName: string;
@@ -170,6 +172,8 @@ const Prognose = () => {
   const [formData, setFormData] = useState<FormData>({
     grossSalaryOver2500: null,
     wageTaxOver2000: null,
+    federalState: "",
+    qualificationCity: "",
     firstName: "",
     lastName: "",
     birthDate: "",

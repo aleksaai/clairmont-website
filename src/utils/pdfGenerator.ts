@@ -39,6 +39,8 @@ export const generatePrognosePDF = (formData: FormData): Blob => {
   addSection("Vorab-Check");
   addText(`Mind. 2.500 Euro Brutto/Monat: ${formData.grossSalaryOver2500 ? "Ja" : "Nein"}`);
   addText(`Mind. 2.000 Euro eingezahlte Lohnsteuer: ${formData.wageTaxOver2000 ? "Ja" : "Nein"}`);
+  addText(`Bundesland: ${formData.federalState || "Nicht angegeben"}`);
+  addText(`Stadt: ${formData.qualificationCity || "Nicht angegeben"}`);
   
   // Personal Information
   addSection("Persönliche Informationen");

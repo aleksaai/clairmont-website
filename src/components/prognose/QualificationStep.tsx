@@ -1,5 +1,6 @@
 import { AlertCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { FormData } from "@/pages/Prognose";
@@ -21,6 +22,12 @@ const QualificationStep = ({ data, updateData, onNext, onBack }: QualificationSt
     }
 
     if (isDisqualified) return;
+
+    if (!data.federalState?.trim() || !data.qualificationCity?.trim()) {
+      alert("Bitte geben Sie Bundesland und Stadt an.");
+      return;
+    }
+
     onNext();
   };
 
@@ -85,6 +92,45 @@ const QualificationStep = ({ data, updateData, onNext, onBack }: QualificationSt
                 Leider sind unsere Kapazitäten aktuell auf Arbeitnehmer mit über 2.500 Euro Bruttoeinkommen
                 und über 2.000 Euro eingezahlter Lohnsteuer zugeschnitten.
               </p>
+            </div>
+          </div>
+        )}
+
+        {!isDisqualified && (
+          <div className="rounded-2xl border border-white/15 bg-white/5 p-4 space-y-4">
+            <div>
+              <Label className="text-[hsl(var(--glass-text))]">
+                In welchem Bundesland und in welcher Stadt wohnen Sie?
+              </Label>
+              <p className="text-xs text-[hsl(var(--glass-text))]/60 mt-1">
+                Diese Angaben helfen uns bei der steuerlichen Einordnung.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="federalState" className="text-[hsl(var(--glass-text))]">
+                  Bundesland *
+                </Label>
+                <Input
+                  id="federalState"
+                  value={data.federalState || ""}
+                  onChange={(e) => updateData({ federalState: e.target.value })}
+                  className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
+                  placeholder="z. B. Nordrhein-Westfalen"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="qualificationCity" className="text-[hsl(var(--glass-text))]">
+                  Stadt *
+                </Label>
+                <Input
+                  id="qualificationCity"
+                  value={data.qualificationCity || ""}
+                  onChange={(e) => updateData({ qualificationCity: e.target.value })}
+                  className="bg-white/10 border-white/20 text-[hsl(var(--glass-text))] placeholder:text-[hsl(var(--glass-text))]/50"
+                  placeholder="z. B. Köln"
+                />
+              </div>
             </div>
           </div>
         )}

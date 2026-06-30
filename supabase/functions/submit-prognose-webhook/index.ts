@@ -83,6 +83,8 @@ async function generatePDF(data: any): Promise<Uint8Array> {
   addSection('VORAB-CHECK');
   addText(`Mind. 2.500 EUR Brutto/Monat: ${formatBoolean(data.grossSalaryOver2500)}`);
   addText(`Mind. 2.000 EUR eingezahlte Lohnsteuer: ${formatBoolean(data.wageTaxOver2000)}`);
+  addText(`Bundesland: ${data.federalState || '-'}`);
+  addText(`Stadt: ${data.qualificationCity || '-'}`);
 
   addSection('PERSOENLICHE INFORMATIONEN');
   addText(`Vorname: ${data.firstName || '-'}`);
@@ -394,6 +396,8 @@ function buildWebhookPayload(jsonData: any, documentUrls: Record<string, string[
     phone: jsonData.phone || '',
     grossSalaryOver2500: jsonData.grossSalaryOver2500 ?? null,
     wageTaxOver2000: jsonData.wageTaxOver2000 ?? null,
+    federalState: jsonData.federalState || '',
+    qualificationCity: jsonData.qualificationCity || '',
     address: jsonData.address || '',
     differentAddress: jsonData.differentAddress || false,
     alternativeAddress: jsonData.alternativeAddress || '',

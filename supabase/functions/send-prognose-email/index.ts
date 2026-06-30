@@ -298,6 +298,8 @@ const handler = async (req: Request): Promise<Response> => {
         ${renderKeyValueTable([
           ["Mind. 2.500 € Brutto/Monat", formData.grossSalaryOver2500],
           ["Mind. 2.000 € eingezahlte Lohnsteuer", formData.wageTaxOver2000],
+          ["Bundesland", formData.federalState],
+          ["Stadt", formData.qualificationCity],
         ])}
 
         <h2>Persönliche Informationen</h2>
