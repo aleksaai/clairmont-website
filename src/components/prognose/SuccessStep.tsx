@@ -8,11 +8,13 @@ import { generatePrognosePDF } from "@/utils/pdfGenerator";
 
 interface SuccessStepProps {
   formData: FormData;
+  submissionId: string;
+  onSuccess: () => void;
 }
 
 type SubmissionState = "submitting" | "success" | "error";
 
-const SuccessStep = ({ formData }: SuccessStepProps) => {
+const SuccessStep = ({ formData, submissionId, onSuccess }: SuccessStepProps) => {
   const navigate = useNavigate();
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   const [submissionState, setSubmissionState] = useState<SubmissionState>("submitting");
@@ -39,7 +41,7 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
       }
 
       const payload = new window.FormData();
-      payload.append("data", JSON.stringify(formData));
+      payload.append("data", JSON.stringify({ ...formData, submissionId }));
 
       const appendFiles = (key: string, files?: File[]) => {
         if (!files?.length) return;
@@ -62,6 +64,12 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
       appendFiles("educationDocuments", formData.educationDocuments);
       appendFiles("spouseIncomeDocuments", formData.spouseIncomeDocuments);
       appendFiles("spouseParentalBenefitDocuments", formData.spouseParentalBenefitDocuments);
+      if (formData.disabilityProof instanceof File) {
+        payload.append("disabilityCertificate", formData.disabilityProof, formData.disabilityProof.name);
+      }
+      if (formData.alimonyProof instanceof File) {
+        payload.append("alimonyProof", formData.alimonyProof, formData.alimonyProof.name);
+      }
       if (formData.spouseTaxDocument instanceof File) {
         payload.append("spouseIncomeDocuments", formData.spouseTaxDocument, formData.spouseTaxDocument.name);
       }
@@ -85,7 +93,13 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
         throw new Error(await response.text());
       }
 
+      const result = await response.json();
+      if (!result?.success || result?.submission_id !== submissionId || result?.email_sent !== true || result?.dashboard_file_count !== result?.expected_dashboard_file_count) {
+        throw new Error("Die serverseitige Vollständigkeitsprüfung ist fehlgeschlagen.");
+      }
+
       setSubmissionState("success");
+      onSuccess();
     } catch (error: any) {
       console.error('Submission error:', error);
       setErrorMessage(
@@ -93,7 +107,7 @@ const SuccessStep = ({ formData }: SuccessStepProps) => {
       );
       setSubmissionState("error");
     }
-  }, [formData]);
+  }, [formData, onSuccess, submissionId]);
 
   useEffect(() => {
     submitData();

@@ -1,31 +1,106 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { PDFDocument, StandardFonts, rgb } from "https://esm.sh/pdf-lib@1.17.1";
+import { PDFDocument, rgb, StandardFonts } from "https://esm.sh/pdf-lib@1.17.1";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const WEBHOOK_URL = "https://hook.eu2.make.com/ibv42wex7bd1vjqf87lju4iadipsht57";
-const ADDITIONAL_WEBHOOK_URL = "https://ufnxliieaejdvxcanqux.supabase.co/functions/v1/form-webhook";
-const ADDITIONAL_WEBHOOK_TOKEN = "Clairmont_2025";
+const WEBHOOK_URL =
+  "https://hook.eu2.make.com/ibv42wex7bd1vjqf87lju4iadipsht57";
+const ADDITIONAL_WEBHOOK_URL =
+  "https://ufnxliieaejdvxcanqux.supabase.co/functions/v1/form-webhook";
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 type StoragePaths = Record<string, string[]>;
 
+interface ParsedSubmission {
+  jsonData: any;
+  storagePaths: StoragePaths;
+  submissionId: string;
+  expectedFileCount: number;
+}
+
+function countStoragePaths(storagePaths: StoragePaths): number {
+  return Object.values(storagePaths).reduce(
+    (total, paths) => total + (Array.isArray(paths) ? paths.length : 0),
+    0,
+  );
+}
+
+function isUuid(value: unknown): value is string {
+  return typeof value === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+      .test(value);
+}
+
+function validateSubmission(jsonData: any, storagePaths: StoragePaths) {
+  const missing: string[] = [];
+  const hasFiles = (category: string) =>
+    (storagePaths[category]?.length ?? 0) > 0;
+
+  if (!jsonData.firstName?.trim()) missing.push("Vorname");
+  if (!jsonData.lastName?.trim()) missing.push("Nachname");
+  if (!jsonData.email?.trim()) missing.push("E-Mail");
+  if (!jsonData.confirmCorrectness) missing.push("Richtigkeitsbestätigung");
+  if (!jsonData.acceptTerms) missing.push("AGB-Zustimmung");
+  if (!jsonData.acceptPrivacy) missing.push("Datenschutz-Zustimmung");
+  if (
+    typeof jsonData.confirmEmail !== "string" ||
+    jsonData.confirmEmail.trim().toLowerCase() !==
+      jsonData.email?.trim().toLowerCase()
+  ) {
+    missing.push("E-Mail-Bestätigung");
+  }
+  if (!hasFiles("idCard")) missing.push("Ausweisdokument");
+
+  const taxYears = Array.isArray(jsonData.taxYears)
+    ? jsonData.taxYears.map(String)
+    : [];
+  if (!taxYears.length && jsonData.noTaxCertificatesConfirmed !== true) {
+    missing.push(
+      "Lohnsteuerbescheinigung oder ausdrückliche Nichtvorhanden-Bestätigung",
+    );
+  }
+  for (const year of taxYears) {
+    if (!hasFiles(`taxCertificateYear_${year}`)) {
+      missing.push(`Lohnsteuerbescheinigung ${year}`);
+    }
+  }
+  if (jsonData.hasCryptoIncome && !hasFiles("cryptoDocuments")) {
+    missing.push("Krypto-Unterlagen");
+  }
+  if (jsonData.hasDisability && !hasFiles("disabilityCertificate")) {
+    missing.push("Behindertennachweis");
+  }
+  if (jsonData.paysAlimony && !hasFiles("alimonyProof")) {
+    missing.push("Unterhaltsnachweis");
+  }
+
+  if (missing.length) {
+    throw new Error(
+      `Pflichtangaben oder Dokumente fehlen: ${missing.join(", ")}`,
+    );
+  }
+}
+
 function arrayBufferToBase64(buffer: ArrayBuffer | Uint8Array): string {
   const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
-  let binary = '';
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
   return btoa(binary);
 }
 
 function sanitizeFileName(name: string): string {
   return name
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\s+/g, '_')
-    .replace(/[^a-zA-Z0-9._-]/g, '_');
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "_")
+    .replace(/[^a-zA-Z0-9._-]/g, "_");
 }
 
 async function generatePDF(data: any): Promise<Uint8Array> {
@@ -65,250 +140,435 @@ async function generatePDF(data: any): Promise<Uint8Array> {
   };
 
   const formatDate = (dateStr: string | undefined) => {
-    if (!dateStr) return '-';
+    if (!dateStr) return "-";
     try {
-      return new Date(dateStr).toLocaleDateString('de-DE');
+      return new Date(dateStr).toLocaleDateString("de-DE");
     } catch {
       return dateStr;
     }
   };
 
-  const formatBoolean = (val: boolean | undefined) => (val ? 'Ja' : 'Nein');
+  const formatBoolean = (val: boolean | undefined) => (val ? "Ja" : "Nein");
 
-  addText('STEUER-SELBSTAUSKUNFT', true, 18);
+  addText("STEUER-SELBSTAUSKUNFT", true, 18);
   yPosition -= 10;
-  addText(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, false, 9);
+  addText(`Erstellt am: ${new Date().toLocaleDateString("de-DE")}`, false, 9);
   yPosition -= 20;
 
-  addSection('VORAB-CHECK');
-  addText(`Mind. 2.500 EUR Brutto/Monat: ${formatBoolean(data.grossSalaryOver2500)}`);
-  addText(`Mind. 2.000 EUR eingezahlte Lohnsteuer: ${formatBoolean(data.wageTaxOver2000)}`);
-  addText(`Bundesland: ${data.federalState || '-'}`);
-  addText(`Stadt: ${data.qualificationCity || '-'}`);
+  addSection("VORAB-CHECK");
+  addText(
+    `Mind. 2.500 EUR Brutto/Monat: ${formatBoolean(data.grossSalaryOver2500)}`,
+  );
+  addText(
+    `Mind. 2.000 EUR eingezahlte Lohnsteuer: ${
+      formatBoolean(data.wageTaxOver2000)
+    }`,
+  );
+  addText(`Bundesland: ${data.federalState || "-"}`);
+  addText(`Stadt: ${data.qualificationCity || "-"}`);
 
-  addSection('PERSOENLICHE INFORMATIONEN');
-  addText(`Vorname: ${data.firstName || '-'}`);
-  addText(`Nachname: ${data.lastName || '-'}`);
+  addSection("PERSOENLICHE INFORMATIONEN");
+  addText(`Vorname: ${data.firstName || "-"}`);
+  addText(`Nachname: ${data.lastName || "-"}`);
   addText(`Geburtsdatum: ${formatDate(data.birthDate)}`);
-  addText(`Geschlecht: ${data.gender || '-'}`);
-  addText(`Nationalitaet: ${data.nationality || '-'}`);
-  addText(`E-Mail: ${data.email || '-'}`);
-  addText(`Telefon: ${data.phone || '-'}`);
-  addText(`Adresse: ${data.address || '-'}`);
+  addText(`Geschlecht: ${data.gender || "-"}`);
+  addText(`Nationalitaet: ${data.nationality || "-"}`);
+  addText(`E-Mail: ${data.email || "-"}`);
+  addText(`Telefon: ${data.phone || "-"}`);
+  addText(`Adresse: ${data.address || "-"}`);
   if (data.differentAddress) {
-    addText('Abweichende Adresse: Ja');
-    addText(`Alternative Adresse: ${data.alternativeAddress || '-'}`);
+    addText("Abweichende Adresse: Ja");
+    addText(`Alternative Adresse: ${data.alternativeAddress || "-"}`);
   }
   if (data.personalInfo) {
-    if (data.personalInfo.street) addText(`Strasse: ${data.personalInfo.street}`);
+    if (data.personalInfo.street) {
+      addText(`Strasse: ${data.personalInfo.street}`);
+    }
     if (data.personalInfo.zipCode) addText(`PLZ: ${data.personalInfo.zipCode}`);
     if (data.personalInfo.city) addText(`Stadt: ${data.personalInfo.city}`);
   }
 
-  addSection('FAMILIENSITUATION');
-  addText(`Familienstand: ${data.maritalStatus || '-'}`);
-  if (data.maritalStatus === 'married' || data.maritalStatus === 'verheiratet') {
+  addSection("FAMILIENSITUATION");
+  addText(`Familienstand: ${data.maritalStatus || "-"}`);
+  if (
+    data.maritalStatus === "married" || data.maritalStatus === "verheiratet"
+  ) {
     addText(`Verheiratet seit: ${formatDate(data.marriedSince)}`);
-    addText(`Name des Ehepartners: ${data.spouseName || '-'}`);
+    addText(`Name des Ehepartners: ${data.spouseName || "-"}`);
     addText(`Geburtsdatum Ehepartner: ${formatDate(data.spouseBirthDate)}`);
-    addText(`Beruf Ehepartner: ${data.spouseOccupation || '-'}`);
+    addText(`Beruf Ehepartner: ${data.spouseOccupation || "-"}`);
     addText(`Ehepartner berufstaetig: ${formatBoolean(data.spouseEmployed)}`);
   }
-  if (data.maritalStatus === 'divorced' || data.maritalStatus === 'geschieden') {
+  if (
+    data.maritalStatus === "divorced" || data.maritalStatus === "geschieden"
+  ) {
     addText(`Scheidungsdatum: ${formatDate(data.divorceDate)}`);
   }
 
-  addSection('KINDER');
+  addSection("KINDER");
   addText(`Kinder vorhanden: ${formatBoolean(data.hasChildren)}`);
   if (data.hasChildren && data.children?.length > 0) {
     addText(`Anzahl Kinder: ${data.children.length}`);
     yPosition -= 5;
     data.children.forEach((child: any, index: number) => {
       addText(`Kind ${index + 1}:`, true);
-      addText(`  Name: ${child.name || '-'}`);
+      addText(`  Name: ${child.name || "-"}`);
       addText(`  Geburtsdatum: ${formatDate(child.birthDate)}`);
-      addText(`  Kindergeld-Bezugszeitraum: ${child.childBenefitPeriod || '-'}`);
+      addText(
+        `  Kindergeld-Bezugszeitraum: ${child.childBenefitPeriod || "-"}`,
+      );
     });
   }
 
-  addSection('BERUFLICHE TAETIGKEIT');
-  addText(`Beruf/Taetigkeit: ${data.occupation || '-'}`);
-  addText(`Home-Office-Tage pro Woche: ${data.homeOfficeDays || '-'}`);
+  addSection("BERUFLICHE TAETIGKEIT");
+  addText(`Beruf/Taetigkeit: ${data.occupation || "-"}`);
+  addText(`Home-Office-Tage pro Woche: ${data.homeOfficeDays || "-"}`);
   if (data.workplace) {
-    addText('Arbeitsplatz-Adresse:', true);
-    addText(`  Strasse: ${data.workplace.street || '-'}`);
-    addText(`  PLZ: ${data.workplace.zipCode || '-'}`);
-    addText(`  Stadt: ${data.workplace.city || '-'}`);
+    addText("Arbeitsplatz-Adresse:", true);
+    addText(`  Strasse: ${data.workplace.street || "-"}`);
+    addText(`  PLZ: ${data.workplace.zipCode || "-"}`);
+    addText(`  Stadt: ${data.workplace.city || "-"}`);
   }
-  addText(`Fortbildungskosten: ${data.trainingCosts || '-'}`);
-  addText(`Arbeitsmittel: ${data.businessEquipment || '-'}`);
+  addText(`Fortbildungskosten: ${data.trainingCosts || "-"}`);
+  addText(`Arbeitsmittel: ${data.businessEquipment || "-"}`);
   if (data.workPeriodsByYear) {
-    addText('Arbeitszeitraeume je Steuerjahr:', true);
-    Object.entries(data.workPeriodsByYear).forEach(([year, period]: [string, any]) => {
-      addText(`  ${year}: ${period?.from || '-'} bis ${period?.to || '-'}`);
-      if (period?.gapExplanation) addText(`  Luecke/Erklaerung: ${period.gapExplanation}`);
-    });
+    addText("Arbeitszeitraeume je Steuerjahr:", true);
+    Object.entries(data.workPeriodsByYear).forEach(
+      ([year, period]: [string, any]) => {
+        addText(`  ${year}: ${period?.from || "-"} bis ${period?.to || "-"}`);
+        if (period?.gapExplanation) {
+          addText(`  Luecke/Erklaerung: ${period.gapExplanation}`);
+        }
+      },
+    );
   }
 
-  addSection('EINKOMMEN');
+  addSection("EINKOMMEN");
   addText(`Gewerbliche Einkuenfte: ${formatBoolean(data.hasBusiness)}`);
-  if (data.hasBusiness) addText(`Art des Gewerbes: ${data.businessType || '-'}`);
+  if (data.hasBusiness) {
+    addText(`Art des Gewerbes: ${data.businessType || "-"}`);
+  }
   addText(`Krypto-Einkuenfte: ${formatBoolean(data.hasCryptoIncome)}`);
   addText(`KFZ steuerlich relevant: ${formatBoolean(data.hasVehicle)}`);
-  addText(`Ausbildung/Studium/Fortbildung: ${formatBoolean(data.educationCompleted)}`);
+  addText(
+    `Ausbildung/Studium/Fortbildung: ${formatBoolean(data.educationCompleted)}`,
+  );
   addText(`Sozialleistungen: ${formatBoolean(data.hasSocialBenefits)}`);
   if (data.hasSocialBenefits) {
-    addText(`Art der Sozialleistung: ${data.socialBenefitDetails || '-'}`);
-    addText(`Betrag Sozialleistung: ${data.socialBenefitAmount || '-'}`);
+    addText(`Art der Sozialleistung: ${data.socialBenefitDetails || "-"}`);
+    addText(`Betrag Sozialleistung: ${data.socialBenefitAmount || "-"}`);
   }
-  if (data.taxYears?.length > 0) addText(`Steuerjahre: ${data.taxYears.join(', ')}`);
+  if (data.taxYears?.length > 0) {
+    addText(`Steuerjahre: ${data.taxYears.join(", ")}`);
+  }
 
-  addSection('VERSICHERUNGEN & MITGLIEDSCHAFTEN');
+  addSection("VERSICHERUNGEN & MITGLIEDSCHAFTEN");
   addText(`Gewerkschaftsmitglied: ${formatBoolean(data.isUnionMember)}`);
   if (data.isUnionMember) {
-    addText(`Name der Gewerkschaft: ${data.unionName || '-'}`);
-    addText(`Gewerkschaftsbeitrag (jaehrlich): ${data.unionFee || '-'} EUR`);
+    addText(`Name der Gewerkschaft: ${data.unionName || "-"}`);
+    addText(`Gewerkschaftsbeitrag (jaehrlich): ${data.unionFee || "-"} EUR`);
   }
-  addText(`Andere Mitgliedschaften: ${formatBoolean(data.hasOtherMemberships)}`);
-  if (data.hasOtherMemberships) addText(`Details andere Mitgliedschaften: ${data.otherMembershipsDetails || '-'}`);
+  addText(
+    `Andere Mitgliedschaften: ${formatBoolean(data.hasOtherMemberships)}`,
+  );
+  if (data.hasOtherMemberships) {
+    addText(
+      `Details andere Mitgliedschaften: ${data.otherMembershipsDetails || "-"}`,
+    );
+  }
   if (data.insurances?.length > 0) {
     yPosition -= 5;
     addText(`Versicherungen (${data.insurances.length}):`, true);
     data.insurances.forEach((insurance: any, index: number) => {
       addText(`Versicherung ${index + 1}:`, true);
-      addText(`  Art: ${insurance.type || '-'}`);
-      addText(`  Anbieter: ${insurance.provider || '-'}`);
-      addText(`  Jahresbeitrag: ${insurance.yearlyContribution || '-'} EUR`);
+      addText(`  Art: ${insurance.type || "-"}`);
+      addText(`  Anbieter: ${insurance.provider || "-"}`);
+      addText(`  Jahresbeitrag: ${insurance.yearlyContribution || "-"} EUR`);
     });
   }
 
-  addSection('IMMOBILIEN');
+  addSection("IMMOBILIEN");
   addText(`Immobilienbesitz: ${formatBoolean(data.hasProperty)}`);
   if (data.hasProperty && data.properties?.length > 0) {
     addText(`Anzahl Immobilien: ${data.properties.length}`);
     yPosition -= 5;
     data.properties.forEach((property: any, index: number) => {
       addText(`Immobilie ${index + 1}:`, true);
-      addText(`  Adresse: ${property.address || '-'}`);
-      addText(`  Nutzung: ${property.usageType || '-'}`);
-      addText(`  Kaufpreis: ${property.purchasePrice || '-'} EUR`);
+      addText(`  Adresse: ${property.address || "-"}`);
+      addText(`  Nutzung: ${property.usageType || "-"}`);
+      addText(`  Kaufpreis: ${property.purchasePrice || "-"} EUR`);
       addText(`  Kaufdatum: ${formatDate(property.purchaseDate)}`);
       addText(`  Fertigstellungsdatum: ${formatDate(property.completionDate)}`);
-      addText(`  Anzahl Einheiten: ${property.numberOfUnits || '-'}`);
-      addText(`  Vermietete Flaeche: ${property.rentedArea || '-'} m2`);
-      addText(`  Monatliche Miete: ${property.rent || '-'} EUR`);
-      addText(`  Nebenkosten: ${property.additionalCosts || '-'} EUR`);
-      addText(`  Zinsaufwendungen: ${property.interestExpense || '-'} EUR`);
-      addText(`  Notarkosten: ${property.notaryCosts || '-'} EUR`);
-      addText(`  Grundsteuer: ${property.propertyTax || '-'} EUR`);
+      addText(`  Anzahl Einheiten: ${property.numberOfUnits || "-"}`);
+      addText(`  Vermietete Flaeche: ${property.rentedArea || "-"} m2`);
+      addText(`  Monatliche Miete: ${property.rent || "-"} EUR`);
+      addText(`  Nebenkosten: ${property.additionalCosts || "-"} EUR`);
+      addText(`  Zinsaufwendungen: ${property.interestExpense || "-"} EUR`);
+      addText(`  Notarkosten: ${property.notaryCosts || "-"} EUR`);
+      addText(`  Grundsteuer: ${property.propertyTax || "-"} EUR`);
       if (property.otherCostsDescription) {
         addText(`  Sonstige Kosten: ${property.otherCostsDescription}`);
-        addText(`  Sonstige Kosten Betrag: ${property.otherCostsAmount || '-'} EUR`);
+        addText(
+          `  Sonstige Kosten Betrag: ${property.otherCostsAmount || "-"} EUR`,
+        );
       }
     });
   }
 
-  addSection('BESONDERE UMSTAENDE');
+  addSection("BESONDERE UMSTAENDE");
   addText(`Behinderung vorhanden: ${formatBoolean(data.hasDisability)}`);
   addText(`Unterhaltszahlungen: ${formatBoolean(data.paysAlimony)}`);
 
-  addSection('BANKVERBINDUNG');
-  addText(`IBAN: ${data.iban || '-'}`);
+  addSection("BANKVERBINDUNG");
+  addText(`IBAN: ${data.iban || "-"}`);
   if (data.partnerCode) addText(`Partnercode: ${data.partnerCode}`);
 
-  addSection('BESTAETIGUNGEN');
+  addSection("BESTAETIGUNGEN");
   addText(`Richtigkeit bestaetigt: ${formatBoolean(data.confirmCorrectness)}`);
   addText(`AGB akzeptiert: ${formatBoolean(data.acceptTerms)}`);
   addText(`Datenschutz akzeptiert: ${formatBoolean(data.acceptPrivacy)}`);
   addText(`E-Mail bestaetigt: ${formatBoolean(data.confirmEmail)}`);
 
   yPosition -= 30;
-  addText('---', false, 8);
-  addText('Dieses Dokument wurde automatisch generiert.', false, 8);
-  addText('Clairmont Advisory - Steuer-Selbstauskunft', false, 8);
+  addText("---", false, 8);
+  addText("Dieses Dokument wurde automatisch generiert.", false, 8);
+  addText("Clairmont Advisory - Steuer-Selbstauskunft", false, 8);
 
   return await pdfDoc.save();
 }
 
-async function parseIncomingSubmission(req: Request, supabase: ReturnType<typeof createClient>): Promise<{ jsonData: any; storagePaths: StoragePaths }> {
-  const contentType = req.headers.get('content-type') || '';
+async function parseIncomingSubmission(
+  req: Request,
+  supabase: any,
+): Promise<ParsedSubmission> {
+  const contentType = req.headers.get("content-type") || "";
 
-  if (contentType.includes('application/json')) {
+  if (contentType.includes("application/json")) {
     const body = await req.json();
+    const submissionId = body.submissionId ?? body.formData?.submissionId;
+    if (!isUuid(submissionId)) {
+      throw new Error("Eine gültige submissionId ist erforderlich.");
+    }
+    const storagePaths = body.storagePaths ?? {};
     return {
       jsonData: body.formData ?? {},
-      storagePaths: body.storagePaths ?? {},
+      storagePaths,
+      submissionId,
+      expectedFileCount: countStoragePaths(storagePaths),
     };
   }
 
-  if (!contentType.includes('multipart/form-data')) {
-    throw new Error(`Unsupported content type: ${contentType || 'missing'}`);
+  if (!contentType.includes("multipart/form-data")) {
+    throw new Error(`Unsupported content type: ${contentType || "missing"}`);
   }
 
   const formData = await req.formData();
-  const rawData = formData.get('data');
-  const jsonData = typeof rawData === 'string' ? JSON.parse(rawData) : {};
+  const rawData = formData.get("data");
+  const jsonData = typeof rawData === "string" ? JSON.parse(rawData) : {};
+  const submissionId = jsonData.submissionId;
+  if (!isUuid(submissionId)) {
+    throw new Error("Eine gültige submissionId ist erforderlich.");
+  }
   const storagePaths: StoragePaths = {};
 
-  const uploadFileGroup = async (category: string, folder: string, files: File[]) => {
+  const uploadFileGroup = async (
+    category: string,
+    folder: string,
+    files: File[],
+  ) => {
     if (!files.length) return;
     storagePaths[category] = [];
 
-    for (const file of files) {
-      const filePath = `${folder}/${Date.now()}_${sanitizeFileName(file.name || 'upload')}`;
-      const { error } = await supabase.storage.from('prognose-documents').upload(filePath, file, {
-        contentType: file.type || 'application/octet-stream',
-        upsert: false,
-      });
+    for (const [index, file] of files.entries()) {
+      if (file.size <= 0) throw new Error(`${file.name || category} ist leer.`);
+      if (file.size > MAX_FILE_SIZE) {
+        throw new Error(`${file.name || category} überschreitet 10 MB.`);
+      }
+      const filePath = `${submissionId}/${folder}/${index}/${
+        sanitizeFileName(file.name || "upload")
+      }`;
+      const { error } = await supabase.storage.from("prognose-documents")
+        .upload(filePath, file, {
+          contentType: file.type || "application/octet-stream",
+          upsert: true,
+        });
 
       if (error) {
-        console.error(`Fallback upload error for ${category}:`, error);
-        continue;
+        throw new Error(
+          `Upload fehlgeschlagen (${file.name || category}): ${error.message}`,
+        );
       }
 
       storagePaths[category].push(filePath);
     }
   };
 
-  await uploadFileGroup('taxCertificate', 'tax-certificates', formData.getAll('taxCertificate').filter((value): value is File => value instanceof File));
-  await uploadFileGroup('idCard', 'id-cards', formData.getAll('idCard').filter((value): value is File => value instanceof File));
-  await uploadFileGroup('disabilityCertificate', 'disability-certificates', formData.getAll('disabilityCertificate').filter((value): value is File => value instanceof File));
-  await uploadFileGroup('otherDocuments', 'other-documents', formData.getAll('otherDocuments').filter((value): value is File => value instanceof File));
-  await uploadFileGroup('additionalDocuments', 'additional-documents', formData.getAll('additionalDocuments').filter((value): value is File => value instanceof File));
-  await uploadFileGroup('propertyDocuments', 'property-documents', formData.getAll('propertyDocuments').filter((value): value is File => value instanceof File));
-  await uploadFileGroup('cryptoDocuments', 'crypto-documents', formData.getAll('cryptoDocuments').filter((value): value is File => value instanceof File));
-  await uploadFileGroup('trainingCostDocuments', 'training-cost-documents', formData.getAll('trainingCostDocuments').filter((value): value is File => value instanceof File));
-  await uploadFileGroup('businessEquipmentDocuments', 'business-equipment-documents', formData.getAll('businessEquipmentDocuments').filter((value): value is File => value instanceof File));
-  await uploadFileGroup('businessDocuments', 'business-documents', formData.getAll('businessDocuments').filter((value): value is File => value instanceof File));
-  await uploadFileGroup('vehicleDocuments', 'vehicle-documents', formData.getAll('vehicleDocuments').filter((value): value is File => value instanceof File));
-  await uploadFileGroup('educationDocuments', 'education-documents', formData.getAll('educationDocuments').filter((value): value is File => value instanceof File));
-  await uploadFileGroup('spouseIncomeDocuments', 'spouse-income-documents', formData.getAll('spouseIncomeDocuments').filter((value): value is File => value instanceof File));
-  await uploadFileGroup('spouseParentalBenefitDocuments', 'spouse-parental-benefit-documents', formData.getAll('spouseParentalBenefitDocuments').filter((value): value is File => value instanceof File));
+  try {
+    await uploadFileGroup(
+      "taxCertificate",
+      "tax-certificates",
+      formData.getAll("taxCertificate").filter((value): value is File =>
+        value instanceof File
+      ),
+    );
+    await uploadFileGroup(
+      "idCard",
+      "id-cards",
+      formData.getAll("idCard").filter((value): value is File =>
+        value instanceof File
+      ),
+    );
+    await uploadFileGroup(
+      "disabilityCertificate",
+      "disability-certificates",
+      formData.getAll("disabilityCertificate").filter((value): value is File =>
+        value instanceof File
+      ),
+    );
+    await uploadFileGroup(
+      "otherDocuments",
+      "other-documents",
+      formData.getAll("otherDocuments").filter((value): value is File =>
+        value instanceof File
+      ),
+    );
+    await uploadFileGroup(
+      "additionalDocuments",
+      "additional-documents",
+      formData.getAll("additionalDocuments").filter((value): value is File =>
+        value instanceof File
+      ),
+    );
+    await uploadFileGroup(
+      "propertyDocuments",
+      "property-documents",
+      formData.getAll("propertyDocuments").filter((value): value is File =>
+        value instanceof File
+      ),
+    );
+    await uploadFileGroup(
+      "cryptoDocuments",
+      "crypto-documents",
+      formData.getAll("cryptoDocuments").filter((value): value is File =>
+        value instanceof File
+      ),
+    );
+    await uploadFileGroup(
+      "trainingCostDocuments",
+      "training-cost-documents",
+      formData.getAll("trainingCostDocuments").filter((value): value is File =>
+        value instanceof File
+      ),
+    );
+    await uploadFileGroup(
+      "businessEquipmentDocuments",
+      "business-equipment-documents",
+      formData.getAll("businessEquipmentDocuments").filter((
+        value,
+      ): value is File => value instanceof File),
+    );
+    await uploadFileGroup(
+      "businessDocuments",
+      "business-documents",
+      formData.getAll("businessDocuments").filter((value): value is File =>
+        value instanceof File
+      ),
+    );
+    await uploadFileGroup(
+      "vehicleDocuments",
+      "vehicle-documents",
+      formData.getAll("vehicleDocuments").filter((value): value is File =>
+        value instanceof File
+      ),
+    );
+    await uploadFileGroup(
+      "educationDocuments",
+      "education-documents",
+      formData.getAll("educationDocuments").filter((value): value is File =>
+        value instanceof File
+      ),
+    );
+    await uploadFileGroup(
+      "spouseIncomeDocuments",
+      "spouse-income-documents",
+      formData.getAll("spouseIncomeDocuments").filter((value): value is File =>
+        value instanceof File
+      ),
+    );
+    await uploadFileGroup(
+      "spouseParentalBenefitDocuments",
+      "spouse-parental-benefit-documents",
+      formData.getAll("spouseParentalBenefitDocuments").filter((
+        value,
+      ): value is File => value instanceof File),
+    );
+    await uploadFileGroup(
+      "alimonyProof",
+      "alimony-proof",
+      formData.getAll("alimonyProof").filter((value): value is File =>
+        value instanceof File
+      ),
+    );
 
-  for (const [key, value] of formData.entries()) {
-    if (!key.startsWith('taxCertificateYear_') || !(value instanceof File)) continue;
-    const year = key.replace('taxCertificateYear_', '');
-    const category = `taxCertificateYear_${year}`;
-    if (!storagePaths[category]) storagePaths[category] = [];
+    for (const [key, value] of formData.entries()) {
+      if (!key.startsWith("taxCertificateYear_") || !(value instanceof File)) {
+        continue;
+      }
+      const year = key.replace("taxCertificateYear_", "");
+      const category = `taxCertificateYear_${year}`;
+      if (!storagePaths[category]) storagePaths[category] = [];
 
-    const filePath = `tax-certificates/${year}/${Date.now()}_${sanitizeFileName(value.name || 'upload')}`;
-    const { error } = await supabase.storage.from('prognose-documents').upload(filePath, value, {
-      contentType: value.type || 'application/octet-stream',
-      upsert: false,
-    });
+      if (value.size <= 0) {
+        throw new Error(`${value.name || category} ist leer.`);
+      }
+      if (value.size > MAX_FILE_SIZE) {
+        throw new Error(`${value.name || category} überschreitet 10 MB.`);
+      }
+      const index = storagePaths[category].length;
+      const filePath = `${submissionId}/tax-certificates/${year}/${index}/${
+        sanitizeFileName(value.name || "upload")
+      }`;
+      const { error } = await supabase.storage.from("prognose-documents")
+        .upload(filePath, value, {
+          contentType: value.type || "application/octet-stream",
+          upsert: true,
+        });
 
-    if (error) {
-      console.error(`Fallback upload error for ${category}:`, error);
-      continue;
+      if (error) {
+        throw new Error(
+          `Upload fehlgeschlagen (${value.name || category}): ${error.message}`,
+        );
+      }
+
+      storagePaths[category].push(filePath);
     }
 
-    storagePaths[category].push(filePath);
+    validateSubmission(jsonData, storagePaths);
+  } catch (error) {
+    const uploadedPaths = Object.values(storagePaths).flat();
+    if (uploadedPaths.length) {
+      const { error: cleanupError } = await supabase.storage.from(
+        "prognose-documents",
+      ).remove(uploadedPaths);
+      if (cleanupError) {
+        console.error("Failed to clean rejected source uploads:", cleanupError);
+      }
+    }
+    throw error;
   }
 
-  return { jsonData, storagePaths };
+  return {
+    jsonData,
+    storagePaths,
+    submissionId,
+    expectedFileCount: countStoragePaths(storagePaths),
+  };
 }
 
-async function buildSignedDocumentUrls(supabase: ReturnType<typeof createClient>, storagePaths: StoragePaths) {
+async function buildSignedDocumentUrls(
+  supabase: any,
+  storagePaths: StoragePaths,
+) {
   const documentUrls: Record<string, string[]> = {};
 
   for (const [category, paths] of Object.entries(storagePaths)) {
@@ -316,9 +576,15 @@ async function buildSignedDocumentUrls(supabase: ReturnType<typeof createClient>
     documentUrls[category] = [];
 
     for (const filePath of paths) {
-      if (typeof filePath !== 'string') continue;
-      const { data } = await supabase.storage.from('prognose-documents').createSignedUrl(filePath, 31536000);
-      if (data?.signedUrl) documentUrls[category].push(data.signedUrl);
+      if (typeof filePath !== "string") continue;
+      const { data, error } = await supabase.storage.from("prognose-documents")
+        .createSignedUrl(filePath, 60 * 60);
+      if (error || !data?.signedUrl) {
+        throw new Error(
+          `Dokument-Link konnte nicht erstellt werden: ${filePath}`,
+        );
+      }
+      documentUrls[category].push(data.signedUrl);
     }
   }
 
@@ -338,157 +604,198 @@ function buildEmailFormData(jsonData: any, storagePaths: StoragePaths) {
 
   const taxCertificatesByYear: Record<string, string[]> = {};
   for (const [key, paths] of Object.entries(storagePaths)) {
-    if (!key.startsWith('taxCertificateYear_')) continue;
-    taxCertificatesByYear[key.replace('taxCertificateYear_', '')] = paths;
+    if (!key.startsWith("taxCertificateYear_")) continue;
+    taxCertificatesByYear[key.replace("taxCertificateYear_", "")] = paths;
   }
   emailData.taxCertificatesByYear = taxCertificatesByYear;
   emailData.propertyDocuments = storagePaths.propertyDocuments ?? [];
   emailData.additionalDocuments = storagePaths.additionalDocuments ?? [];
   emailData.cryptoDocuments = storagePaths.cryptoDocuments ?? [];
   emailData.trainingCostDocuments = storagePaths.trainingCostDocuments ?? [];
-  emailData.businessEquipmentDocuments = storagePaths.businessEquipmentDocuments ?? [];
+  emailData.businessEquipmentDocuments =
+    storagePaths.businessEquipmentDocuments ?? [];
   emailData.businessDocuments = storagePaths.businessDocuments ?? [];
   emailData.vehicleDocuments = storagePaths.vehicleDocuments ?? [];
   emailData.educationDocuments = storagePaths.educationDocuments ?? [];
   emailData.spouseIncomeDocuments = storagePaths.spouseIncomeDocuments ?? [];
-  emailData.spouseParentalBenefitDocuments = storagePaths.spouseParentalBenefitDocuments ?? [];
+  emailData.spouseParentalBenefitDocuments =
+    storagePaths.spouseParentalBenefitDocuments ?? [];
+  emailData.alimonyProof = storagePaths.alimonyProof ?? [];
 
   return emailData;
 }
 
-async function sendInternalEmail(jsonData: any, storagePaths: StoragePaths) {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+async function sendInternalEmail(
+  jsonData: any,
+  storagePaths: StoragePaths,
+  submissionId: string,
+  expectedFileCount: number,
+  testMode: boolean,
+) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
   if (!supabaseUrl || !serviceRoleKey) {
-    console.error('Cannot send internal email: missing Supabase URL or service role key');
-    return;
+    throw new Error("E-Mail-Konfiguration fehlt.");
   }
 
-  const emailResponse = await fetch(`${supabaseUrl}/functions/v1/send-prognose-email`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${serviceRoleKey}`,
+  const emailResponse = await fetch(
+    `${supabaseUrl}/functions/v1/send-prognose-email`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${serviceRoleKey}`,
+      },
+      body: JSON.stringify({
+        formData: buildEmailFormData(jsonData, storagePaths),
+        userEmail: jsonData.email || "no-email@example.com",
+        submissionId,
+        expectedFileCount,
+        testMode,
+      }),
     },
-    body: JSON.stringify({
-      formData: buildEmailFormData(jsonData, storagePaths),
-      userEmail: jsonData.email || 'no-email@example.com',
-    }),
-  });
+  );
 
   if (!emailResponse.ok) {
-    console.error(`Internal email failed: ${emailResponse.status}`, await emailResponse.text());
-    return;
+    throw new Error(
+      `Interne E-Mail fehlgeschlagen (${emailResponse.status}): ${await emailResponse
+        .text()}`,
+    );
   }
 
-  console.log('Internal email sent successfully');
+  const body = await emailResponse.json();
+  if (!body?.success) {
+    throw new Error("E-Mail-Dienst hat den Versand nicht bestätigt.");
+  }
+  console.log("Internal email sent successfully");
 }
 
-function buildWebhookPayload(jsonData: any, documentUrls: Record<string, string[]>) {
+function buildWebhookPayload(
+  jsonData: any,
+  documentUrls: Record<string, string[]>,
+) {
   const webhookPayload: Record<string, any> = {
-    firstName: jsonData.firstName || '',
-    lastName: jsonData.lastName || '',
-    birthDate: jsonData.birthDate || '',
-    gender: jsonData.gender || '',
-    nationality: jsonData.nationality || '',
-    email: jsonData.email || '',
-    phone: jsonData.phone || '',
+    firstName: jsonData.firstName || "",
+    lastName: jsonData.lastName || "",
+    birthDate: jsonData.birthDate || "",
+    gender: jsonData.gender || "",
+    nationality: jsonData.nationality || "",
+    email: jsonData.email || "",
+    phone: jsonData.phone || "",
     grossSalaryOver2500: jsonData.grossSalaryOver2500 ?? null,
     wageTaxOver2000: jsonData.wageTaxOver2000 ?? null,
-    federalState: jsonData.federalState || '',
-    qualificationCity: jsonData.qualificationCity || '',
-    address: jsonData.address || '',
+    federalState: jsonData.federalState || "",
+    qualificationCity: jsonData.qualificationCity || "",
+    address: jsonData.address || "",
     differentAddress: jsonData.differentAddress || false,
-    alternativeAddress: jsonData.alternativeAddress || '',
-    personalInfoStreet: jsonData.personalInfo?.street || '',
-    personalInfoZipCode: jsonData.personalInfo?.zipCode || '',
-    personalInfoCity: jsonData.personalInfo?.city || '',
-    maritalStatus: jsonData.maritalStatus || '',
-    marriedSince: jsonData.marriedSince || '',
-    spouseName: jsonData.spouseName || '',
-    spouseBirthDate: jsonData.spouseBirthDate || '',
-    spouseOccupation: jsonData.spouseOccupation || '',
+    alternativeAddress: jsonData.alternativeAddress || "",
+    personalInfoStreet: jsonData.personalInfo?.street || "",
+    personalInfoZipCode: jsonData.personalInfo?.zipCode || "",
+    personalInfoCity: jsonData.personalInfo?.city || "",
+    maritalStatus: jsonData.maritalStatus || "",
+    marriedSince: jsonData.marriedSince || "",
+    spouseName: jsonData.spouseName || "",
+    spouseBirthDate: jsonData.spouseBirthDate || "",
+    spouseOccupation: jsonData.spouseOccupation || "",
     spouseEmployed: jsonData.spouseEmployed || false,
-    spouseReceivedParentalBenefit: jsonData.spouseReceivedParentalBenefit ?? null,
-    divorceDate: jsonData.divorceDate || '',
+    spouseReceivedParentalBenefit: jsonData.spouseReceivedParentalBenefit ??
+      null,
+    divorceDate: jsonData.divorceDate || "",
     hasChildren: jsonData.hasChildren || false,
     childrenCount: jsonData.children?.length || 0,
-    occupation: jsonData.occupation || '',
-    homeOfficeDays: jsonData.homeOfficeDays || '',
-    workplaceStreet: jsonData.workplace?.street || '',
-    workplaceZipCode: jsonData.workplace?.zipCode || '',
-    workplaceCity: jsonData.workplace?.city || '',
+    occupation: jsonData.occupation || "",
+    homeOfficeDays: jsonData.homeOfficeDays || "",
+    workplaceStreet: jsonData.workplace?.street || "",
+    workplaceZipCode: jsonData.workplace?.zipCode || "",
+    workplaceCity: jsonData.workplace?.city || "",
     workPeriodsByYear: jsonData.workPeriodsByYear || {},
-    trainingCosts: jsonData.trainingCosts || '',
-    businessEquipment: jsonData.businessEquipment || '',
+    trainingCosts: jsonData.trainingCosts || "",
+    businessEquipment: jsonData.businessEquipment || "",
     hasBusiness: jsonData.hasBusiness || false,
-    businessType: jsonData.businessType || '',
+    businessType: jsonData.businessType || "",
     hasCryptoIncome: jsonData.hasCryptoIncome || false,
     hasVehicle: jsonData.hasVehicle ?? null,
     educationCompleted: jsonData.educationCompleted ?? null,
     hasSocialBenefits: jsonData.hasSocialBenefits || false,
-    socialBenefitDetails: jsonData.socialBenefitDetails || '',
-    socialBenefitAmount: jsonData.socialBenefitAmount || '',
+    socialBenefitDetails: jsonData.socialBenefitDetails || "",
+    socialBenefitAmount: jsonData.socialBenefitAmount || "",
     taxYears: jsonData.taxYears || [],
     isUnionMember: jsonData.isUnionMember || false,
-    unionName: jsonData.unionName || '',
-    unionFee: jsonData.unionFee || '',
+    unionName: jsonData.unionName || "",
+    unionFee: jsonData.unionFee || "",
     hasOtherMemberships: jsonData.hasOtherMemberships || false,
-    otherMembershipsDetails: jsonData.otherMembershipsDetails || '',
+    otherMembershipsDetails: jsonData.otherMembershipsDetails || "",
     insurancesCount: jsonData.insurances?.length || 0,
     hasProperty: jsonData.hasProperty || false,
     propertiesCount: jsonData.properties?.length || 0,
     hasDisability: jsonData.hasDisability || false,
     paysAlimony: jsonData.paysAlimony || false,
-    iban: jsonData.iban || '',
-    partnerCode: jsonData.partnerCode || '',
+    iban: jsonData.iban || "",
+    partnerCode: jsonData.partnerCode || "",
     confirmCorrectness: jsonData.confirmCorrectness || false,
     acceptTerms: jsonData.acceptTerms || false,
     acceptPrivacy: jsonData.acceptPrivacy || false,
     confirmEmail: jsonData.confirmEmail || false,
-    ...Object.fromEntries(Object.entries(documentUrls).map(([key, value]) => [`${key}Urls`, value])),
+    ...Object.fromEntries(
+      Object.entries(documentUrls).map(([key, value]) => [`${key}Urls`, value]),
+    ),
   };
 
   if (jsonData.children?.length > 0) {
     jsonData.children.forEach((child: any, index: number) => {
-      webhookPayload[`child_${index + 1}_name`] = child.name || '';
-      webhookPayload[`child_${index + 1}_birthDate`] = child.birthDate || '';
-      webhookPayload[`child_${index + 1}_childBenefitPeriod`] = child.childBenefitPeriod || '';
+      webhookPayload[`child_${index + 1}_name`] = child.name || "";
+      webhookPayload[`child_${index + 1}_birthDate`] = child.birthDate || "";
+      webhookPayload[`child_${index + 1}_childBenefitPeriod`] =
+        child.childBenefitPeriod || "";
     });
   }
 
   if (jsonData.insurances?.length > 0) {
     jsonData.insurances.forEach((insurance: any, index: number) => {
-      webhookPayload[`insurance_${index + 1}_type`] = insurance.type || '';
-      webhookPayload[`insurance_${index + 1}_provider`] = insurance.provider || '';
-      webhookPayload[`insurance_${index + 1}_yearlyContribution`] = insurance.yearlyContribution || '';
+      webhookPayload[`insurance_${index + 1}_type`] = insurance.type || "";
+      webhookPayload[`insurance_${index + 1}_provider`] = insurance.provider ||
+        "";
+      webhookPayload[`insurance_${index + 1}_yearlyContribution`] =
+        insurance.yearlyContribution || "";
     });
   }
 
   if (jsonData.properties?.length > 0) {
     jsonData.properties.forEach((property: any, index: number) => {
-      webhookPayload[`property_${index + 1}_address`] = property.address || '';
-      webhookPayload[`property_${index + 1}_usageType`] = property.usageType || '';
-      webhookPayload[`property_${index + 1}_purchasePrice`] = property.purchasePrice || '';
-      webhookPayload[`property_${index + 1}_purchaseDate`] = property.purchaseDate || '';
-      webhookPayload[`property_${index + 1}_completionDate`] = property.completionDate || '';
-      webhookPayload[`property_${index + 1}_numberOfUnits`] = property.numberOfUnits || '';
-      webhookPayload[`property_${index + 1}_rentedArea`] = property.rentedArea || '';
-      webhookPayload[`property_${index + 1}_rent`] = property.rent || '';
-      webhookPayload[`property_${index + 1}_additionalCosts`] = property.additionalCosts || '';
-      webhookPayload[`property_${index + 1}_interestExpense`] = property.interestExpense || '';
-      webhookPayload[`property_${index + 1}_notaryCosts`] = property.notaryCosts || '';
-      webhookPayload[`property_${index + 1}_propertyTax`] = property.propertyTax || '';
-      webhookPayload[`property_${index + 1}_otherCostsDescription`] = property.otherCostsDescription || '';
-      webhookPayload[`property_${index + 1}_otherCostsAmount`] = property.otherCostsAmount || '';
+      webhookPayload[`property_${index + 1}_address`] = property.address || "";
+      webhookPayload[`property_${index + 1}_usageType`] = property.usageType ||
+        "";
+      webhookPayload[`property_${index + 1}_purchasePrice`] =
+        property.purchasePrice || "";
+      webhookPayload[`property_${index + 1}_purchaseDate`] =
+        property.purchaseDate || "";
+      webhookPayload[`property_${index + 1}_completionDate`] =
+        property.completionDate || "";
+      webhookPayload[`property_${index + 1}_numberOfUnits`] =
+        property.numberOfUnits || "";
+      webhookPayload[`property_${index + 1}_rentedArea`] =
+        property.rentedArea || "";
+      webhookPayload[`property_${index + 1}_rent`] = property.rent || "";
+      webhookPayload[`property_${index + 1}_additionalCosts`] =
+        property.additionalCosts || "";
+      webhookPayload[`property_${index + 1}_interestExpense`] =
+        property.interestExpense || "";
+      webhookPayload[`property_${index + 1}_notaryCosts`] =
+        property.notaryCosts || "";
+      webhookPayload[`property_${index + 1}_propertyTax`] =
+        property.propertyTax || "";
+      webhookPayload[`property_${index + 1}_otherCostsDescription`] =
+        property.otherCostsDescription || "";
+      webhookPayload[`property_${index + 1}_otherCostsAmount`] =
+        property.otherCostsAmount || "";
     });
   }
 
   if (jsonData.cryptoUploads?.length > 0) {
     jsonData.cryptoUploads.forEach((upload: any, index: number) => {
-      webhookPayload[`crypto_${index + 1}_exchange`] = upload.exchange || '';
-      webhookPayload[`crypto_${index + 1}_date`] = upload.date || '';
+      webhookPayload[`crypto_${index + 1}_exchange`] = upload.exchange || "";
+      webhookPayload[`crypto_${index + 1}_date`] = upload.date || "";
     });
   }
 
@@ -496,87 +803,149 @@ function buildWebhookPayload(jsonData: any, documentUrls: Record<string, string[
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const incomingAuth = req.headers.get("authorization");
     const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    const { jsonData, storagePaths } = await parseIncomingSubmission(req, supabase);
-    console.log('Processing prognose submission (compatible mode)...');
+    const { jsonData, storagePaths, submissionId, expectedFileCount } =
+      await parseIncomingSubmission(req, supabase);
+    const testMode = jsonData.testMode === true &&
+      incomingAuth ===
+        `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""}`;
+    validateSubmission(jsonData, storagePaths);
+    if (expectedFileCount < 1) {
+      throw new Error("Es wurden keine Dokumente empfangen.");
+    }
+    console.log(
+      `Processing prognose submission ${submissionId} with ${expectedFileCount} documents...`,
+    );
 
     const documentUrls = await buildSignedDocumentUrls(supabase, storagePaths);
-    const webhookPayload = buildWebhookPayload(jsonData, documentUrls);
-
-    console.log('Sending to Make.com webhook...');
-    const webhookResponse = await fetch(WEBHOOK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(webhookPayload),
-    });
-
-    if (!webhookResponse.ok) {
-      console.error(`Make.com webhook failed: ${webhookResponse.status}`);
-    } else {
-      console.log('Make.com webhook sent successfully');
+    if (countStoragePaths(documentUrls) !== expectedFileCount) {
+      throw new Error("Nicht alle Dokument-Links konnten erzeugt werden.");
     }
 
     const pdfBytes = await generatePDF(jsonData);
     const pdfBase64 = arrayBufferToBase64(pdfBytes);
-
-    console.log('Sending to additional webhook...');
-    try {
-      const additionalPayload = {
-        formType: 'steuerprognose',
-        submittedAt: new Date().toISOString(),
-        formData: jsonData,
-        pdfContent: {
-          name: sanitizeFileName(`Steuer-Selbstauskunft_${jsonData.firstName || 'Unknown'}_${jsonData.lastName || 'User'}.pdf`),
-          type: 'application/pdf',
-          data: pdfBase64,
-        },
-        files: [],
-        documentUrls,
-      };
-
-      const additionalWebhookResponse = await fetch(ADDITIONAL_WEBHOOK_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${ADDITIONAL_WEBHOOK_TOKEN}`,
-        },
-        body: JSON.stringify(additionalPayload),
-      });
-
-      if (!additionalWebhookResponse.ok) {
-        const errorText = await additionalWebhookResponse.text();
-        console.error(`Additional webhook failed: ${additionalWebhookResponse.status}`, errorText);
-      } else {
-        console.log('Additional webhook sent successfully');
-      }
-    } catch (additionalError) {
-      console.error('Error sending to additional webhook:', additionalError);
+    const webhookSecret = Deno.env.get("FORM_WEBHOOK_SECRET");
+    if (!webhookSecret) {
+      throw new Error("Dashboard-Webhook-Konfiguration fehlt.");
     }
 
-    try {
-      await sendInternalEmail(jsonData, storagePaths);
-    } catch (emailError) {
-      console.error('Error sending internal email:', emailError);
-    }
+    const additionalPayload = {
+      submissionId,
+      expectedFileCount,
+      formType: "steuerprognose",
+      submittedAt: new Date().toISOString(),
+      formData: jsonData,
+      pdfContent: {
+        name: sanitizeFileName(
+          `Steuer-Selbstauskunft_${jsonData.firstName || "Unknown"}_${
+            jsonData.lastName || "User"
+          }.pdf`,
+        ),
+        type: "application/pdf",
+        data: pdfBase64,
+      },
+      documentUrls,
+    };
 
-    return new Response(JSON.stringify({ success: true, message: 'Data sent to webhooks successfully' }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    const additionalWebhookResponse = await fetch(ADDITIONAL_WEBHOOK_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${webhookSecret}`,
+      },
+      body: JSON.stringify(additionalPayload),
     });
+
+    const dashboardResult = await additionalWebhookResponse.json().catch(
+      () => ({}),
+    );
+    if (!additionalWebhookResponse.ok || !dashboardResult?.success) {
+      throw new Error(
+        `Dashboard-Übertragung fehlgeschlagen (${additionalWebhookResponse.status}): ${
+          JSON.stringify(dashboardResult)
+        }`,
+      );
+    }
+    if (
+      dashboardResult.dashboard_file_count !== expectedFileCount + 1 ||
+      dashboardResult.expected_dashboard_file_count !== expectedFileCount + 1
+    ) {
+      throw new Error(
+        "Dashboard hat nicht alle erwarteten Dokumente bestätigt.",
+      );
+    }
+
+    let emailSent = dashboardResult.email_sent === true;
+    if (!emailSent) {
+      await sendInternalEmail(
+        jsonData,
+        storagePaths,
+        submissionId,
+        expectedFileCount,
+        testMode,
+      );
+      const { error: emailMarkerError } = await supabase
+        .from("folders")
+        .update({
+          submission_email_sent_at: new Date().toISOString(),
+          submission_error: null,
+        })
+        .eq("id", dashboardResult.folder_id)
+        .eq("source_submission_id", submissionId);
+      if (emailMarkerError) {
+        throw new Error(
+          `E-Mail-Bestätigung konnte nicht gespeichert werden: ${emailMarkerError.message}`,
+        );
+      }
+      emailSent = true;
+    }
+
+    // Legacy Make automation is non-critical. Dashboard and email are already
+    // durably confirmed before this compatibility notification runs.
+    try {
+      const webhookResponse = await fetch(WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildWebhookPayload(jsonData, documentUrls)),
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!webhookResponse.ok) {
+        console.error(`Make.com webhook failed: ${webhookResponse.status}`);
+      }
+    } catch (makeError) {
+      console.error("Make.com compatibility webhook failed:", makeError);
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        submission_id: submissionId,
+        folder_id: dashboardResult.folder_id,
+        dashboard_file_count: dashboardResult.dashboard_file_count,
+        expected_dashboard_file_count:
+          dashboardResult.expected_dashboard_file_count,
+        email_sent: emailSent,
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      },
+    );
   } catch (error: any) {
-    console.error('Error in submit-prognose-webhook:', error);
+    console.error("Error in submit-prognose-webhook:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
 };

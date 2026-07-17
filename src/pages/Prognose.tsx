@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "motion/react";
@@ -162,12 +162,43 @@ export interface FormData {
   acceptPrivacy: boolean;
   partnerCode?: string;
   confirmEmail?: string;
+  noTaxCertificatesConfirmed?: boolean;
 }
+
+const stripFilesForPersistence = (data: FormData): FormData => {
+  const {
+    spouseTaxDocument: _spouseTaxDocument,
+    spouseIncomeDocuments: _spouseIncomeDocuments,
+    spouseParentalBenefitDocuments: _spouseParentalBenefitDocuments,
+    trainingCostDocuments: _trainingCostDocuments,
+    businessEquipmentDocuments: _businessEquipmentDocuments,
+    businessDocuments: _businessDocuments,
+    cryptoDocuments: _cryptoDocuments,
+    propertyDocuments: _propertyDocuments,
+    vehicleDocuments: _vehicleDocuments,
+    educationDocuments: _educationDocuments,
+    disabilityProof: _disabilityProof,
+    alimonyProof: _alimonyProof,
+    taxCertificatesByYear: _taxCertificatesByYear,
+    additionalDocuments: _additionalDocuments,
+    documents: _documents,
+    ...serializable
+  } = data;
+
+  return serializable as FormData;
+};
 
 const Prognose = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [currentStep, setCurrentStep] = useState(0);
+  const [submissionId] = useState(() => {
+    const existing = localStorage.getItem("prognoseSubmissionId");
+    if (existing) return existing;
+    const created = crypto.randomUUID();
+    localStorage.setItem("prognoseSubmissionId", created);
+    return created;
+  });
   const hasRefParam = !!searchParams.get("ref");
   const [formData, setFormData] = useState<FormData>({
     grossSalaryOver2500: null,
@@ -214,12 +245,11 @@ const Prognose = () => {
   // Load saved form data from localStorage
   useEffect(() => {
     const savedData = localStorage.getItem("prognoseFormData");
-    const savedStep = localStorage.getItem("prognoseCurrentStep");
     if (savedData) {
-      setFormData(JSON.parse(savedData));
-    }
-    if (savedStep) {
-      setCurrentStep(parseInt(savedStep));
+      setFormData((current) => ({ ...current, ...JSON.parse(savedData) }));
+      // Browser File objects cannot be restored from localStorage. Restart the
+      // guided flow so required uploads are selected again and revalidated.
+      setCurrentStep(1);
     }
   }, []);
 
@@ -231,11 +261,10 @@ const Prognose = () => {
     }
   }, [searchParams]);
 
-  // Save form data to localStorage
-  const saveProgress = () => {
-    localStorage.setItem("prognoseFormData", JSON.stringify(formData));
+  useEffect(() => {
+    localStorage.setItem("prognoseFormData", JSON.stringify(stripFilesForPersistence(formData)));
     localStorage.setItem("prognoseCurrentStep", currentStep.toString());
-  };
+  }, [formData, currentStep]);
 
   const updateFormData = (data: Partial<FormData>) => {
     setFormData((prev) => ({ ...prev, ...data }));
@@ -243,7 +272,6 @@ const Prognose = () => {
 
   const nextStep = () => {
     setCurrentStep((prev) => prev + 1);
-    saveProgress();
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -260,13 +288,14 @@ const Prognose = () => {
   };
 
   const handleSubmit = () => {
-    // Handle final form submission
-    console.log("Form submitted:", formData);
-    // Clear localStorage after submission
-    localStorage.removeItem("prognoseFormData");
-    localStorage.removeItem("prognoseCurrentStep");
     nextStep();
   };
+
+  const handleSubmissionSuccess = useCallback(() => {
+    localStorage.removeItem("prognoseFormData");
+    localStorage.removeItem("prognoseCurrentStep");
+    localStorage.removeItem("prognoseSubmissionId");
+  }, []);
 
   const hasTaxYears = formData.taxYears && formData.taxYears.length > 0;
   const goToStepById = (stepId: string) => {
@@ -292,8 +321,8 @@ const Prognose = () => {
     { id: "additional-documents", node: <AdditionalDocumentsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} /> },
     { id: "documents", node: <DocumentUploadStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} /> },
     { id: "bank", node: <BankDetailsStep data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} hidePartnerCode={hasRefParam} /> },
-    { id: "verification", node: <VerificationStep data={formData} onSubmit={handleSubmit} onBack={prevStep} onGoToStep={goToStepById} /> },
-    { id: "success", node: <SuccessStep formData={formData} /> },
+    { id: "verification", node: <VerificationStep data={formData} updateData={updateFormData} onSubmit={handleSubmit} onBack={prevStep} onGoToStep={goToStepById} /> },
+    { id: "success", node: <SuccessStep formData={formData} submissionId={submissionId} onSuccess={handleSubmissionSuccess} /> },
   ];
 
   const totalSteps = steps.length - 1;

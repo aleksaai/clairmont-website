@@ -43,9 +43,9 @@ const DocumentUploadStep = ({ data, updateData, onNext, onBack }: DocumentUpload
     if (files.length === 0) return;
     
     // Validate file size (max 10MB per file)
-    const invalidFiles = files.filter(f => f.size > 10 * 1024 * 1024);
+    const invalidFiles = files.filter(f => f.size === 0 || f.size > 10 * 1024 * 1024);
     if (invalidFiles.length > 0) {
-      toast.error("Einige Dateien sind größer als 10MB");
+      toast.error("Leere Dateien oder Dateien über 10MB können nicht hochgeladen werden");
       return;
     }
     
@@ -123,7 +123,6 @@ const DocumentUploadStep = ({ data, updateData, onNext, onBack }: DocumentUpload
             multiple
             onChange={(e) => handleFileInput(e, field)}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            accept=".pdf,.jpg,.jpeg,.png,.heic,.heif,.webp,.gif,.bmp,.tiff,.tif,.doc,.docx,.xls,.xlsx"
           />
           
           <div className="text-center space-y-2">
@@ -132,7 +131,7 @@ const DocumentUploadStep = ({ data, updateData, onNext, onBack }: DocumentUpload
               Dateien hierher ziehen oder <span className="text-[hsl(var(--primary))] underline">durchsuchen</span>
             </p>
             <p className="text-xs text-[hsl(var(--glass-text))]/60">
-              PDF, Bilder (JPG, PNG, HEIC, WEBP) oder Office-Dokumente (max. 10MB)
+              Beliebiges Dokumentformat, maximal 10MB pro Datei
             </p>
           </div>
         </div>

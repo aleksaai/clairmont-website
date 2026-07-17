@@ -23,13 +23,16 @@ type FileField =
   | "spouseParentalBenefitDocuments";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
-const ACCEPTED_FILES = ".pdf,.jpg,.jpeg,.png,.heic,.heif,.webp,.gif,.bmp,.tiff,.tif,.doc,.docx,.xls,.xlsx";
 
 const SupportingDocumentsStep = ({ data, updateData, onNext, onBack }: SupportingDocumentsStepProps) => {
   const [dragActive, setDragActive] = useState<FileField | null>(null);
 
   const appendFiles = (field: FileField, files: FileList | File[]) => {
     const validFiles = Array.from(files).filter((file) => {
+      if (file.size === 0) {
+        alert(`${file.name} ist leer und wird übersprungen.`);
+        return false;
+      }
       if (file.size > MAX_FILE_SIZE) {
         alert(`${file.name} ist größer als 10MB und wird übersprungen.`);
         return false;
@@ -74,13 +77,12 @@ const SupportingDocumentsStep = ({ data, updateData, onNext, onBack }: Supportin
           <input
             type="file"
             multiple
-            accept={ACCEPTED_FILES}
             onChange={(event) => event.target.files && appendFiles(field, event.target.files)}
             className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
           />
           <Upload className="mx-auto mb-3 h-9 w-9 text-[hsl(var(--glass-text))]/55" />
           <p className="text-sm text-[hsl(var(--glass-text))]/85">Dateien hierher ziehen oder klicken</p>
-          <p className="mt-1 text-xs text-[hsl(var(--glass-text))]/55">PDF, Bilder oder Office-Dokumente bis 10MB</p>
+          <p className="mt-1 text-xs text-[hsl(var(--glass-text))]/55">Beliebiges Dokumentformat bis 10MB</p>
         </div>
 
         {files.length > 0 && (

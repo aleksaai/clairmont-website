@@ -16,7 +16,13 @@ const CryptoUploadStep = ({ data, updateData, onNext, onBack }: CryptoUploadStep
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
+      const newFiles = Array.from(e.target.files).filter((file) => {
+        if (file.size === 0 || file.size > 10 * 1024 * 1024) {
+          alert(`${file.name} ist leer oder größer als 10MB und wird übersprungen.`);
+          return false;
+        }
+        return true;
+      });
       const updatedFiles = [...files, ...newFiles];
       setFiles(updatedFiles);
       updateData({ cryptoDocuments: updatedFiles });
@@ -59,7 +65,6 @@ const CryptoUploadStep = ({ data, updateData, onNext, onBack }: CryptoUploadStep
               type="file"
               id="crypto-file-upload"
               multiple
-              accept=".pdf,.jpg,.jpeg,.png,.heic,.heif,.webp,.gif,.bmp,.tiff,.tif,.doc,.docx,.xls,.xlsx"
               onChange={handleFileChange}
               className="hidden"
             />

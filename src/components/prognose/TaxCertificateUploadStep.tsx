@@ -65,6 +65,10 @@ const TaxCertificateUploadStep = ({ data, updateData, onNext, onBack }: TaxCerti
   const handleFiles = (files: FileList, year: string) => {
     const fileArray = Array.from(files);
     const validFiles = fileArray.filter(file => {
+      if (file.size === 0) {
+        alert(`${file.name} ist leer und wird übersprungen.`);
+        return false;
+      }
       if (file.size > 10 * 1024 * 1024) {
         alert(`${file.name} ist größer als 10MB und wird übersprungen.`);
         return false;
@@ -204,12 +208,11 @@ const TaxCertificateUploadStep = ({ data, updateData, onNext, onBack }: TaxCerti
                   Dateien hierher ziehen oder klicken zum Auswählen
                 </p>
                 <p className="text-sm text-[hsl(var(--glass-text))]/60 mb-3">
-                  PDF, Bilder (JPG, PNG, HEIC, WEBP) oder Office-Dokumente (max. 10MB)
+                  Beliebiges Dokumentformat, maximal 10MB pro Datei
                 </p>
                 <input
                   type="file"
                   multiple
-                  accept=".pdf,.jpg,.jpeg,.png,.heic,.heif,.webp,.gif,.bmp,.tiff,.tif,.doc,.docx,.xls,.xlsx"
                   onChange={(e) => handleFileInput(e, year)}
                   className="hidden"
                   id={`tax-certificate-${year}`}

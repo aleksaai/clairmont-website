@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 interface VerificationStepProps {
   data: FormData;
+  updateData: (data: Partial<FormData>) => void;
   onSubmit: () => void;
   onBack: () => void;
   onGoToStep: (step: string) => void;
@@ -26,12 +27,38 @@ interface VerificationResponse {
   hasErrors: boolean;
 }
 
-const VerificationStep = ({ data, onSubmit, onBack, onGoToStep }: VerificationStepProps) => {
+const getDeterministicChecks = (data: FormData): CheckResult[] => {
+  const checks: CheckResult[] = [];
+  const addError = (id: string, label: string, message: string) => checks.push({ id, label, status: "error", message });
+  const validFile = (file: unknown) => file instanceof File && file.size > 0 && file.size <= 10 * 1024 * 1024;
+
+  if (!data.confirmCorrectness || !data.acceptTerms || !data.acceptPrivacy || !data.confirmEmail || data.confirmEmail.trim().toLowerCase() !== data.email.trim().toLowerCase()) {
+    addError("confirmations", "Selbstauskunft", "Die Selbstauskunft und alle Pflichtbestätigungen müssen vollständig sein.");
+  }
+  if (!data.documents?.idCard?.some(validFile)) {
+    addError("idCard", "Ausweisdokument", "Bitte laden Sie mindestens ein gültiges Ausweisdokument hoch.");
+  }
+  for (const year of data.taxYears || []) {
+    if (!data.taxCertificatesByYear?.[year]?.some(validFile)) {
+      addError(`taxCert_${year}`, `Lohnsteuerbescheinigung ${year}`, `Für ${year} fehlt eine Datei.`);
+    }
+  }
+  if ((!data.taxYears || data.taxYears.length === 0) && !data.noTaxCertificatesConfirmed) {
+    checks.push({ id: "taxYears", label: "Lohnsteuerbescheinigung", status: "warning", message: "Bitte bestätigen Sie ausdrücklich, dass keine Lohnsteuerbescheinigung vorhanden ist." });
+  }
+  if (data.hasCryptoIncome && !data.cryptoDocuments?.some(validFile)) addError("crypto", "Krypto-Unterlagen", "Die angegebenen Krypto-Unterlagen fehlen.");
+  if (data.hasDisability && !data.documents?.disabilityCertificate?.some(validFile) && !validFile(data.disabilityProof)) addError("disability", "Behindertenausweis", "Der erforderliche Nachweis fehlt.");
+  if (data.paysAlimony && !validFile(data.alimonyProof)) addError("alimony", "Unterhaltsnachweis", "Der erforderliche Nachweis fehlt.");
+
+  return checks;
+};
+
+const VerificationStep = ({ data, updateData, onSubmit, onBack, onGoToStep }: VerificationStepProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [results, setResults] = useState<CheckResult[]>([]);
   const [canSubmit, setCanSubmit] = useState(false);
   const [hasWarnings, setHasWarnings] = useState(false);
-  const [noTaxYearsConfirmed, setNoTaxYearsConfirmed] = useState(false);
+  const [noTaxYearsConfirmed, setNoTaxYearsConfirmed] = useState(Boolean(data.noTaxCertificatesConfirmed));
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -83,6 +110,15 @@ const VerificationStep = ({ data, onSubmit, onBack, onGoToStep }: VerificationSt
   const runVerification = async () => {
     setIsLoading(true);
     setError(null);
+    const deterministicChecks = getDeterministicChecks(data);
+
+    if (deterministicChecks.some((result) => result.status === "error")) {
+      setResults(deterministicChecks);
+      setCanSubmit(false);
+      setHasWarnings(deterministicChecks.some((result) => result.status === "warning"));
+      setIsLoading(false);
+      return;
+    }
 
     try {
       // Convert ID card files to base64
@@ -130,13 +166,23 @@ const VerificationStep = ({ data, onSubmit, onBack, onGoToStep }: VerificationSt
       if (fnError) throw fnError;
 
       const response = responseData as VerificationResponse;
-      setResults(response.results);
-      setCanSubmit(response.canSubmit);
-      setHasWarnings(response.hasWarnings);
+      // AI/content recognition is advisory: uncommon formats (HEIC, DOCX,
+      // scanner exports, etc.) must never prevent a complete submission.
+      const advisoryResults = response.results
+        .filter((result) => result.id !== "taxYears")
+        .map((result) => result.status === "error"
+          ? { ...result, status: "warning" as const, message: `${result.message} Die Datei wird trotzdem vollständig übermittelt und manuell geprüft.` }
+          : result);
+      const merged = [...deterministicChecks.filter((result) => result.id === "taxYears"), ...advisoryResults];
+      setResults(merged);
+      setCanSubmit(!merged.some((result) => result.status === "error"));
+      setHasWarnings(merged.some((result) => result.status === "warning"));
     } catch (err) {
       console.error("Verification error:", err);
-      setError("Die Prüfung konnte nicht durchgeführt werden. Sie können den Antrag trotzdem absenden.");
-      setCanSubmit(true);
+      setError("Die automatische Inhaltsprüfung ist gerade nicht verfügbar. Ihre Pflichtangaben und ausgewählten Dateien wurden lokal geprüft.");
+      setResults(deterministicChecks);
+      setCanSubmit(!deterministicChecks.some((result) => result.status === "error"));
+      setHasWarnings(true);
     } finally {
       setIsLoading(false);
     }
@@ -173,11 +219,14 @@ const VerificationStep = ({ data, onSubmit, onBack, onGoToStep }: VerificationSt
     }
   };
 
-  const effectiveCanSubmit = canSubmit || (hasWarnings && !results.some(r => r.status === "error"));
+  const effectiveCanSubmit = canSubmit
+    && !results.some((result) => result.status === "error")
+    && ((data.taxYears?.length ?? 0) > 0 || noTaxYearsConfirmed);
 
   // Handle "no tax years" confirmation
   const handleConfirmNoTaxYears = () => {
     setNoTaxYearsConfirmed(true);
+    updateData({ noTaxCertificatesConfirmed: true });
     setResults(prev => prev.map(r => 
       r.id === "taxYears" 
         ? { ...r, status: "ok" as const, message: "Bestätigt: Keine Lohnsteuerbescheinigung vorhanden." }
