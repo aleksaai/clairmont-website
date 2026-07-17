@@ -1,5 +1,5 @@
-// POST-LOVABLE-MIGRATION: Uses OpenAI GPT-4o-mini for document verification
-// (replaces the Lovable AI Gateway). Requires OPENAI_API_KEY secret on the Supabase project.
+// Uses OpenAI GPT-4o-mini for document verification.
+// Requires OPENAI_API_KEY in the Clairmont Supabase project.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
