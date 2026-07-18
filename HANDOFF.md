@@ -29,6 +29,8 @@ Files are accepted independent of extension or MIME type. Zero-byte files and fi
 
 Frontend deployments follow pushes to `main`. Edge Functions must be deployed explicitly to `ufnxliieaejdvxcanqux` with the correct Clairmont-scoped Supabase access token.
 
+Netlify project `clairmont-website` must define `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` and `VITE_SUPABASE_PROJECT_ID` for all deploy contexts. They were restored in Netlify on 2026-07-18 after the `.env` repository cleanup exposed that the production project had no build variables. The client now also uses a non-crashing placeholder when build variables are absent, so a configuration mistake can disable backend actions but cannot take down the public marketing site again.
+
 ## Reliability hardening (2026-07-17)
 
 - Removed fail-open verification and localStorage `File` restoration bugs.

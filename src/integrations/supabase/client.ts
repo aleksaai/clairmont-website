@@ -2,8 +2,18 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const configuredSupabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const configuredSupabasePublishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+// Keep the public marketing site renderable even if a deployment is missing
+// its backend build variables. Backend-dependent actions will fail normally,
+// but the entire website must never crash during module initialization.
+const SUPABASE_URL = configuredSupabaseUrl || "https://configuration-missing.invalid";
+const SUPABASE_PUBLISHABLE_KEY = configuredSupabasePublishableKey || "configuration-missing";
+
+if (!configuredSupabaseUrl || !configuredSupabasePublishableKey) {
+  console.error("Supabase build configuration is missing. Backend actions are unavailable.");
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
