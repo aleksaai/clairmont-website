@@ -31,6 +31,8 @@ Frontend deployments follow pushes to `main`. Edge Functions must be deployed ex
 
 Netlify project `clairmont-website` must define `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` and `VITE_SUPABASE_PROJECT_ID` for all deploy contexts. They were restored in Netlify on 2026-07-18 after the `.env` repository cleanup exposed that the production project had no build variables. The client now also uses a non-crashing placeholder when build variables are absent, so a configuration mistake can disable backend actions but cannot take down the public marketing site again.
 
+Production incident 2026-07-18: the missing Netlify variables caused the public bundle to crash at startup; additionally, `/prognose` referenced a removed `saveProgress` handler. Both paths were repaired and verified in a real browser without console errors. The old prototype favicon was replaced at both `/favicon.svg` and `/favicon.ico` with the Clairmont shield mark. Fix commits: `38ff9ad`, `a05062b`, `70d25d3`.
+
 ## Reliability hardening (2026-07-17)
 
 - Removed fail-open verification and localStorage `File` restoration bugs.
