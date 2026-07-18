@@ -266,6 +266,11 @@ const Prognose = () => {
     localStorage.setItem("prognoseCurrentStep", currentStep.toString());
   }, [formData, currentStep]);
 
+  const saveProgress = useCallback(() => {
+    localStorage.setItem("prognoseFormData", JSON.stringify(stripFilesForPersistence(formData)));
+    localStorage.setItem("prognoseCurrentStep", currentStep.toString());
+  }, [formData, currentStep]);
+
   const updateFormData = (data: Partial<FormData>) => {
     setFormData((prev) => ({ ...prev, ...data }));
   };
